@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../build/Ecommer.Api.props" />
-</Project>

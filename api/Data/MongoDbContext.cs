@@ -20,4 +20,6 @@ public class MongoDbContext
     {
         return _database.GetCollection<T>(name);
     }
+
+    public IMongoDatabase GetDatabase() => _database;
 }

@@ -1,4 +1,3 @@
-using Ecommer.Api.Data;
 using Ecommer.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
