@@ -10,7 +10,7 @@ public class UserService
 
     public UserService(MongoDbContext context)
     {
-        _users = context.GetCollection<User>("users");
+        _users = context.Users;
     }
 
     public async Task<List<User>> GetAllAsync()

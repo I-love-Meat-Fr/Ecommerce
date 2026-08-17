@@ -10,7 +10,7 @@ public class ProductService
 
     public ProductService(MongoDbContext context)
     {
-        _products = context.GetCollection<Product>("products");
+        _products = context.Products;
     }
 
     public async Task<List<Product>> GetAllAsync()

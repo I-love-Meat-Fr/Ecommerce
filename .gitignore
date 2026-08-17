@@ -41,3 +41,9 @@ x86/
 *.nupkg
 *.snupkg
 packages/
+
+# MongoDB / Docker local data
+.env
+.mongodb/
+mongo_data/
+.mongo-data/

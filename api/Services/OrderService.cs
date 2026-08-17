@@ -10,7 +10,7 @@ public class OrderService
 
     public OrderService(MongoDbContext context)
     {
-        _orders = context.GetCollection<Order>("orders");
+        _orders = context.Orders;
     }
 
     public async Task<List<Order>> GetAllAsync()
