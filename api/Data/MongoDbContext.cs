@@ -10,7 +10,8 @@ public class MongoDbContext
 
     public MongoDbContext(IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("MongoDB")
+        var connectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING")
+            ?? configuration.GetConnectionString("MongoDB")
             ?? "mongodb://localhost:27017";
         var databaseName = configuration["DatabaseName"] ?? "ecommer";
 

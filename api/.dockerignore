@@ -1,0 +1,11 @@
+**/bin
+**/obj
+**/.vs
+**/.vscode
+**/*.user
+**/.DS_Store
+**/node_modules
+**/dist
+**/.env
+**/.env.local
+**/appsettings.Development.json

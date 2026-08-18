@@ -1,16 +1,26 @@
+import { Routes, Route } from 'react-router-dom'
+import Layout from './components/Layout'
+import HomePage from './pages/HomePage'
+import ProductsPage from './pages/ProductsPage'
+import ProductDetailPage from './pages/ProductDetailPage'
+import CartPage from './pages/CartPage'
+import AboutPage from './pages/AboutPage'
+import ContactPage from './pages/ContactPage'
+import BlogPage from './pages/BlogPage'
+
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-blue-600 text-white p-4">
-        <h1 className="text-2xl font-bold">E-Commerce Store</h1>
-      </nav>
-      <main className="p-8">
-        <h2 className="text-xl mb-4">Welcome to our store!</h2>
-        <p className="text-gray-700">
-          React + Tailwind CSS + .NET API is ready.
-        </p>
-      </main>
-    </div>
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route index element={<HomePage />} />
+        <Route path="san-pham" element={<ProductsPage />} />
+        <Route path="san-pham/:slug" element={<ProductDetailPage />} />
+        <Route path="gio-hang" element={<CartPage />} />
+        <Route path="gioi-thieu" element={<AboutPage />} />
+        <Route path="lien-he" element={<ContactPage />} />
+        <Route path="kinh-nghiem" element={<BlogPage />} />
+      </Route>
+    </Routes>
   )
 }
 

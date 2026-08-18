@@ -8,13 +8,18 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// CORS for the local Vite dev server (5173 by default).
+// CORS for the local Vite dev server (5173 by default) and the production
+// frontend origin. Add your deployed frontend URL here once you have one
+// (e.g. https://florist.vercel.app). The "*" entry is only honored when
+// AllowCredentials is false (we don't use cookies here).
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendDev", policy =>
         policy.WithOrigins(
                 "http://localhost:5173",
-                "http://127.0.0.1:5173")
+                "http://127.0.0.1:5173",
+                "https://florist.vn",
+                "https://www.florist.vn")
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
