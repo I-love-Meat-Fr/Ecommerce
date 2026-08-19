@@ -28,9 +28,13 @@ public class UserService
         return await _users.Find(u => u.Email == email).FirstOrDefaultAsync();
     }
 
-    public async Task<User> CreateAsync(User user)
+    public async Task<User> CreateAsync(User user, string? plainPassword = null)
     {
         user.CreatedAt = DateTime.UtcNow;
+        if (!string.IsNullOrEmpty(plainPassword))
+        {
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(plainPassword);
+        }
         await _users.InsertOneAsync(user);
         return user;
     }
@@ -45,5 +49,17 @@ public class UserService
     {
         var result = await _users.DeleteOneAsync(u => u.Id == id);
         return result.DeletedCount > 0;
+    }
+
+    public bool VerifyPassword(string passwordHash, string plainPassword)
+    {
+        try
+        {
+            return BCrypt.Net.BCrypt.Verify(plainPassword, passwordHash);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
