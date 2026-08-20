@@ -1,7 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useCartStore } from '../store/cartStore'
+import { useAuthStore } from '../store/authStore'
 import { useState, useEffect } from 'react'
-import { Search, X, ShoppingBag, User, Menu } from 'lucide-react'
+import { Search, X, ShoppingBag, User, LogOut, Menu } from 'lucide-react'
 
 const navigation = [
   { name: 'Trang chủ', href: '/' },
@@ -17,14 +18,27 @@ function Header({ onMenuClick }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isAccountOpen, setIsAccountOpen] = useState(false)
   const cartItems = useCartStore(state => state.items)
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated())
+  const user = useAuthStore(state => state.user)
+  const logout = useAuthStore(state => state.logout)
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 30)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    if (!isAccountOpen) return
+    const handleClick = (e) => {
+      if (!e.target.closest('[data-account-menu]')) setIsAccountOpen(false)
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [isAccountOpen])
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -33,6 +47,12 @@ function Header({ onMenuClick }) {
       setSearchQuery('')
       setIsSearchOpen(false)
     }
+  }
+
+  const handleLogout = () => {
+    logout()
+    setIsAccountOpen(false)
+    navigate('/')
   }
 
   return (
@@ -136,13 +156,52 @@ function Header({ onMenuClick }) {
                 </button>
               )}
 
-              <Link
-                to="/dang-nhap"
-                className="hidden md:block p-2 text-ink-900 hover:text-champagne-500 transition-colors"
-                aria-label="Tài khoản"
-              >
-                <User className="w-5 h-5" strokeWidth={1.5} />
-              </Link>
+              {isAuthenticated ? (
+                <div className="relative hidden md:block" data-account-menu>
+                  <button
+                    onClick={() => setIsAccountOpen((v) => !v)}
+                    className="p-2 text-ink-900 hover:text-champagne-500 transition-colors"
+                    aria-label="Tài khoản"
+                    aria-expanded={isAccountOpen}
+                  >
+                    <User className="w-5 h-5" strokeWidth={1.5} />
+                  </button>
+                  {isAccountOpen && (
+                    <div className="absolute right-0 top-full mt-3 w-56 bg-ivory-50 border border-ivory-300 shadow-soft py-2 z-50">
+                      <div className="px-4 py-3 border-b border-ivory-300">
+                        <p className="text-[11px] tracking-[0.2em] uppercase text-ink-500">
+                          Đã đăng nhập
+                        </p>
+                        <p className="text-sm text-ink-900 truncate">
+                          {user?.fullName || user?.email}
+                        </p>
+                      </div>
+                      <Link
+                        to="/tai-khoan"
+                        onClick={() => setIsAccountOpen(false)}
+                        className="block px-4 py-2 text-sm text-ink-900 hover:bg-ivory-100 transition-colors"
+                      >
+                        Tài khoản của tôi
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-sm text-ink-900 hover:bg-ivory-100 transition-colors flex items-center gap-2"
+                      >
+                        <LogOut className="w-4 h-4" strokeWidth={1.5} />
+                        Đăng xuất
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  to="/dang-nhap"
+                  className="hidden md:block p-2 text-ink-900 hover:text-champagne-500 transition-colors"
+                  aria-label="Đăng nhập"
+                >
+                  <User className="w-5 h-5" strokeWidth={1.5} />
+                </Link>
+              )}
 
               <Link
                 to="/gio-hang"

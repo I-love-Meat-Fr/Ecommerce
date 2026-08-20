@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom'
-import { X, ArrowUpRight } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../store/authStore'
+import { X, ArrowUpRight, LogOut } from 'lucide-react'
 
 const navigation = [
   { name: 'Trang chủ', href: '/' },
@@ -12,6 +13,17 @@ const navigation = [
 ]
 
 function MobileMenu({ isOpen, onClose }) {
+  const navigate = useNavigate()
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated())
+  const user = useAuthStore((state) => state.user)
+  const logout = useAuthStore((state) => state.logout)
+
+  const handleLogout = () => {
+    logout()
+    onClose()
+    navigate('/')
+  }
+
   return (
     <>
       {/* Backdrop */}
@@ -73,9 +85,54 @@ function MobileMenu({ isOpen, onClose }) {
 
           {/* Footer */}
           <div className="p-8 border-t border-ivory-300 bg-ivory-100">
+            {isAuthenticated ? (
+              <>
+                <p className="eyebrow mb-3">— Tài khoản</p>
+                <p className="font-display text-xl text-ink-900 mb-4">
+                  {user?.fullName || user?.email}
+                </p>
+                <div className="flex flex-col gap-2">
+                  <Link
+                    to="/tai-khoan"
+                    onClick={onClose}
+                    className="link-editorial text-[12px]"
+                  >
+                    Tài khoản của tôi
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="link-editorial text-[12px] inline-flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" strokeWidth={1.5} />
+                    Đăng xuất
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="eyebrow mb-3">— Thành viên</p>
+                <div className="flex flex-col gap-2">
+                  <Link
+                    to="/dang-nhap"
+                    onClick={onClose}
+                    className="link-editorial text-[12px]"
+                  >
+                    Đăng nhập
+                  </Link>
+                  <Link
+                    to="/dang-ky"
+                    onClick={onClose}
+                    className="link-editorial text-[12px]"
+                  >
+                    Đăng ký
+                  </Link>
+                </div>
+              </>
+            )}
+            <div className="divider-thin my-6" />
             <p className="eyebrow mb-3">— Hotline</p>
-            <a 
-              href="tel:0818596696" 
+            <a
+              href="tel:0818596696"
               className="font-display text-2xl text-ink-900 hover:text-champagne-500 transition-colors"
             >
               0818 596 696

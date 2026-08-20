@@ -7,6 +7,10 @@ import CartPage from './pages/CartPage'
 import AboutPage from './pages/AboutPage'
 import ContactPage from './pages/ContactPage'
 import BlogPage from './pages/BlogPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import AccountPage from './pages/AccountPage'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   return (
@@ -19,6 +23,16 @@ function App() {
         <Route path="gioi-thieu" element={<AboutPage />} />
         <Route path="lien-he" element={<ContactPage />} />
         <Route path="kinh-nghiem" element={<BlogPage />} />
+        <Route path="dang-nhap" element={<LoginPage />} />
+        <Route path="dang-ky" element={<RegisterPage />} />
+        <Route
+          path="tai-khoan"
+          element={
+            <ProtectedRoute>
+              <AccountPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
     </Routes>
   )

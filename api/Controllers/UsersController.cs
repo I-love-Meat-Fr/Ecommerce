@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Ecommer.Api.Models;
 using Ecommer.Api.Services;
@@ -6,6 +7,7 @@ namespace Ecommer.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UsersController : ControllerBase
 {
     private readonly UserService _userService;

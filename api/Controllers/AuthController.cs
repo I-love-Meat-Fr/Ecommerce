@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Ecommer.Api.DTOs;
 using Ecommer.Api.Models;
@@ -70,5 +72,34 @@ public class AuthController : ControllerBase
         var (token, expiresAt) = _jwtService.GenerateToken(user.Id!, user.Email);
 
         return Ok(new AuthResponse(token, user.Email, user.FullName, expiresAt));
+    }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<AuthResponse>> Me()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue("sub");
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+
+        var user = await _userService.GetByIdAsync(userId);
+        if (user == null) return NotFound(new { message = "User not found" });
+
+        var expiryUnix = User.FindFirstValue("exp");
+        var expiresAt = DateTime.UtcNow;
+        if (long.TryParse(expiryUnix, out var exp))
+        {
+            expiresAt = DateTimeOffset.FromUnixTimeSeconds(exp).UtcDateTime;
+        }
+
+        return Ok(new AuthResponse(
+            Token: string.Empty,
+            Email: user.Email,
+            FullName: user.FullName,
+            ExpiresAt: expiresAt
+        ));
     }
 }
