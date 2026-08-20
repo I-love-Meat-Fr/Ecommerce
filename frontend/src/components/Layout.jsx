@@ -2,13 +2,23 @@ import { Outlet } from 'react-router-dom'
 import Header from './Header'
 import Footer from './Footer'
 import MobileMenu from './MobileMenu'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Phone, ArrowUp } from 'lucide-react'
 
 function Layout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [showBackToTop, setShowBackToTop] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 600)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-ivory-50 font-sans">
       <Header onMenuClick={() => setIsMobileMenuOpen(true)} />
       
       <main className="flex-1">
@@ -22,38 +32,35 @@ function Layout() {
         onClose={() => setIsMobileMenuOpen(false)} 
       />
       
-      {/* Floating social icons */}
-      <div className="fixed right-4 bottom-20 flex flex-col gap-2 z-40">
+      {/* Floating contact buttons */}
+      <div className="fixed right-5 bottom-24 flex flex-col gap-2 z-40">
         <a 
           href="tel:0818596696" 
-          className="w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-700 transition-colors"
+          className="w-12 h-12 bg-ink-900 text-ivory-50 flex items-center justify-center shadow-elevated hover:bg-champagne-500 transition-all duration-300"
           title="Gọi điện"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-          </svg>
+          <Phone className="w-4 h-4" strokeWidth={1.5} />
         </a>
         <a 
           href="https://zalo.me/0818596696" 
           target="_blank"
           rel="noopener noreferrer"
-          className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors"
+          className="w-12 h-12 bg-ivory-50 text-ink-900 border border-ink-900/10 flex items-center justify-center shadow-elevated hover:bg-ink-900 hover:text-ivory-50 transition-all duration-300"
           title="Zalo"
         >
-          <span className="text-lg font-bold">Z</span>
+          <span className="font-display text-base">Z</span>
         </a>
       </div>
 
-      {/* Back to top button */}
+      {/* Back to top */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className="fixed right-4 bottom-4 w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-700 transition-all opacity-0 pointer-events-none"
-        id="backToTop"
+        className={`fixed right-5 bottom-5 w-12 h-12 bg-champagne-400 text-ink-900 flex items-center justify-center shadow-elevated hover:bg-champagne-500 transition-all duration-300 z-40 ${
+          showBackToTop ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
         title="Lên đầu trang"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-        </svg>
+        <ArrowUp className="w-4 h-4" strokeWidth={1.5} />
       </button>
     </div>
   )

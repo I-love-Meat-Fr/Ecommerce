@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Target, Eye, Heart, Award, Users, Truck, Leaf } from 'lucide-react'
+import { Target, Eye, Heart, Award, Users, Truck, Leaf, ArrowUpRight, Sparkles } from 'lucide-react'
 
 const values = [
   {
@@ -10,160 +10,141 @@ const values = [
   {
     icon: Target,
     title: 'Giá thành hợp lý',
-    description: 'Florist Vietnam tự hào là một trong những đơn vị hàng đầu trong lĩnh vực nghiên cứu & sản xuất HOA cung cấp ra những sản phẩm chất lượng cao nhưng vẫn đảm bảo được giá thành hợp lý nhất tới tay Quý Khách hàng.',
+    description: 'Tự hào là đơn vị hàng đầu trong lĩnh vực nghiên cứu & sản xuất HOA cung cấp ra thị trường những sản phẩm chất lượng cao với giá thành hợp lý.',
   },
   {
     icon: Heart,
-    title: 'Dịch vụ khách hàng tốt nhất',
-    description: 'Florist Vietnam hiện đang phục vụ trên hàng nghìn khách hàng tại Hà Nội & các tỉnh thành lân cận.',
+    title: 'Dịch vụ tận tâm',
+    description: 'Florist Vietnam hiện đang phục vụ trên hàng nghìn khách hàng tại Hà Nội & các tỉnh thành lân cận với sự tận tâm cao nhất.',
   },
 ]
 
 const team = [
-  {
-    name: 'Nguyễn Văn A',
-    role: 'Giám đốc',
-    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&h=300&fit=crop',
-  },
-  {
-    name: 'Trần Thị B',
-    role: 'Quản lý sản xuất',
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=300&fit=crop',
-  },
-  {
-    name: 'Lê Văn C',
-    role: 'Kỹ sư nông nghiệp',
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop',
-  },
+  { name: 'Nguyễn Văn A', role: 'Giám Đốc', image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600&h=700&fit=crop' },
+  { name: 'Trần Thị B', role: 'Quản Lý Sản Xuất', image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=700&fit=crop' },
+  { name: 'Lê Văn C', role: 'Chuyên Gia Cây Trồng', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=700&fit=crop' },
+  { name: 'Phạm Thị D', role: 'Tư Vấn Thiết Kế', image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=600&h=700&fit=crop' },
+]
+
+const stats = [
+  { value: '10+', label: 'Năm Kinh Nghiệm' },
+  { value: '2K+', label: 'Khách Hàng Hài Lòng' },
+  { value: '50+', label: 'Giống Cây Chất Lượng' },
+  { value: '24/7', label: 'Hỗ Trợ Tư Vấn' },
 ]
 
 function AboutPage() {
   return (
-    <div>
-      {/* Hero */}
-      <section className="relative bg-primary-900 text-white py-20">
+    <div className="bg-ivory-50">
+      {/* Editorial Header */}
+      <section className="pt-12 md:pt-20 pb-16">
         <div className="container-custom">
-          <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">Về Florist Vietnam</h1>
-            <p className="text-xl text-white/90">
-              Florist Vietnam - Điểm đến tin cậy cho những người yêu cây cảnh
-            </p>
-          </div>
-        </div>
-      </section>
+          <nav className="flex items-center gap-2 text-[11px] tracking-widest uppercase mb-10">
+            <Link to="/" className="text-ink-500 hover:text-ink-900 transition-colors">Trang Chủ</Link>
+            <span className="text-ink-300">/</span>
+            <span className="text-ink-900 font-medium">Câu Chuyện</span>
+          </nav>
 
-      {/* About Content */}
-      <section className="py-16">
-        <div className="container-custom">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <span className="text-primary-600 font-semibold">Câu chuyện của chúng tôi</span>
-              <h2 className="text-3xl font-bold text-gray-900 mt-2 mb-6">
-                Hơn 10 năm kinh nghiệm trong lĩnh vực cây cảnh
-              </h2>
-              <div className="space-y-4 text-gray-600">
-                <p>
-                  Florist Vietnam là một doanh nghiệp trẻ, hoạt động trong lĩnh vực nông nghiệp công nghệ cao, 
-                  chuyên về HOA & CÂY GIỐNG có giá trị kinh tế cao.
-                </p>
-                <p>
-                  Với trách nhiệm nghiên cứu, lai tạo và trồng thử nghiệm các giống hoa mới, có giá trị kinh tế, 
-                  phù hợp với điều kiện tự nhiên của Miền Bắc Việt Nam.
-                </p>
-                <p>
-                  Florist Vietnam đang không ngừng nỗ lực để phục vụ Khách hàng một cách tốt nhất. 
-                  Chúng tôi luôn luôn đặt mục tiêu CHẤT LƯỢNG – SỰ HÀI LÒNG CỦA KHÁCH HÀNG lên hàng đầu.
-                </p>
-              </div>
+          <div className="grid md:grid-cols-12 gap-10 mb-16">
+            <div className="md:col-span-7">
+              <p className="section-number mb-4">— Maison / Câu Chuyện</p>
+              <h1 className="font-display text-display-2xl text-ink-900">
+                Mười năm <em className="italic text-champagne-500">kiến tạo</em> không gian xanh
+              </h1>
             </div>
-            <div className="relative">
-              <img
-                src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=600&h=500&fit=crop"
-                alt="Vườn cây Florist"
-                className="rounded-2xl shadow-xl"
-              />
-              <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-xl">
-                <div className="text-4xl font-bold text-primary-600">10+</div>
-                <div className="text-gray-600">Năm kinh nghiệm</div>
-              </div>
+            <div className="md:col-span-4 md:col-start-9 pt-8">
+              <p className="text-ink-600 leading-relaxed font-light">
+                Florist Vietnam là doanh nghiệp hoạt động trong lĩnh vực nông nghiệp công nghệ cao, 
+                chuyên về HOA & CÂY GIỐNG có giá trị kinh tế cao. Hành trình của chúng tôi bắt đầu 
+                từ niềm đam mê với thiên nhiên và khát vọng mang vẻ đẹp tinh tế đến mọi không gian sống.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Mission & Vision */}
-      <section className="py-16 bg-gray-50">
+      {/* Hero image */}
+      <section className="mb-20 md:mb-28">
         <div className="container-custom">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-2xl shadow-sm">
-              <div className="w-14 h-14 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center mb-6">
-                <Eye className="w-7 h-7" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Tầm nhìn</h3>
-              <p className="text-gray-600">
-                "Trở thành biểu tượng tuổi trẻ, sáng tạo, vươn lên Việt Nam về nghiên cứu, 
-                lai tạo & sản xuất nguồn giống hoa mới phục vụ nhu cầu phát triển kinh tế xã hội."
-              </p>
-            </div>
-
-            <div className="bg-white p-8 rounded-2xl shadow-sm">
-              <div className="w-14 h-14 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center mb-6">
-                <Target className="w-7 h-7" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Sứ mệnh</h3>
-              <p className="text-gray-600">
-                "Mục tiêu xuyên suốt của Florist Vietnam là nỗ lực không ngừng để tạo ra được 
-                những giống hoa mới có giá trị cao nhất có thể."
-              </p>
-            </div>
-
-            <div className="bg-white p-8 rounded-2xl shadow-sm">
-              <div className="w-14 h-14 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center mb-6">
-                <Heart className="w-7 h-7" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Giá trị cốt lõi</h3>
-              <p className="text-gray-600">
-                "Florist Vietnam tập trung tối đa nguồn lực vào sự phát triển con người toàn diện. 
-                Góp phần tạo ra được những sản phẩm & dịch vụ tốt nhất phục vụ cộng đồng."
-              </p>
-            </div>
+          <div className="aspect-[16/9] md:aspect-[21/9] overflow-hidden hover-zoom">
+            <img
+              src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1600&h=900&fit=crop"
+              alt="Vườn cây Florist"
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
       </section>
 
       {/* Stats */}
-      <section className="py-16">
+      <section className="py-16 md:py-20 bg-ink-900 text-ivory-50">
         <div className="container-custom">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { value: '1000+', label: 'Khách hàng', icon: Users },
-              { value: '50+', label: 'Loại cây giống', icon: Leaf },
-              { value: '100%', label: 'Chất lượng', icon: Award },
-              { value: '24h', label: 'Giao hàng', icon: Truck },
-            ].map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-4xl md:text-5xl font-bold text-primary-600 mb-2">{stat.value}</div>
-                <div className="text-gray-600">{stat.label}</div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-ink-700">
+            {stats.map((s, i) => (
+              <div key={i} className="bg-ink-900 p-10 md:p-12 text-center">
+                <div className="font-display text-display-lg text-champagne-300 mb-3">
+                  {s.value}
+                </div>
+                <p className="text-[10px] tracking-widest uppercase text-ivory-100/60 font-medium">
+                  {s.label}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Values */}
-      <section className="py-16 bg-gray-50">
+      {/* Mission */}
+      <section className="py-20 md:py-28">
         <div className="container-custom">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">Giá trị của chúng tôi</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {values.map((value, index) => (
-              <div key={index} className="flex gap-4">
-                <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <value.icon className="w-6 h-6" />
+          <div className="grid md:grid-cols-12 gap-10 lg:gap-16 items-center">
+            <div className="md:col-span-6">
+              <div className="aspect-[4/5] overflow-hidden hover-zoom">
+                <img
+                  src="https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=800&h=1000&fit=crop"
+                  alt="Sứ mệnh"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+            <div className="md:col-span-6 lg:col-start-8">
+              <p className="section-number mb-4">— Sứ Mệnh</p>
+              <h2 className="font-display text-display-lg text-ink-900 mb-6">
+                Mang thiên nhiên <em className="italic text-champagne-500">vào</em> từng không gian
+              </h2>
+              <p className="text-ink-600 leading-relaxed font-light mb-5">
+                Với trách nhiệm nghiên cứu, lai tạo và trồng thử nghiệm các giống hoa mới, 
+                có giá trị kinh tế, phù hợp với điều kiện tự nhiên của Miền Bắc Việt Nam, 
+                chúng tôi không ngừng nỗ lực để mang đến những sản phẩm tốt nhất.
+              </p>
+              <p className="text-ink-600 leading-relaxed font-light">
+                Florist Vietnam tin rằng mỗi không gian sống đều xứng đáng được tô điểm 
+                bởi vẻ đẹp của thiên nhiên — một cách tinh tế, hiện đại và bền vững.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Values */}
+      <section className="py-20 md:py-28 bg-ivory-100">
+        <div className="container-custom">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <p className="section-number mb-4">— Giá Trị Cốt Lõi</p>
+            <h2 className="font-display text-display-lg text-ink-900">
+              Những điều chúng tôi <em className="italic">theo đuổi</em>
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-px bg-ivory-300">
+            {values.map((v, i) => (
+              <div key={i} className="bg-ivory-100 p-10 md:p-12 group hover:bg-ivory-50 transition-colors duration-500">
+                <div className="flex items-start justify-between mb-8">
+                  <v.icon className="w-8 h-8 text-ink-900 group-hover:text-champagne-500 transition-colors" strokeWidth={1.25} />
+                  <span className="section-number">№ {String(i + 1).padStart(2, '0')}</span>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">{value.title}</h3>
-                  <p className="text-gray-600 text-sm">{value.description}</p>
-                </div>
+                <h3 className="font-display text-2xl text-ink-900 mb-4 leading-snug">{v.title}</h3>
+                <p className="text-sm text-ink-500 leading-relaxed font-light">{v.description}</p>
               </div>
             ))}
           </div>
@@ -171,42 +152,32 @@ function AboutPage() {
       </section>
 
       {/* Team */}
-      <section className="py-16">
+      <section className="py-20 md:py-28">
         <div className="container-custom">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">Đội ngũ của chúng tôi</h2>
-          <p className="text-gray-600 text-center max-w-2xl mx-auto mb-12">
-            Đội ngũ chuyên gia nông nghiệp giàu kinh nghiệm của Florist Vietnam
-          </p>
-          <div className="grid md:grid-cols-3 gap-8 max-w-3xl mx-auto">
-            {team.map((member, index) => (
-              <div key={index} className="text-center">
-                <img
-                  src={member.image}
-                  alt={member.name}
-                  className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
-                />
-                <h3 className="font-semibold text-gray-900">{member.name}</h3>
-                <p className="text-gray-600 text-sm">{member.role}</p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-6">
+            <div>
+              <p className="section-number mb-4">— Đội Ngũ</p>
+              <h2 className="font-display text-display-lg text-ink-900">
+                Những người <em className="italic">đứng sau</em> Florist
+              </h2>
+            </div>
+            <Link to="/lien-he" className="link-editorial self-start md:self-end">
+              Gặp Gỡ Chúng Tôi
+              <ArrowUpRight className="w-3 h-3" strokeWidth={2} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+            {team.map((member, i) => (
+              <div key={i} className="group">
+                <div className="aspect-[4/5] overflow-hidden bg-ivory-200 mb-5 hover-zoom">
+                  <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+                </div>
+                <p className="section-number mb-2">№ {String(i + 1).padStart(2, '0')}</p>
+                <h3 className="font-display text-xl text-ink-900 mb-1">{member.name}</h3>
+                <p className="text-xs tracking-widest uppercase text-ink-500">{member.role}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16 bg-primary-600 text-white">
-        <div className="container-custom text-center">
-          <h2 className="text-3xl font-bold mb-4">Bạn muốn hợp tác với Florist Vietnam?</h2>
-          <p className="text-white/90 mb-8 max-w-2xl mx-auto">
-            Chúng tôi luôn sẵn sàng hợp tác với các đối tác để cùng phát triển
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link to="/lien-he" className="btn-primary bg-white text-primary-700 hover:bg-gray-100">
-              Liên hệ ngay
-            </Link>
-            <Link to="/san-pham" className="btn-secondary border-white text-white hover:bg-white/10">
-              Xem sản phẩm
-            </Link>
           </div>
         </div>
       </section>
