@@ -40,9 +40,9 @@ public class AuthController : ControllerBase
 
         await _userService.CreateAsync(user, request.Password);
 
-        var (token, expiresAt) = _jwtService.GenerateToken(user.Id!, user.Email);
+        var (token, expiresAt) = _jwtService.GenerateToken(user.Id!, user.Email, user.Role);
 
-        return Ok(new AuthResponse(token, user.Email, user.FullName, expiresAt));
+        return Ok(new AuthResponse(token, user.Email, user.FullName, user.Role, expiresAt));
     }
 
     [HttpPost("login")]
@@ -69,9 +69,9 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid email or password" });
         }
 
-        var (token, expiresAt) = _jwtService.GenerateToken(user.Id!, user.Email);
+        var (token, expiresAt) = _jwtService.GenerateToken(user.Id!, user.Email, user.Role);
 
-        return Ok(new AuthResponse(token, user.Email, user.FullName, expiresAt));
+        return Ok(new AuthResponse(token, user.Email, user.FullName, user.Role, expiresAt));
     }
 
     [HttpGet("me")]
@@ -99,6 +99,7 @@ public class AuthController : ControllerBase
             Token: string.Empty,
             Email: user.Email,
             FullName: user.FullName,
+            Role: user.Role,
             ExpiresAt: expiresAt
         ));
     }

@@ -183,6 +183,15 @@ function Header({ onMenuClick }) {
                       >
                         Tài khoản của tôi
                       </Link>
+                      {user?.role === 'Admin' && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setIsAccountOpen(false)}
+                          className="block px-4 py-2 text-sm text-ink-900 hover:bg-ivory-100 transition-colors"
+                        >
+                          Quản trị
+                        </Link>
+                      )}
                       <button
                         onClick={handleLogout}
                         className="w-full text-left px-4 py-2 text-sm text-ink-900 hover:bg-ivory-100 transition-colors flex items-center gap-2"

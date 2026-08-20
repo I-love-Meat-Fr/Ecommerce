@@ -27,6 +27,7 @@ export const useAuthStore = create(
           const user = {
             email: data.email,
             fullName: data.fullName,
+            role: data.role,
           }
           setStoredToken(data.token)
           set({
@@ -52,6 +53,7 @@ export const useAuthStore = create(
           const user = {
             email: data.email,
             fullName: data.fullName,
+            role: data.role,
           }
           setStoredToken(data.token)
           set({

@@ -14,7 +14,7 @@ public class JwtService
         _config = config;
     }
 
-    public (string Token, DateTime ExpiresAt) GenerateToken(string userId, string email)
+    public (string Token, DateTime ExpiresAt) GenerateToken(string userId, string email, string role)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
             _config["Jwt:Secret"] ?? throw new InvalidOperationException("JWT secret not configured")));
@@ -27,6 +27,7 @@ public class JwtService
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId),
             new Claim(JwtRegisteredClaimNames.Email, email),
+            new Claim(ClaimTypes.Role, role),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
         };

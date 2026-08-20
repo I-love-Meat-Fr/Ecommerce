@@ -47,6 +47,7 @@ public static class UsersSeeder
             Address = "1 Admin Plaza, Ho Chi Minh City, Vietnam",
             CreatedAt = now,
             IsActive = true,
+            Role = "Admin",
         },
         new User
         {

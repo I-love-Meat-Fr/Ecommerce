@@ -99,6 +99,15 @@ function MobileMenu({ isOpen, onClose }) {
                   >
                     Tài khoản của tôi
                   </Link>
+                  {user?.role === 'Admin' && (
+                    <Link
+                      to="/admin"
+                      onClick={onClose}
+                      className="link-editorial text-[12px]"
+                    >
+                      Quản trị
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="link-editorial text-[12px] inline-flex items-center gap-2"
