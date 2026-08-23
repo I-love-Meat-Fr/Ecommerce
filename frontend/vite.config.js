@@ -10,12 +10,13 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-dom/client', 'react-router-dom'],
-    force: true,
   },
   build: {
+    // React 18 is pure ESM. Disable CJS transformation to avoid
+    // "./cjs/react.production.min.js" resolution mismatches that
+    // occur on Vercel's build environment.
     commonjsOptions: {
-      include: [/.+/],
-      transformMixedEsModules: true,
+      transformMixedEsModules: false,
     },
   },
   server: {
