@@ -6,9 +6,9 @@ export default defineConfig({
   resolve: {
     dedupe: ['react', 'react-dom'],
   },
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'react-dom/client', 'react-router-dom'],
-  },
+  // No optimizeDeps.include — forcing pre-bundling on Vercel was making
+  // Vite resolve into the CJS `./cjs/react-jsx-runtime.production.min.js`
+  // path that doesn't exist in some build environments.
   server: {
     port: 5173,
     proxy: {
