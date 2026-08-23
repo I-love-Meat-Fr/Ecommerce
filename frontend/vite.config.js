@@ -6,9 +6,19 @@ export default defineConfig({
   resolve: {
     dedupe: ['react', 'react-dom'],
   },
-  // No optimizeDeps.include — forcing pre-bundling on Vercel was making
-  // Vite resolve into the CJS `./cjs/react-jsx-runtime.production.min.js`
-  // path that doesn't exist in some build environments.
+  build: {
+    // Force Rollup to bundle react instead of externalizing it as CJS.
+    // Without this, Vercel's build container produces an externalized
+    // reference to "./cjs/react.production.min.js?commonjs-external"
+    // which then fails to resolve itself.
+    commonjsOptions: {
+      transformMixedEsModules: true,
+      ignoreTryCatch: false,
+    },
+    rollupOptions: {
+      external: [],
+    },
+  },
   server: {
     port: 5173,
     proxy: {
