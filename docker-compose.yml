@@ -30,7 +30,10 @@ services:
       - "5000:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__MongoDB: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-admin123}@mongo:27017
+      # Prefer Atlas when MONGO_CONNECTION_STRING is set in .env; otherwise
+      # fall back to the local Docker mongo container.
+      ConnectionStrings__MongoDB: ${MONGO_CONNECTION_STRING:-mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-admin123}@mongo:27017}
+      MONGO_CONNECTION_STRING: ${MONGO_CONNECTION_STRING:-}
       DatabaseName: ${MONGO_DB:-ecommer}
     depends_on:
       mongo:
