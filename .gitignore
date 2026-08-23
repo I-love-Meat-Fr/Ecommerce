@@ -1,49 +1,9 @@
-# Build results
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
-
-# Visual Studio
-.vs/
-.vscode/
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
-
-# .NET Core
-project.lock.json
-project.fragment.lock.json
-artifacts/
-
-# Rider
-.idea/
-
-# VS Code
-.DS_Store
-Thumbs.db
-
-# Cursor
-.cursor/
-
-# User-specific files
-*.rsuser
-*.userprefs
-
-# Build results
-[Dd]ebug/
-[Rr]elease/
-x64/
-x86/
-
-# NuGet
-*.nupkg
-*.snupkg
-packages/
-
-# MongoDB / Docker local data
+frontend/node_modules
+frontend/dist
 .env
-.mongodb/
-mongo_data/
-.mongo-data/
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.vscode
+.idea

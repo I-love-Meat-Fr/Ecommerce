@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "outputDirectory": "dist",
+  "buildCommand": "echo 'Skipping build — using prebuilt dist/ from repo' && exit 0",
+  "installCommand": "echo 'No install needed — using prebuilt dist/' && exit 0",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
