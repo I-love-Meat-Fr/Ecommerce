@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "outputDirectory": "public",
-  "buildCommand": "echo 'Skipping build — using prebuilt public/ from repo' && exit 0",
-  "installCommand": "echo 'No install needed — using prebuilt public/' && exit 0",
+  "buildCommand": "cd frontend && npm install --no-audit --no-fund && npm run build",
+  "outputDirectory": "frontend/dist",
+  "framework": null,
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
