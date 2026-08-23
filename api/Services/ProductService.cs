@@ -28,6 +28,23 @@ public class ProductService
         return await _products.Find(p => p.Category == category).ToListAsync();
     }
 
+    // Search by product name (case-insensitive contains) or by any variant SKU/name.
+    // Single pass, capped at 500 docs to keep admin queries snappy.
+    public async Task<List<Product>> SearchAsync(string query)
+    {
+        var filter = Builders<Product>.Filter.Or(
+            Builders<Product>.Filter.Regex(p => p.Name, new MongoDB.Bson.BsonRegularExpression(query, "i")),
+            Builders<Product>.Filter.ElemMatch(
+                p => p.Variants,
+                Builders<ProductVariant>.Filter.Or(
+                    Builders<ProductVariant>.Filter.Regex(v => v.Sku, new MongoDB.Bson.BsonRegularExpression(query, "i")),
+                    Builders<ProductVariant>.Filter.Regex(v => v.Name, new MongoDB.Bson.BsonRegularExpression(query, "i"))
+                )
+            )
+        );
+        return await _products.Find(filter).Limit(500).ToListAsync();
+    }
+
     public async Task<Product> CreateAsync(Product product)
     {
         product.CreatedAt = DateTime.UtcNow;

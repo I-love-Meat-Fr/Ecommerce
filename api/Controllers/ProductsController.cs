@@ -17,8 +17,14 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Product>>> GetAll([FromQuery] string? category = null)
+    public async Task<ActionResult<List<Product>>> GetAll(
+        [FromQuery] string? category = null,
+        [FromQuery] string? search = null)
     {
+        if (!string.IsNullOrEmpty(search))
+        {
+            return Ok(await _productService.SearchAsync(search));
+        }
         if (!string.IsNullOrEmpty(category))
         {
             return Ok(await _productService.GetByCategoryAsync(category));

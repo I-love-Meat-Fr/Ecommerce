@@ -1,12 +1,33 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { push } from '../components/admin/Toast'
 
-function AdminPage() {
+const tiles = [
+  {
+    title: 'Sản phẩm',
+    desc: 'Thêm, sửa, xóa sản phẩm và biến thể.',
+    to: '/admin/products',
+    ready: true,
+  },
+  {
+    title: 'Đơn hàng',
+    desc: 'Theo dõi và cập nhật trạng thái đơn hàng.',
+    ready: false,
+  },
+  {
+    title: 'Người dùng',
+    desc: 'Quản lý tài khoản khách hàng.',
+    ready: false,
+  },
+]
+
+export default function AdminPage() {
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
 
   const handleLogout = () => {
     logout()
+    push('Đã đăng xuất', 'info')
     navigate('/')
   }
 
@@ -23,34 +44,34 @@ function AdminPage() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="card-editorial p-8 hover:border-ink-900">
-              <p className="eyebrow mb-3">Quản lý</p>
-              <h3 className="font-display text-2xl text-ink-900 mb-4">Sản phẩm</h3>
-              <p className="text-sm text-ink-600 font-light mb-6">
-                Thêm, sửa, xóa sản phẩm trong cửa hàng.
-              </p>
-              <span className="badge-editorial">Sắp ra mắt</span>
-            </div>
+            {tiles.map((t) =>
+              t.ready ? (
+                <Link
+                  key={t.title}
+                  to={t.to}
+                  className="card-editorial p-8 hover:border-ink-900 hover:bg-white block"
+                >
+                  <p className="eyebrow mb-3">Quản lý</p>
+                  <h3 className="font-display text-2xl text-ink-900 mb-4">{t.title}</h3>
+                  <p className="text-sm text-ink-600 font-light mb-6">{t.desc}</p>
+                  <span className="text-xs uppercase tracking-widest text-sage-600 font-mono">
+                    Mở →
+                  </span>
+                </Link>
+              ) : (
+                <div
+                  key={t.title}
+                  className="card-editorial p-8 cursor-not-allowed opacity-60"
+                >
+                  <p className="eyebrow mb-3">Quản lý</p>
+                  <h3 className="font-display text-2xl text-ink-900 mb-4">{t.title}</h3>
+                  <p className="text-sm text-ink-600 font-light mb-6">{t.desc}</p>
+                  <span className="badge-editorial">Sắp ra mắt</span>
+                </div>
+              )
+            )}
 
-            <div className="card-editorial p-8 hover:border-ink-900">
-              <p className="eyebrow mb-3">Quản lý</p>
-              <h3 className="font-display text-2xl text-ink-900 mb-4">Đơn hàng</h3>
-              <p className="text-sm text-ink-600 font-light mb-6">
-                Theo dõi và cập nhật trạng thái đơn hàng.
-              </p>
-              <span className="badge-editorial">Sắp ra mắt</span>
-            </div>
-
-            <div className="card-editorial p-8 hover:border-ink-900">
-              <p className="eyebrow mb-3">Quản lý</p>
-              <h3 className="font-display text-2xl text-ink-900 mb-4">Người dùng</h3>
-              <p className="text-sm text-ink-600 font-light mb-6">
-                Quản lý tài khoản khách hàng.
-              </p>
-              <span className="badge-editorial">Sắp ra mắt</span>
-            </div>
-
-            <div className="card-editorial p-8 hover:border-ink-900">
+            <div className="card-editorial p-8 cursor-not-allowed opacity-60">
               <p className="eyebrow mb-3">Quản lý</p>
               <h3 className="font-display text-2xl text-ink-900 mb-4">Bài viết</h3>
               <p className="text-sm text-ink-600 font-light mb-6">
@@ -70,5 +91,3 @@ function AdminPage() {
     </div>
   )
 }
-
-export default AdminPage

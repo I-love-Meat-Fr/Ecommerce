@@ -11,6 +11,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import AccountPage from './pages/AccountPage'
 import AdminPage from './pages/AdminPage'
+import AdminProductsPage from './pages/AdminProductsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -39,6 +40,14 @@ function App() {
           element={
             <ProtectedRoute requireRole="Admin">
               <AdminPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="admin/products"
+          element={
+            <ProtectedRoute requireRole="Admin">
+              <AdminProductsPage />
             </ProtectedRoute>
           }
         />
