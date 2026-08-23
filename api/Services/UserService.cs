@@ -39,9 +39,43 @@ public class UserService
         return user;
     }
 
-    public async Task<bool> UpdateAsync(string id, User user)
+    public async Task<bool> UpdateAsync(string id, UserUpdateDto dto)
     {
-        var result = await _users.ReplaceOneAsync(u => u.Id == id, user);
+        var updates = new List<UpdateDefinition<User>>();
+
+        if (dto.FullName != null) updates.Add(Builders<User>.Update.Set(u => u.FullName, dto.FullName));
+        if (dto.Phone != null) updates.Add(Builders<User>.Update.Set(u => u.Phone, dto.Phone));
+        if (dto.Address != null) updates.Add(Builders<User>.Update.Set(u => u.Address, dto.Address));
+        if (dto.Role != null) updates.Add(Builders<User>.Update.Set(u => u.Role, dto.Role));
+        if (dto.IsActive.HasValue) updates.Add(Builders<User>.Update.Set(u => u.IsActive, dto.IsActive.Value));
+
+        var update = Builders<User>.Update.Combine(updates);
+        var result = await _users.UpdateOneAsync(u => u.Id == id, update);
+        return result.MatchedCount > 0;
+    }
+
+    // Admin-initiated password reset: write the already-hashed password directly.
+    // Callers must have authorized the request before calling this.
+    public async Task<bool> AdminResetPasswordAsync(string id, string newPasswordHash)
+    {
+        var result = await _users.UpdateOneAsync(
+            u => u.Id == id,
+            Builders<User>.Update.Set(u => u.PasswordHash, newPasswordHash));
+        return result.MatchedCount > 0;
+    }
+
+    // Verify the supplied current password, then replace the stored hash.
+    // Caller (controller) is responsible for proving identity via JWT.
+    public async Task<bool> ChangePasswordAsync(string id, string currentPassword, string newPassword)
+    {
+        var user = await GetByIdAsync(id);
+        if (user == null) return false;
+        if (!VerifyPassword(user.PasswordHash, currentPassword)) return false;
+
+        var newHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        var result = await _users.UpdateOneAsync(
+            u => u.Id == id,
+            Builders<User>.Update.Set(u => u.PasswordHash, newHash));
         return result.ModifiedCount > 0;
     }
 

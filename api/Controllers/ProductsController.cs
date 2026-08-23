@@ -49,11 +49,11 @@ public class ProductsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
-    [HttpPut("{id}")]
+    [HttpPatch("{id}")]
     [Authorize(Roles = "Admin")]
-    public async Task<ActionResult> Update(string id, [FromBody] Product product)
+    public async Task<ActionResult> Update(string id, [FromBody] ProductUpdateDto dto)
     {
-        var success = await _productService.UpdateAsync(id, product);
+        var success = await _productService.UpdateAsync(id, dto);
         if (!success)
             return NotFound();
         return NoContent();

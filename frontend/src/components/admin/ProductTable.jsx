@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { productApi } from '../../services/api'
 import { push } from './Toast'
 import ConfirmModal from './ConfirmModal'
+import SafeImage from '../SafeImage'
 
 const CATEGORIES = ['', 'Hoa sinh nhật', 'Hoa khai trương', 'Hoa chia buồn', 'Hoa tình yêu', 'Hoa chúc mừng', 'Phụ kiện']
 
@@ -154,7 +155,7 @@ export default function ProductTable({ onEdit, refreshSignal }) {
         </select>
 
         <button
-          onClick={onEdit(null)}
+          onClick={() => onEdit(null)}
           className="px-4 py-2 text-sm font-medium bg-ink-900 text-white rounded-xs hover:bg-ink-800 transition-colors"
         >
           + Thêm sản phẩm
@@ -257,18 +258,14 @@ export default function ProductTable({ onEdit, refreshSignal }) {
                       />
                     </td>
                     <td className="px-4 py-2.5">
-                      {p.imageUrl ? (
-                        <img
+                      <div className="w-10 h-10 border border-ink-200 rounded-xs overflow-hidden bg-ivory-100">
+                        <SafeImage
                           src={p.imageUrl}
                           alt={p.name}
-                          className="w-10 h-10 object-cover border border-ink-200 rounded-xs"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none'
-                          }}
+                          fallbackSeed={p.id || p.name}
+                          imgClassName="w-full h-full object-cover"
                         />
-                      ) : (
-                        <div className="w-10 h-10 bg-ink-100 border border-ink-200 rounded-xs" />
-                      )}
+                      </div>
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="font-medium text-ink-900 leading-snug">{p.name}</div>

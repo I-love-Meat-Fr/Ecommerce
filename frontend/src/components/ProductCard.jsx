@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, Heart } from 'lucide-react'
 import { useCartStore } from '../store/cartStore'
+import SafeImage from './SafeImage'
 
 function ProductCard({ product, index = 0 }) {
   const addItem = useCartStore(state => state.addItem)
@@ -20,24 +21,19 @@ function ProductCard({ product, index = 0 }) {
 
   return (
     <Link 
-      to={`/san-pham/${product.slug || product._id}`}
+      to={`/products/${product.slug || product._id}`}
       className="group block"
     >
       {/* Image */}
       <div className="relative aspect-[4/5] overflow-hidden bg-ivory-100 mb-5">
-        {product.imageUrl ? (
-          <div className="hover-zoom w-full h-full">
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-ivory-200">
-            <span className="font-display text-6xl text-ivory-300">F</span>
-          </div>
-        )}
+        <div className="hover-zoom w-full h-full">
+          <SafeImage
+            src={product.imageUrl}
+            alt={product.name}
+            fallbackSeed={product.id || product.slug || product.name}
+            imgClassName="w-full h-full object-cover"
+          />
+        </div>
         
         {/* Wishlist */}
         <button 

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { productApi } from '../services/api'
 import { useCartStore } from '../store/cartStore'
 import ProductCard from '../components/ProductCard'
+import SafeImage from '../components/SafeImage'
 import { Minus, Plus, Heart, Share2, Check, Truck, ShieldCheck, Leaf, ArrowRight } from 'lucide-react'
 
 const sampleProduct = {
@@ -103,7 +104,7 @@ function ProductDetailPage() {
           <nav className="flex items-center gap-2 text-[11px] tracking-widest uppercase">
             <Link to="/" className="text-ink-500 hover:text-ink-900 transition-colors">Trang Chủ</Link>
             <span className="text-ink-300">/</span>
-            <Link to="/san-pham" className="text-ink-500 hover:text-ink-900 transition-colors">Bộ Sưu Tập</Link>
+            <Link to="/products" className="text-ink-500 hover:text-ink-900 transition-colors">Bộ Sưu Tập</Link>
             <span className="text-ink-300">/</span>
             <span className="text-ink-900 font-medium">{product.name}</span>
           </nav>
@@ -118,20 +119,36 @@ function ProductDetailPage() {
             <div className="lg:col-span-7">
               <div className="grid grid-cols-12 gap-3 md:gap-4">
                 <div className="col-span-12 aspect-[4/5] overflow-hidden bg-ivory-200 hover-zoom">
-                  <img
-                    src={product.imageUrl || 'https://via.placeholder.com/800'}
+                  <SafeImage
+                    src={product.imageUrl}
                     alt={product.name}
-                    className="w-full h-full object-cover"
+                    fallbackSeed={product.id || product.slug || product.name}
+                    imgClassName="w-full h-full object-cover"
                   />
                 </div>
                 <div className="col-span-4 aspect-square overflow-hidden bg-ivory-200 hover-zoom">
-                  <img src="https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=400" alt="" className="w-full h-full object-cover" />
+                  <SafeImage
+                    src="https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=400"
+                    alt=""
+                    fallbackSeed="thumb-1"
+                    imgClassName="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="col-span-4 aspect-square overflow-hidden bg-ivory-200 hover-zoom">
-                  <img src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400" alt="" className="w-full h-full object-cover" />
+                  <SafeImage
+                    src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400"
+                    alt=""
+                    fallbackSeed="thumb-2"
+                    imgClassName="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="col-span-4 aspect-square overflow-hidden bg-ivory-200 hover-zoom">
-                  <img src="https://images.unsplash.com/photo-1593691509543-c55fb32e7355?w=400" alt="" className="w-full h-full object-cover" />
+                  <SafeImage
+                    src="https://images.unsplash.com/photo-1593691509543-c55fb32e7355?w=400"
+                    alt=""
+                    fallbackSeed="thumb-3"
+                    imgClassName="w-full h-full object-cover"
+                  />
                 </div>
               </div>
             </div>
@@ -293,7 +310,7 @@ function ProductDetailPage() {
                 Sản phẩm <em className="italic">tương tự</em>
               </h2>
             </div>
-            <Link to="/san-pham" className="link-editorial self-start md:self-end">
+            <Link to="/products" className="link-editorial self-start md:self-end">
               Xem Tất Cả
               <ArrowRight className="w-3 h-3" strokeWidth={2} />
             </Link>

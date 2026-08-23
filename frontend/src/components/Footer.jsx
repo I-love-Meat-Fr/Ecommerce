@@ -3,22 +3,22 @@ import { Instagram, Facebook, Youtube, Mail, Phone, MapPin } from 'lucide-react'
 
 const footerLinks = {
   collection: [
-    { name: 'Cây Giống Hoa', href: '/san-pham?category=cay-giong' },
-    { name: 'Hoa Đồng Tiền', href: '/san-pham/hoa-dong-tien' },
-    { name: 'Lan Ý', href: '/san-pham/lan-y' },
-    { name: 'Monstera', href: '/san-pham/monstera-deliciosa' },
-    { name: 'Quà Tặng', href: '/san-pham?category=qua-tang' },
+    { name: 'Cây Giống Hoa', href: '/products?category=cay-giong' },
+    { name: 'Hoa Đồng Tiền', href: '/products/hoa-dong-tien' },
+    { name: 'Lan Ý', href: '/products/lan-y' },
+    { name: 'Monstera', href: '/products/monstera-deliciosa' },
+    { name: 'Quà Tặng', href: '/products?category=qua-tang' },
   ],
   maison: [
-    { name: 'Câu Chuyện', href: '/gioi-thieu' },
-    { name: 'Hệ Thống Cửa Hàng', href: '/he-thong-cua-hang' },
-    { name: 'Tạp Chí', href: '/kinh-nghiem' },
-    { name: 'Tuyển Dụng', href: '/tuyen-dung' },
+    { name: 'Câu Chuyện', href: '/about' },
+    { name: 'Hệ Thống Cửa Hàng', href: '/stores' },
+    { name: 'Tạp Chí', href: '/blog' },
+    { name: 'Tuyển Dụng', href: '/careers' },
   ],
   services: [
-    { name: 'Chính Sách Giao Hàng', href: '/chinh-sach-giao-hang' },
-    { name: 'Chính Sách Đổi Trả', href: '/chinh-sach-doi-tra' },
-    { name: 'Hướng Dẫn Mua Hàng', href: '/huong-dan-mua-hang' },
+    { name: 'Chính Sách Giao Hàng', href: '/shipping' },
+    { name: 'Chính Sách Đổi Trả', href: '/returns' },
+    { name: 'Hướng Dẫn Mua Hàng', href: '/buying-guide' },
     { name: 'Câu Hỏi Thường Gặp', href: '/faq' },
   ],
 }
@@ -159,8 +159,8 @@ function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-ivory-100/50">
             <p>© 2024 Florist Vietnam. <span className="font-light">Bảo lưu mọi quyền.</span></p>
             <div className="flex gap-6">
-              <Link to="/chinh-sach-bao-mat" className="hover:text-ivory-50 transition-colors font-light">Chính sách bảo mật</Link>
-              <Link to="/dieu-khoan-su-dung" className="hover:text-ivory-50 transition-colors font-light">Điều khoản sử dụng</Link>
+              <Link to="/privacy" className="hover:text-ivory-50 transition-colors font-light">Chính sách bảo mật</Link>
+              <Link to="/terms" className="hover:text-ivory-50 transition-colors font-light">Điều khoản sử dụng</Link>
             </div>
           </div>
         </div>

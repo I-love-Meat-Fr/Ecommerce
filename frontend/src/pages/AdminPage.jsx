@@ -16,8 +16,9 @@ const tiles = [
   },
   {
     title: 'Người dùng',
-    desc: 'Quản lý tài khoản khách hàng.',
-    ready: false,
+    desc: 'Quản lý tài khoản khách hàng và quản trị viên.',
+    to: '/admin/users',
+    ready: true,
   },
 ]
 

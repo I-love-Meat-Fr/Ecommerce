@@ -1,50 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
+import SafeImage from '../components/SafeImage'
 import { productApi } from '../services/api'
 import { ArrowRight, ArrowUpRight, Award, Truck, Leaf, ShieldCheck, Sparkles, Quote } from 'lucide-react'
-
-const sampleProducts = [
-  {
-    _id: '1', name: 'Hoa Đồng Tiền Vàng',
-    slug: 'hoa-dong-tien-vang',
-    description: 'Hoa đồng tiền vàng rực rỡ, dễ trồng, thích hợp cho ban công và vườn nhà.',
-    imageUrl: 'https://florist.vn/wp-content/uploads/2020/10/hoa-dong-tien.jpg',
-    category: 'cay-giong',
-    variants: [{ price: 250000, sku: 'HDT-VANG-01' }],
-  },
-  {
-    _id: '2', name: 'Lan Ý Trắng',
-    slug: 'lan-y-trang',
-    description: 'Lan ý trắng tinh khiết, thanh lọc không khí, phù hợp văn phòng hiện đại.',
-    imageUrl: 'https://florist.vn/wp-content/uploads/2020/10/lan-y.jpg',
-    category: 'cay-giong',
-    variants: [{ price: 350000, sku: 'LY-TRANG-01' }],
-  },
-  {
-    _id: '3', name: 'Monstera Deliciosa',
-    slug: 'monstera-deliciosa',
-    description: 'Cây Monstera xanh tốt, lá to bản, mang phong cách nhiệt đới đương đại.',
-    imageUrl: 'https://florist.vn/wp-content/uploads/2020/10/monstera.jpg',
-    category: 'cay-giong',
-    variants: [{ price: 450000, sku: 'MON-DEL-01' }],
-  },
-  {
-    _id: '4', name: 'Alocasia Polly',
-    slug: 'alocasia-polly',
-    description: 'Alocasia Polly với lá xanh đậm hình mũi tên độc đáo, biểu tượng của sự tinh tế.',
-    imageUrl: 'https://florist.vn/wp-content/uploads/2020/10/alocasia.jpg',
-    category: 'cay-giong',
-    variants: [{ price: 380000, sku: 'ALO-POL-01' }],
-  },
-]
-
-const categories = [
-  { name: 'Hoa Đồng Tiền', slug: 'hoa-dong-tien', count: '24 sản phẩm', image: 'https://images.unsplash.com/photo-1526346698789-22fd84314424?w=800&h=1000&fit=crop' },
-  { name: 'Lan Ý', slug: 'lan-y', count: '18 sản phẩm', image: 'https://images.unsplash.com/photo-1593691509543-c55fb32e7355?w=800&h=1000&fit=crop' },
-  { name: 'Monstera', slug: 'monstera', count: '12 sản phẩm', image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=800&h=1000&fit=crop' },
-  { name: 'Quà Tặng', slug: 'qua-tang', count: '36 sản phẩm', image: 'https://images.unsplash.com/photo-1510525009512-ad7fc60f4a2e?w=800&h=1000&fit=crop' },
-]
 
 const promises = [
   { icon: Leaf, title: 'Nguồn Gốc Rõ Ràng', desc: '100% cây giống được kiểm định chất lượng, truy xuất nguồn gốc minh bạch.' },
@@ -60,22 +19,60 @@ const editorial = [
 ]
 
 function HomePage() {
-  const [products, setProducts] = useState(sampleProducts)
+  const [allProducts, setAllProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
     const fetchProducts = async () => {
+      setLoading(true)
+      setLoadError(false)
       try {
         const data = await productApi.getAll()
-        if (data && data.length > 0) setProducts(data.slice(0, 8))
+        if (cancelled) return
+        setAllProducts(Array.isArray(data) ? data : [])
       } catch (error) {
-        console.log('Using sample products')
+        if (cancelled) return
+        setLoadError(true)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
     fetchProducts()
+    return () => {
+      cancelled = true
+    }
   }, [])
+
+  // Pick the 4 products with the highest total stock across their variants.
+  // Falls back to the first 4 when there's no stock data.
+  const featuredProducts = useMemo(() => {
+    if (!allProducts.length) return []
+    const totalStock = (p) =>
+      (p.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0)
+    const withStock = allProducts.filter((p) => totalStock(p) > 0)
+    const pool = withStock.length >= 4 ? withStock : allProducts
+    return [...pool].sort((a, b) => totalStock(b) - totalStock(a)).slice(0, 4)
+  }, [allProducts])
+
+  // Derive categories from real product data. Each category becomes a tile
+  // with a thumbnail (first product's image), a real product count, and the
+  // raw category slug for the /products?category=… filter link.
+  const categoryTiles = useMemo(() => {
+    const map = new Map()
+    for (const p of allProducts) {
+      const slug = (p.category || '').trim()
+      if (!slug) continue
+      if (!map.has(slug)) {
+        map.set(slug, { slug, name: slug, count: 0, imageUrl: p.imageUrl })
+      }
+      map.get(slug).count += 1
+    }
+    return [...map.values()]
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 4)
+  }, [allProducts])
 
   return (
     <div className="bg-ivory-50">
@@ -104,11 +101,11 @@ function HomePage() {
                 </p>
 
                 <div className="flex flex-wrap items-center gap-6 pt-4">
-                  <Link to="/san-pham" className="btn-luxury-gold">
+                  <Link to="/products" className="btn-luxury-gold">
                     Khám Phá Ngay
                     <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
                   </Link>
-                  <Link to="/gioi-thieu" className="link-editorial">
+                  <Link to="/about" className="link-editorial">
                     Câu Chuyện
                     <ArrowUpRight className="w-3 h-3" strokeWidth={2} />
                   </Link>
@@ -202,6 +199,7 @@ function HomePage() {
       </section>
 
       {/* ========== CATEGORIES (Editorial B/W Grid) ========== */}
+      {categoryTiles.length > 0 && (
       <section className="py-20 md:py-28 bg-ivory-100">
         <div className="container-custom">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-6">
@@ -211,45 +209,47 @@ function HomePage() {
                 Bộ sưu tập <em className="italic">nổi bật</em>
               </h2>
             </div>
-            <Link to="/san-pham" className="link-editorial self-start md:self-end">
+            <Link to="/products" className="link-editorial self-start md:self-end">
               Tất Cả Danh Mục
               <ArrowUpRight className="w-3 h-3" strokeWidth={2} />
             </Link>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-            {categories.map((cat, i) => (
+            {categoryTiles.map((cat, i) => (
               <Link
                 key={cat.slug}
-                to={`/san-pham?category=${cat.slug}`}
+                to={`/products?category=${encodeURIComponent(cat.slug)}`}
                 className="group relative aspect-[3/4] overflow-hidden bg-ink-900"
               >
                 <div className="hover-zoom absolute inset-0">
-                  <img
-                    src={cat.image}
+                  <SafeImage
+                    src={cat.imageUrl}
                     alt={cat.name}
-                    className="w-full h-full object-cover opacity-90 group-hover:opacity-70 transition-opacity duration-700"
+                    fallbackSeed={cat.slug}
+                    className="w-full h-full"
+                    imgClassName="w-full h-full object-cover opacity-90 group-hover:opacity-70 transition-opacity duration-700"
                   />
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-ink-900/80 via-ink-900/10 to-transparent" />
-                
+
                 {/* Index number */}
                 <span className="absolute top-5 left-5 text-[10px] tracking-widest uppercase text-ivory-50/70 font-medium">
                   — {String(i + 1).padStart(2, '0')}
                 </span>
-                
+
                 {/* Arrow */}
                 <div className="absolute top-5 right-5 w-10 h-10 border border-ivory-50/40 rounded-full flex items-center justify-center text-ivory-50 group-hover:bg-ivory-50 group-hover:text-ink-900 group-hover:rotate-45 transition-all duration-500">
                   <ArrowUpRight className="w-4 h-4" strokeWidth={1.5} />
                 </div>
-                
+
                 {/* Title */}
                 <div className="absolute bottom-0 left-0 right-0 p-5 md:p-7">
                   <h3 className="font-display text-xl md:text-2xl text-ivory-50 leading-tight mb-2">
                     {cat.name}
                   </h3>
                   <p className="text-[10px] tracking-widest uppercase text-ivory-50/70 font-medium">
-                    {cat.count}
+                    {cat.count} sản phẩm
                   </p>
                 </div>
               </Link>
@@ -257,6 +257,7 @@ function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ========== FEATURED PRODUCTS ========== */}
       <section className="py-20 md:py-28">
@@ -282,16 +283,31 @@ function HomePage() {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : featuredProducts.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
-              {products.map((product, i) => (
-                <ProductCard key={product._id} product={product} index={i} />
+              {featuredProducts.map((product, i) => (
+                <ProductCard key={product.id} product={product} index={i} />
               ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <p className="font-display text-2xl text-ink-900 mb-3">
+                {loadError ? 'Không tải được sản phẩm' : 'Chưa có sản phẩm nào'}
+              </p>
+              <p className="text-ink-500 font-light mb-6">
+                {loadError
+                  ? 'Vui lòng thử lại sau hoặc xem toàn bộ bộ sưu tập.'
+                  : 'Bộ sưu tập đang được cập nhật.'}
+              </p>
+              <Link to="/products" className="btn-luxury-outline">
+                Xem Tất Cả Sản Phẩm
+                <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+              </Link>
             </div>
           )}
 
           <div className="text-center mt-16">
-            <Link to="/san-pham" className="btn-luxury-outline">
+            <Link to="/products" className="btn-luxury-outline">
               Xem Toàn Bộ Bộ Sưu Tập
               <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
             </Link>
@@ -338,7 +354,7 @@ function HomePage() {
                 ))}
               </div>
 
-              <Link to="/gioi-thieu" className="inline-flex items-center gap-2 text-champagne-300 hover:text-champagne-200 text-sm tracking-editorial uppercase font-medium transition-colors">
+              <Link to="/about" className="inline-flex items-center gap-2 text-champagne-300 hover:text-champagne-200 text-sm tracking-editorial uppercase font-medium transition-colors">
                 Đọc Câu Chuyện Đầy Đủ
                 <ArrowUpRight className="w-4 h-4" strokeWidth={1.5} />
               </Link>
@@ -380,7 +396,7 @@ function HomePage() {
                 <a href="tel:0818596696" className="btn-luxury">
                   Gọi 0818 596 696
                 </a>
-                <Link to="/lien-he" className="btn-luxury-outline">
+                <Link to="/contact" className="btn-luxury-outline">
                   Tư Vấn Miễn Phí
                 </Link>
               </div>

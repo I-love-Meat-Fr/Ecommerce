@@ -5,7 +5,7 @@ import { push } from './Toast'
 const navItems = [
   { label: 'Sản phẩm', to: '/admin/products', icon: '◧' },
   { label: 'Đơn hàng', to: '/admin/orders', icon: '◇', disabled: true },
-  { label: 'Người dùng', to: '/admin/users', icon: '◯', disabled: true },
+  { label: 'Người dùng', to: '/admin/users', icon: '◯' },
 ]
 
 export default function AdminLayout({ children }) {

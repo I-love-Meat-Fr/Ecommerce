@@ -53,11 +53,21 @@ public class ProductService
         return product;
     }
 
-    public async Task<bool> UpdateAsync(string id, Product product)
+    public async Task<bool> UpdateAsync(string id, ProductUpdateDto dto)
     {
-        product.UpdatedAt = DateTime.UtcNow;
-        var result = await _products.ReplaceOneAsync(p => p.Id == id, product);
-        return result.ModifiedCount > 0;
+        var updates = new List<UpdateDefinition<Product>>();
+
+        if (dto.Name != null) updates.Add(Builders<Product>.Update.Set(p => p.Name, dto.Name));
+        if (dto.Description != null) updates.Add(Builders<Product>.Update.Set(p => p.Description, dto.Description));
+        if (dto.Category != null) updates.Add(Builders<Product>.Update.Set(p => p.Category, dto.Category));
+        if (dto.ImageUrl != null) updates.Add(Builders<Product>.Update.Set(p => p.ImageUrl, dto.ImageUrl));
+        if (dto.Variants != null) updates.Add(Builders<Product>.Update.Set(p => p.Variants, dto.Variants));
+
+        updates.Add(Builders<Product>.Update.Set(p => p.UpdatedAt, DateTime.UtcNow));
+
+        var update = Builders<Product>.Update.Combine(updates);
+        var result = await _products.UpdateOneAsync(p => p.Id == id, update);
+        return result.MatchedCount > 0;
     }
 
     public async Task<bool> DeleteAsync(string id)

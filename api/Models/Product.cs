@@ -31,6 +31,17 @@ public class Product
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
 
+// DTO for PATCH /api/products/{id} — only fields the client may change.
+// Every field is nullable so we can distinguish "not provided" from "set to empty".
+public class ProductUpdateDto
+{
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public string? Category { get; set; }
+    public string? ImageUrl { get; set; }
+    public List<ProductVariant>? Variants { get; set; }
+}
+
 public class ProductVariant
 {
     [BsonElement("sku")]

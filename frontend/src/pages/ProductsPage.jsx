@@ -198,7 +198,7 @@ function ProductsPage() {
               <X className="w-12 h-12 text-ivory-300 mx-auto mb-6" strokeWidth={1} />
               <h3 className="font-display text-2xl text-ink-900 mb-3">Không tìm thấy sản phẩm</h3>
               <p className="text-ink-500 font-light mb-8">Hãy thử tìm kiếm với từ khóa khác hoặc khám phá bộ sưu tập đầy đủ của chúng tôi.</p>
-              <Link to="/san-pham" className="btn-luxury-outline">
+              <Link to="/products" className="btn-luxury-outline">
                 Xem Toàn Bộ Sản Phẩm
               </Link>
             </div>

@@ -1,0 +1,143 @@
+---
+description: Use English-only API endpoints and file paths
+globs: **/*.{cs,csproj,js,jsx,ts,tsx,html,css,md}
+alwaysApply: false
+---
+
+# English-Only API Endpoints & File Paths
+
+All API endpoints and file/directory paths in this project **must be written in English**. Do not use Vietnamese (or other non-English) words, diacritics, or transliterations in these surface areas.
+
+## 1. API Endpoints (Backend)
+
+Use kebab-case, English-only paths. The user-facing Vietnamese slug (e.g. `/san-pham`) is **only** allowed on the **frontend** route layer (`react-router-dom`); the **API** never mirrors it.
+
+### CORRECT
+
+```http
+GET    /api/products
+GET    /api/products/{id}
+POST   /api/products
+PUT    /api/products/{id}
+DELETE /api/products/{id}
+
+GET    /api/orders
+POST   /api/orders
+PATCH  /api/orders/{id}/status
+
+POST   /api/auth/register
+POST   /api/auth/login
+GET    /api/auth/me
+
+GET    /api/users
+GET    /api/users/{id}
+GET    /api/users/email/{email}
+```
+
+### WRONG (do not do this)
+
+```http
+GET /api/san-pham
+POST /api/don-hang
+POST /api/dang-nhap
+GET /api/nguoi-dung
+```
+
+### Rules
+
+- Controllers route segments come from the controller name (`[Route("api/[controller]")]`). Controller class names and folders are always English (`ProductsController`, `OrdersController`, `AuthController`, `UsersController`).
+- Action routes must be English verbs/nouns: `login`, `register`, `me`, `status`. Never use Vietnamese.
+- Query parameters are English: `?category=`, `?userId=`, `?search=`, `?status=`.
+- The response JSON shape uses English field names (`token`, `email`, `fullName`, `expiresAt`, `createdAt`, ...). This is already enforced by the existing DTOs — do not change them.
+
+## 2. React Router Paths (Frontend)
+
+Frontend routes use friendly Vietnamese slugs for SEO/UX, but the **path-to-component mapping** still lives in `App.jsx` with English component names:
+
+```jsx
+// App.jsx — correct pattern
+<Route path="san-pham" element={<ProductsPage />} />
+<Route path="san-pham/:slug" element={<ProductDetailPage />} />
+<Route path="gio-hang" element={<CartPage />} />
+<Route path="dang-nhap" element={<LoginPage />} />
+<Route path="tai-khoan" element={<AccountPage />} />
+```
+
+- **Frontend route paths** (the URL fragment in `path=`) may stay Vietnamese for SEO. This is the only place Vietnamese is allowed.
+- **Component names, file names, import paths, exports** must all be English (`ProductsPage`, `LoginPage`, `authStore`, `authApi`, `ProtectedRoute`, ...).
+- `Link to=...` values match the route path, so they may also be Vietnamese.
+
+## 3. File & Directory Names
+
+All **files, folders, exports, components, classes, functions, modules** must use English names. ASCII letters, digits, dashes, underscores only. No diacritics.
+
+### CORRECT
+
+```
+frontend/src/pages/ProductsPage.jsx
+frontend/src/pages/ProductDetailPage.jsx
+frontend/src/pages/LoginPage.jsx
+frontend/src/pages/AccountPage.jsx
+frontend/src/pages/CartPage.jsx
+frontend/src/services/api.js
+frontend/src/store/authStore.js
+frontend/src/store/cartStore.js
+frontend/src/components/Header.jsx
+frontend/src/components/ProtectedRoute.jsx
+
+api/Controllers/ProductsController.cs
+api/Controllers/OrdersController.cs
+api/Controllers/AuthController.cs
+api/Controllers/UsersController.cs
+api/Services/ProductService.cs
+api/Services/OrderService.cs
+api/Services/UserService.cs
+api/Services/JwtService.cs
+api/DTOs/AuthDTOs.cs
+api/Models/User.cs
+api/Models/Product.cs
+api/Models/Order.cs
+```
+
+### WRONG (do not do this)
+
+```
+frontend/src/pages/TrangChu.jsx
+frontend/src/pages/SanPham.jsx
+frontend/src/pages/DangNhap.jsx
+frontend/src/store/cartStore.js          ✓ ok (English)
+frontend/src/store/gioHangStore.js      ✗
+api/Controllers/SanPhamController.cs    ✗
+api/Services/DichVuDatHang.cs          ✗
+```
+
+## 4. GUID Variables & Identifiers
+
+In code, identifiers use English:
+
+```js
+// CORRECT
+const productApi = { getAll, getById }
+const authStore = create(...)
+const cartItems = useCartStore(state => state.items)
+
+// WRONG
+const sanPhamApi = { layTatCa, layTheoId }
+const gioHangStore = create(...)
+```
+
+## 5. URLs the User Sees
+
+- **Browser URL** (frontend route): may be Vietnamese (`florist.vn/san-pham`).
+- **API URL** (sent to backend): always English (`api.example.com/api/products`).
+- **File paths on disk**: always English.
+
+## 6. When Generating New Code
+
+Before writing a new file, route, endpoint, or identifier, ask:
+
+1. Is this an API endpoint? → English only.
+2. Is this a React route path? → Vietnamese slug OK, but component/file/import is English.
+3. Is this a file/folder/identifier/variable? → English only.
+
+If you are unsure, default to English.

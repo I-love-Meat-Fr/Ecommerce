@@ -77,6 +77,17 @@ export const useAuthStore = create(
         set({ user: null, token: null, expiresAt: null, error: null })
       },
 
+      // Pull the latest user record from /api/users/me so the in-memory copy
+      // reflects server-side changes (e.g. after editing the profile).
+      refreshUser: async () => {
+        try {
+          const data = await authApi.me()
+          set({ user: { email: data.email, fullName: data.fullName, role: data.role } })
+        } catch {
+          // ignore — caller already handled the UI feedback
+        }
+      },
+
       clearError: () => set({ error: null }),
     }),
     {

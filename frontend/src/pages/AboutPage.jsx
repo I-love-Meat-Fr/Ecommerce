@@ -161,7 +161,7 @@ function AboutPage() {
                 Những người <em className="italic">đứng sau</em> Florist
               </h2>
             </div>
-            <Link to="/lien-he" className="link-editorial self-start md:self-end">
+            <Link to="/contact" className="link-editorial self-start md:self-end">
               Gặp Gỡ Chúng Tôi
               <ArrowUpRight className="w-3 h-3" strokeWidth={2} />
             </Link>

@@ -12,6 +12,7 @@ import RegisterPage from './pages/RegisterPage'
 import AccountPage from './pages/AccountPage'
 import AdminPage from './pages/AdminPage'
 import AdminProductsPage from './pages/AdminProductsPage'
+import AdminUsersPage from './pages/AdminUsersPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -19,39 +20,49 @@ function App() {
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<HomePage />} />
-        <Route path="san-pham" element={<ProductsPage />} />
-        <Route path="san-pham/:slug" element={<ProductDetailPage />} />
-        <Route path="gio-hang" element={<CartPage />} />
-        <Route path="gioi-thieu" element={<AboutPage />} />
-        <Route path="lien-he" element={<ContactPage />} />
-        <Route path="kinh-nghiem" element={<BlogPage />} />
-        <Route path="dang-nhap" element={<LoginPage />} />
-        <Route path="dang-ky" element={<RegisterPage />} />
+        <Route path="products" element={<ProductsPage />} />
+        <Route path="products/:slug" element={<ProductDetailPage />} />
+        <Route path="cart" element={<CartPage />} />
+        <Route path="about" element={<AboutPage />} />
+        <Route path="contact" element={<ContactPage />} />
+        <Route path="blog" element={<BlogPage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<RegisterPage />} />
         <Route
-          path="tai-khoan"
+          path="account"
           element={
             <ProtectedRoute>
               <AccountPage />
             </ProtectedRoute>
           }
         />
-        <Route
-          path="admin"
-          element={
-            <ProtectedRoute requireRole="Admin">
-              <AdminPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="admin/products"
-          element={
-            <ProtectedRoute requireRole="Admin">
-              <AdminProductsPage />
-            </ProtectedRoute>
-          }
-        />
       </Route>
+
+      {/* Admin routes — use their own layout (no storefront header/footer/floatings) */}
+      <Route
+        path="admin"
+        element={
+          <ProtectedRoute requireRole="Admin">
+            <AdminPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="admin/products"
+        element={
+          <ProtectedRoute requireRole="Admin">
+            <AdminProductsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="admin/users"
+        element={
+          <ProtectedRoute requireRole="Admin">
+            <AdminUsersPage />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   )
 }

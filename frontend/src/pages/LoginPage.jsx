@@ -10,7 +10,7 @@ function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const from = location.state?.from?.pathname || '/tai-khoan'
+  const from = location.state?.from?.pathname || '/account'
 
   useEffect(() => {
     clearError()
@@ -97,7 +97,7 @@ function LoginPage() {
           <p className="text-center text-sm text-ink-600 mt-10 font-light">
             Chưa có tài khoản?{' '}
             <Link
-              to="/dang-ky"
+              to="/register"
               className="text-ink-900 underline underline-offset-4 hover:text-champagne-600 transition-colors"
             >
               Đăng ký ngay

@@ -20,7 +20,7 @@ function RegisterPage() {
   }, [clearError])
 
   useEffect(() => {
-    if (isAuthenticated()) navigate('/tai-khoan', { replace: true })
+    if (isAuthenticated()) navigate('/account', { replace: true })
   }, [isAuthenticated, navigate])
 
   const handleChange = (e) => {
@@ -47,7 +47,7 @@ function RegisterPage() {
         fullName: form.fullName,
         phone: form.phone || null,
       })
-      navigate('/tai-khoan', { replace: true })
+      navigate('/account', { replace: true })
     } catch {
       // error already in store
     }
@@ -181,7 +181,7 @@ function RegisterPage() {
           <p className="text-center text-sm text-ink-600 mt-10 font-light">
             Đã có tài khoản?{' '}
             <Link
-              to="/dang-nhap"
+              to="/login"
               className="text-ink-900 underline underline-offset-4 hover:text-champagne-600 transition-colors"
             >
               Đăng nhập

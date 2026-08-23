@@ -7,7 +7,7 @@ function ProtectedRoute({ children, requireRole }) {
   const location = useLocation()
 
   if (!isAuthenticated) {
-    return <Navigate to="/dang-nhap" replace state={{ from: location }} />
+    return <Navigate to="/login" replace state={{ from: location }} />
   }
 
   if (requireRole && user?.role !== requireRole) {

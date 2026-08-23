@@ -83,12 +83,55 @@ export const productApi = {
   },
 
   update: async (id, payload) => {
-    const response = await api.put(`/products/${id}`, payload)
+    const response = await api.patch(`/products/${id}`, payload)
     return response.data
   },
 
   remove: async (id) => {
     const response = await api.delete(`/products/${id}`)
+    return response.data
+  },
+}
+
+export const userApi = {
+  getAll: async () => {
+    const response = await api.get('/users')
+    return response.data
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/users/${id}`)
+    return response.data
+  },
+
+  create: async (payload) => {
+    const response = await api.post('/users', payload)
+    return response.data
+  },
+
+  update: async (id, payload) => {
+    const response = await api.patch(`/users/${id}`, payload)
+    return response.data
+  },
+
+  remove: async (id) => {
+    const response = await api.delete(`/users/${id}`)
+    return response.data
+  },
+
+  changePassword: async (id, currentPassword, newPassword) => {
+    const response = await api.post(`/users/${id}/change-password`, {
+      currentPassword,
+      newPassword,
+    })
+    return response.data
+  },
+
+  adminResetPassword: async (id, newPassword) => {
+    const response = await api.post(`/users/${id}/change-password`, {
+      currentPassword: '',
+      newPassword,
+    })
     return response.data
   },
 }

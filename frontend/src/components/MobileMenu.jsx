@@ -4,12 +4,12 @@ import { X, ArrowUpRight, LogOut } from 'lucide-react'
 
 const navigation = [
   { name: 'Trang chủ', href: '/' },
-  { name: 'Bộ Sưu Tập', href: '/san-pham' },
-  { name: 'Cây Giống Hoa', href: '/san-pham?category=cay-giong' },
-  { name: 'Hoa Đồng Tiền', href: '/san-pham?category=hoa-dong-tien' },
-  { name: 'Câu Chuyện', href: '/gioi-thieu' },
-  { name: 'Tạp Chí', href: '/kinh-nghiem' },
-  { name: 'Liên Hệ', href: '/lien-he' },
+  { name: 'Bộ Sưu Tập', href: '/products' },
+  { name: 'Cây Giống Hoa', href: '/products?category=cay-giong' },
+  { name: 'Hoa Đồng Tiền', href: '/products?category=hoa-dong-tien' },
+  { name: 'Câu Chuyện', href: '/about' },
+  { name: 'Tạp Chí', href: '/blog' },
+  { name: 'Liên Hệ', href: '/contact' },
 ]
 
 function MobileMenu({ isOpen, onClose }) {
@@ -93,7 +93,7 @@ function MobileMenu({ isOpen, onClose }) {
                 </p>
                 <div className="flex flex-col gap-2">
                   <Link
-                    to="/tai-khoan"
+                    to="/account"
                     onClick={onClose}
                     className="link-editorial text-[12px]"
                   >
@@ -122,14 +122,14 @@ function MobileMenu({ isOpen, onClose }) {
                 <p className="eyebrow mb-3">— Thành viên</p>
                 <div className="flex flex-col gap-2">
                   <Link
-                    to="/dang-nhap"
+                    to="/login"
                     onClick={onClose}
                     className="link-editorial text-[12px]"
                   >
                     Đăng nhập
                   </Link>
                   <Link
-                    to="/dang-ky"
+                    to="/register"
                     onClick={onClose}
                     className="link-editorial text-[12px]"
                   >

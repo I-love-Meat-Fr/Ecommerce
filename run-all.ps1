@@ -140,6 +140,28 @@ foreach ($key in @('JWT_SECRET','JWT_ISSUER','JWT_AUDIENCE')) {
     if ($val) { $beEnv[$key] = $val }
 }
 
+# Forward MONGO_CONNECTION_STRING from .env if present, so the API talks to
+# Atlas instead of a (possibly non-running) local Docker mongod. The .env file
+# at the repo root is parsed line-by-line; lines starting with `#` and blanks
+# are skipped. Anything else is exposed as an env var when it matches a known
+# set of prefixes.
+$envFile = Join-Path $Root '.env'
+if (Test-Path $envFile) {
+    Get-Content $envFile | ForEach-Object {
+        $line = $_.Trim()
+        if (-not $line -or $line.StartsWith('#')) { return }
+        if ($line -notmatch '^([A-Z_][A-Z0-9_]*)=(.*)$') { return }
+        $name = $Matches[1]
+        $val  = $Matches[2].Trim().Trim('"').Trim("'")
+        # Only forward a curated allowlist so we don't accidentally export
+        # every random key from .env into the dotnet process.
+        $allowed = @('MONGO_CONNECTION_STRING','CORS_ORIGINS','JWT_SECRET','JWT_ISSUER','JWT_AUDIENCE','MONGO_USE_TLS')
+        if ($allowed -contains $name -and -not $beEnv.ContainsKey($name)) {
+            $beEnv[$name] = $val
+        }
+    }
+}
+
 Write-Host ''
 Write-Host ('[1/2] Starting backend API on http://localhost:{0} ...' -f $ApiPort) -ForegroundColor Yellow
 

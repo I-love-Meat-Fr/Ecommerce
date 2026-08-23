@@ -1,0 +1,74 @@
+---
+description: Database modification workflow for MongoDB
+globs: **/*.cs
+alwaysApply: false
+---
+
+# Database Modification Workflow
+
+When modifying the MongoDB database, follow this strict sequence:
+
+## 1. Confirm Changes First
+
+Before writing any code, present the planned changes to the user for confirmation. Include:
+- Which collection(s) will be affected
+- What changes will be made (add/modify/delete fields, indexes, etc.)
+- Migration strategy
+
+```
+1. Confirm: Describe the changes → wait for user approval
+```
+
+## 2. Create Seed File
+
+After confirmation, create a temporary seed file in `api/Data/Seed/` following the existing pattern:
+
+```csharp
+namespace Ecommer.Api.Data.Seed;
+
+public static class {Action}Seeder
+{
+    public static async Task SeedAsync(MongoDbContext context, ILogger logger, CancellationToken ct = default)
+    {
+        // Implementation
+    }
+}
+```
+
+File naming convention: `{Description}Seeder.cs` (e.g., `AddProductFieldSeeder.cs`, `FixUserEmailSeeder.cs`)
+
+## 3. Apply the Seed
+
+1. Register the seeder in `MongoStartup.cs`:
+```csharp
+await {Action}Seeder.SeedAsync(context, logger, ct);
+```
+
+2. Run the application to execute the seed
+
+3. Verify the changes in MongoDB
+
+## 4. Delete Seed File
+
+After successful application:
+1. Remove the seeder registration from `MongoStartup.cs`
+2. Delete the seed file from `api/Data/Seed/`
+
+## Seeder Pattern Reference
+
+Seeders should be idempotent - check if changes already exist before applying:
+
+```csharp
+public static async Task SeedAsync(MongoDbContext context, ILogger logger, CancellationToken ct = default)
+{
+    var collection = context.CollectionName;
+    
+    // Check if migration already applied
+    var existing = await collection.CountDocumentsAsync(filter, cancellationToken: ct);
+    if (existing > 0) return;  // Already migrated
+    
+    // Apply changes
+    await collection.UpdateManyAsync(filter, update, cancellationToken: ct);
+    logger.LogInformation("Applied {Action} migration");
+}
+```

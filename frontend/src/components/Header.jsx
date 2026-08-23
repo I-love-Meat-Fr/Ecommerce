@@ -6,11 +6,11 @@ import { Search, X, ShoppingBag, User, LogOut, Menu } from 'lucide-react'
 
 const navigation = [
   { name: 'Trang chủ', href: '/' },
-  { name: 'Bộ Sưu Tập', href: '/san-pham' },
-  { name: 'Cây Giống', href: '/san-pham?category=cay-giong' },
-  { name: 'Hoa Đồng Tiền', href: '/san-pham?category=hoa-dong-tien' },
-  { name: 'Câu Chuyện', href: '/gioi-thieu' },
-  { name: 'Liên Hệ', href: '/lien-he' },
+  { name: 'Bộ Sưu Tập', href: '/products' },
+  { name: 'Cây Giống', href: '/products?category=cay-giong' },
+  { name: 'Hoa Đồng Tiền', href: '/products?category=hoa-dong-tien' },
+  { name: 'Câu Chuyện', href: '/about' },
+  { name: 'Liên Hệ', href: '/contact' },
 ]
 
 function Header({ onMenuClick }) {
@@ -43,7 +43,7 @@ function Header({ onMenuClick }) {
   const handleSearch = (e) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      navigate(`/san-pham?search=${encodeURIComponent(searchQuery.trim())}`)
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
       setSearchQuery('')
       setIsSearchOpen(false)
     }
@@ -177,7 +177,7 @@ function Header({ onMenuClick }) {
                         </p>
                       </div>
                       <Link
-                        to="/tai-khoan"
+                        to="/account"
                         onClick={() => setIsAccountOpen(false)}
                         className="block px-4 py-2 text-sm text-ink-900 hover:bg-ivory-100 transition-colors"
                       >
@@ -204,7 +204,7 @@ function Header({ onMenuClick }) {
                 </div>
               ) : (
                 <Link
-                  to="/dang-nhap"
+                  to="/login"
                   className="hidden md:block p-2 text-ink-900 hover:text-champagne-500 transition-colors"
                   aria-label="Đăng nhập"
                 >
@@ -213,7 +213,7 @@ function Header({ onMenuClick }) {
               )}
 
               <Link
-                to="/gio-hang"
+                to="/cart"
                 className="relative p-2 text-ink-900 hover:text-champagne-500 transition-colors"
                 aria-label="Giỏ hàng"
               >
