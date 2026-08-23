@@ -15,8 +15,8 @@ export default defineConfig({
   resolve: {
     dedupe: ['react', 'react-dom'],
     alias: [
-      { find: /^react$/, replacement: path.join(reactDir, 'umd/react.production.min.js') },
-      { find: /^react-dom$/, replacement: path.join(reactDomDir, 'umd/react-dom.production.min.js') },
+      { find: /^react$/, replacement: require.resolve('react') },
+      { find: /^react-dom$/, replacement: require.resolve('react-dom') },
     ],
   },
   build: {
