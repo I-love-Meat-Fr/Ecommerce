@@ -12,7 +12,7 @@ export default defineConfig({
       ignoreTryCatch: false,
     },
     rollupOptions: {
-      external: [],
+      external: () => false,
     },
   },
   server: {
