@@ -65,6 +65,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Raise the multipart form limit so the admin image upload can ship
+// reasonable-sized photos (default is ~128 MB but request form limits
+// default lower; align with the per-file cap in UploadsController).
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10L * 1024 * 1024; // 10 MB envelope
+});
+
 // CORS for the local Vite dev server (5173) and the production frontend
 // origins. Origins can also be supplied at runtime via the CORS_ORIGINS env
 // var (semicolon-separated). Example:
@@ -131,6 +139,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseSecurityHeaders();
 app.UseCors("FrontendDev");
+
+// Serve files under wwwroot/ (which is where /uploads/... images live).
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();

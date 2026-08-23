@@ -143,6 +143,29 @@ export const orderApi = {
   },
 }
 
+export const uploadApi = {
+  // Single-file upload. Returns { url, size }. url is a relative path
+  // like "/uploads/2026/08/abc.jpg" — prepend the API origin to render.
+  upload: async (file, onProgress) => {
+    const form = new FormData()
+    form.append('file', file)
+    const response = await api.post('/uploads', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (event) => {
+        if (onProgress && event.total) {
+          onProgress(Math.round((event.loaded * 100) / event.total))
+        }
+      },
+    })
+    return response.data
+  },
+
+  // Delete a previously uploaded file by its relative url.
+  remove: async (url) => {
+    await api.delete('/uploads', { params: { url } })
+  },
+}
+
 export const authApi = {
   login: async (email, password) => {
     const response = await api.post('/auth/login', { email, password })

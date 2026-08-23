@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { productApi } from '../../services/api'
+import { useEffect, useState, useRef } from 'react'
+import { productApi, uploadApi } from '../../services/api'
 import { push } from './Toast'
 
 const emptyVariant = () => ({
@@ -21,6 +21,150 @@ function buildEmptyProduct() {
     imageUrl: '',
     variants: [emptyVariant()],
   }
+}
+
+// One image field: handles file picker → upload → preview → replace → delete.
+// Keeps `value` in sync with form state via onChange(url|null).
+function ImageField({ label, value, onChange, onDelete, required = false }) {
+  const [progress, setProgress] = useState(0)
+  const [busy, setBusy] = useState(false)
+  const [previewError, setPreviewError] = useState(false)
+  const fileInputRef = useRef(null)
+
+  // Reset broken-image flag whenever the value changes.
+  useEffect(() => {
+    setPreviewError(false)
+  }, [value])
+
+  const handlePick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    // Reset so picking the same file twice still triggers onChange.
+    e.target.value = ''
+
+    if (!file.type.startsWith('image/')) {
+      push('Vui lòng chọn file ảnh', 'error')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      push('Ảnh tối đa 5 MB', 'error')
+      return
+    }
+
+    // Capture the old URL so we can clean it up after the new upload
+    // succeeds (matches "delete_unused on replace" requirement).
+    const previousUrl = value
+
+    setBusy(true)
+    setProgress(0)
+    try {
+      const { url } = await uploadApi.upload(file, (pct) => setProgress(pct))
+      onChange(url)
+      // Fire-and-forget the cleanup — don't block the form on it.
+      if (previousUrl && previousUrl.startsWith('/uploads/')) {
+        uploadApi.remove(previousUrl).catch(() => {})
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Upload thất bại'
+      push(msg, 'error')
+    } finally {
+      setBusy(false)
+      setProgress(0)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!value) return
+    if (value.startsWith('/uploads/')) {
+      try {
+        await uploadApi.remove(value)
+      } catch {
+        // Ignore — file might already be gone. We still clear the field.
+      }
+    }
+    onDelete?.()
+    onChange('')
+  }
+
+  const showImage = value && !previewError
+
+  return (
+    <div>
+      <label className="block text-[11px] uppercase tracking-wider text-ink-600 font-mono mb-1">
+        {label}
+        {required && <span className="text-red-600 ml-1">*</span>}
+      </label>
+
+      {showImage ? (
+        <div className="relative border border-ink-300 rounded-xs overflow-hidden bg-ivory-50">
+          <img
+            src={value}
+            alt=""
+            className="w-full h-32 object-cover"
+            onError={() => setPreviewError(true)}
+          />
+          <div className="absolute inset-x-0 bottom-0 flex gap-1 p-1.5 bg-white/90 backdrop-blur-sm">
+            <button
+              type="button"
+              onClick={handlePick}
+              disabled={busy}
+              className="flex-1 px-2 py-1 text-[11px] border border-ink-300 hover:bg-ink-100 disabled:opacity-50"
+            >
+              Thay ảnh
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={busy}
+              className="px-2 py-1 text-[11px] border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50"
+            >
+              Xóa
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={handlePick}
+          disabled={busy}
+          className="w-full h-32 border border-dashed border-ink-300 rounded-xs flex flex-col items-center justify-center gap-1 text-xs text-ink-500 hover:border-ink-900 hover:text-ink-900 hover:bg-ink-50 transition-colors disabled:opacity-50"
+        >
+          {busy ? (
+            <>
+              <span className="font-mono">{progress}%</span>
+              <span className="text-[10px] tracking-wider uppercase">Đang tải lên…</span>
+            </>
+          ) : (
+            <>
+              <span className="font-display text-lg">+</span>
+              <span>Chọn ảnh (jpg/png/webp, ≤ 5MB)</span>
+            </>
+          )}
+        </button>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
+      {busy && (
+        <div className="h-0.5 bg-ink-100 mt-1 overflow-hidden rounded-full">
+          <div
+            className="h-full bg-sage-600 transition-all duration-200"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function ProductFormModal({ open, product, onClose, onSaved }) {
@@ -61,12 +205,19 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
   }
 
   const removeVariant = (idx) => {
-    setForm((prev) => ({
-      ...prev,
-      variants: prev.variants.length > 1
-        ? prev.variants.filter((_, i) => i !== idx)
-        : prev.variants,
-    }))
+    setForm((prev) => {
+      const removed = prev.variants[idx]
+      // Best-effort cleanup of any uploaded variant image.
+      if (removed?.imageUrl && removed.imageUrl.startsWith('/uploads/')) {
+        uploadApi.remove(removed.imageUrl).catch(() => {})
+      }
+      return {
+        ...prev,
+        variants: prev.variants.length > 1
+          ? prev.variants.filter((_, i) => i !== idx)
+          : prev.variants,
+      }
+    })
   }
 
   const validate = () => {
@@ -90,7 +241,6 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
     }
     setBusy(true)
     try {
-      // Strip Mongo-internal fields that admin form shouldn't send back.
       const payload = {
         name: form.name.trim(),
         description: form.description?.trim() || '',
@@ -145,57 +295,54 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
         </div>
 
         <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-[11px] uppercase tracking-wider text-ink-600 font-mono mb-1">
-                Tên sản phẩm <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => updateField('name', e.target.value)}
-                className={`w-full px-3 py-2 text-sm border rounded-xs focus:outline-none focus:border-ink-900 ${
-                  errors.name ? 'border-red-500' : 'border-ink-300'
-                }`}
-              />
-              {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2 space-y-4">
+              <div>
+                <label className="block text-[11px] uppercase tracking-wider text-ink-600 font-mono mb-1">
+                  Tên sản phẩm <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => updateField('name', e.target.value)}
+                  className={`w-full px-3 py-2 text-sm border rounded-xs focus:outline-none focus:border-ink-900 ${
+                    errors.name ? 'border-red-500' : 'border-ink-300'
+                  }`}
+                />
+                {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
+              </div>
+
+              <div>
+                <label className="block text-[11px] uppercase tracking-wider text-ink-600 font-mono mb-1">
+                  Danh mục
+                </label>
+                <input
+                  type="text"
+                  value={form.category || ''}
+                  onChange={(e) => updateField('category', e.target.value)}
+                  placeholder="Hoa sinh nhật"
+                  className="w-full px-3 py-2 text-sm border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] uppercase tracking-wider text-ink-600 font-mono mb-1">
+                  Mô tả
+                </label>
+                <textarea
+                  value={form.description || ''}
+                  onChange={(e) => updateField('description', e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900 resize-y"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-[11px] uppercase tracking-wider text-ink-600 font-mono mb-1">
-                Danh mục
-              </label>
-              <input
-                type="text"
-                value={form.category || ''}
-                onChange={(e) => updateField('category', e.target.value)}
-                placeholder="Hoa sinh nhật"
-                className="w-full px-3 py-2 text-sm border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] uppercase tracking-wider text-ink-600 font-mono mb-1">
-                URL ảnh chính
-              </label>
-              <input
-                type="text"
-                value={form.imageUrl || ''}
-                onChange={(e) => updateField('imageUrl', e.target.value)}
-                placeholder="https://…"
-                className="w-full px-3 py-2 text-sm border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900 font-mono"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-[11px] uppercase tracking-wider text-ink-600 font-mono mb-1">
-                Mô tả
-              </label>
-              <textarea
-                value={form.description || ''}
-                onChange={(e) => updateField('description', e.target.value)}
-                rows={3}
-                className="w-full px-3 py-2 text-sm border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900 resize-y"
+              <ImageField
+                label="Ảnh chính"
+                value={form.imageUrl}
+                onChange={(url) => updateField('imageUrl', url)}
               />
             </div>
           </div>
@@ -235,7 +382,7 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
                   </div>
 
                   <div className="grid grid-cols-12 gap-2">
-                    <div className="col-span-6 md:col-span-3">
+                    <div className="col-span-6 md:col-span-2">
                       <input
                         type="text"
                         placeholder="SKU *"
@@ -277,7 +424,7 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
                         }`}
                       />
                     </div>
-                    <div className="col-span-4 md:col-span-2">
+                    <div className="col-span-4 md:col-span-1">
                       <input
                         type="number"
                         placeholder="Kho *"
@@ -287,6 +434,13 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
                         className={`w-full px-2.5 py-1.5 text-xs border rounded-xs font-mono text-right focus:outline-none focus:border-ink-900 ${
                           errors[`variant_${idx}_stock`] ? 'border-red-500' : 'border-ink-300'
                         }`}
+                      />
+                    </div>
+                    <div className="col-span-12 md:col-span-2">
+                      <ImageField
+                        label="Ảnh biến thể"
+                        value={v.imageUrl}
+                        onChange={(url) => updateVariant(idx, 'imageUrl', url)}
                       />
                     </div>
 
