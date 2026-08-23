@@ -6,8 +6,8 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
-        // Editorial Luxury palette
+colors: {
+        // Editorial Luxury palette — neutral foundations
         ivory: {
           50: '#fdfcf9',
           100: '#f8f5ee',
@@ -23,23 +23,26 @@ export default {
           400: '#8a8a8a',
           300: '#b8b8b8',
         },
-        champagne: {
-          50: '#faf6ee',
-          100: '#f1e9d2',
-          200: '#e3d2a5',
-          300: '#d4b878',
-          400: '#c19a4f',
-          500: '#a37d35',
-          600: '#7a5e26',
-        },
+        // Botanical sage — primary natural accent
         sage: {
-          50: '#f4f5f0',
-          100: '#e6e8de',
-          200: '#c9cdb6',
-          300: '#a8ad8a',
-          400: '#7e845f',
-          500: '#5e6246',
-          600: '#444733',
+          50: '#f4f7f1',
+          100: '#e6ecdf',
+          200: '#cdd9bf',
+          300: '#aebf97',
+          400: '#7d9463',
+          500: '#5e7a48',
+          600: '#3f5530',
+        },
+        // Legacy alias — components still reference `champagne-NNN`.
+        // Pointed at the sage palette so the theme reads green/natural.
+        champagne: {
+          50: '#f4f7f1',
+          100: '#e6ecdf',
+          200: '#cdd9bf',
+          300: '#aebf97',
+          400: '#7d9463',
+          500: '#5e7a48',
+          600: '#3f5530',
         },
         // Legacy primary for compatibility
         primary: {

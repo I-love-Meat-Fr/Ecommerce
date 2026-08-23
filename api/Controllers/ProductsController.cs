@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Ecommer.Api.Models;
 using Ecommer.Api.Services;
@@ -35,6 +36,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<Product>> Create([FromBody] Product product)
     {
         var created = await _productService.CreateAsync(product);
@@ -42,6 +44,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> Update(string id, [FromBody] Product product)
     {
         var success = await _productService.UpdateAsync(id, product);
@@ -51,6 +54,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> Delete(string id)
     {
         var success = await _productService.DeleteAsync(id);

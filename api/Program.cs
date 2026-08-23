@@ -1,7 +1,10 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Ecommer.Api.Data;
+using Ecommer.Api.Middleware;
 using Ecommer.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,6 +39,26 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+
+// Rate limiting for the login endpoint to slow down brute-force attacks.
+// 5 attempts per IP per minute, sliding window. On limit exceeded the API returns 429.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("login", httpContext =>
+    {
+        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetSlidingWindowLimiter(ip, _ => new SlidingWindowRateLimiterOptions
+        {
+            PermitLimit = 5,
+            Window = TimeSpan.FromMinutes(1),
+            SegmentsPerWindow = 6,
+            QueueLimit = 0,
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+        });
+    });
+});
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -90,10 +113,15 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseSecurityHeaders();
 app.UseCors("FrontendDev");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllers();
 app.MapHealthChecks("/health");
+
+// Lightweight test endpoint — no dependencies, used by test-security-headers.ps1
+app.MapGet("/ping", () => Results.Ok(new { status = "ok", timestamp = DateTime.UtcNow }));
 
 app.Run();

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Ecommer.Api.DTOs;
 using Ecommer.Api.Models;
 using Ecommer.Api.Services;
@@ -13,11 +14,13 @@ public class AuthController : ControllerBase
 {
     private readonly UserService _userService;
     private readonly JwtService _jwtService;
+    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(UserService userService, JwtService jwtService)
+    public AuthController(UserService userService, JwtService jwtService, ILogger<AuthController> logger)
     {
         _userService = userService;
         _jwtService = jwtService;
+        _logger = logger;
     }
 
     [HttpPost("register")]
@@ -26,6 +29,9 @@ public class AuthController : ControllerBase
         var existingUser = await _userService.GetByEmailAsync(request.Email);
         if (existingUser != null)
         {
+            // Email enumeration: log attempt at Info with email so we can spot
+            // bots probing valid addresses, but return a generic 409.
+            _logger.LogInformation("Register attempt with existing email: {Email}", request.Email);
             return Conflict(new { message = "Email already registered" });
         }
 
@@ -39,6 +45,7 @@ public class AuthController : ControllerBase
         };
 
         await _userService.CreateAsync(user, request.Password);
+        _logger.LogInformation("User registered: {Email}", request.Email);
 
         var (token, expiresAt) = _jwtService.GenerateToken(user.Id!, user.Email, user.Role);
 
@@ -46,28 +53,40 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("login")]
     public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request)
     {
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
         var user = await _userService.GetByEmailAsync(request.Email);
         if (user == null)
         {
+            // Do NOT distinguish "user not found" from "wrong password" in the
+            // response. Log internally so operators can correlate brute-force.
+            _logger.LogWarning("Failed login (no such user): {Email} from {Ip}", request.Email, ip);
             return Unauthorized(new { message = "Invalid email or password" });
         }
 
         if (!user.IsActive)
         {
+            _logger.LogWarning("Failed login (deactivated): {Email} from {Ip}", request.Email, ip);
             return Unauthorized(new { message = "Account is deactivated" });
         }
 
         if (string.IsNullOrEmpty(user.PasswordHash))
         {
+            _logger.LogWarning("Failed login (no password set): {Email} from {Ip}", request.Email, ip);
             return Unauthorized(new { message = "Invalid email or password" });
         }
 
         if (!_userService.VerifyPassword(user.PasswordHash, request.Password))
         {
+            // Never log the supplied password or the stored hash.
+            _logger.LogWarning("Failed login (bad password): {Email} from {Ip}", request.Email, ip);
             return Unauthorized(new { message = "Invalid email or password" });
         }
+
+        _logger.LogInformation("Login success: {Email} from {Ip}", request.Email, ip);
 
         var (token, expiresAt) = _jwtService.GenerateToken(user.Id!, user.Email, user.Role);
 

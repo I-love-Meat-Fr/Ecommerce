@@ -53,14 +53,5 @@ public static class MongoStartup
         {
             logger.LogError(ex, "Failed to seed sample orders. The API will still start.");
         }
-
-        try
-        {
-            await PromoteAdminSeeder.SeedAsync(context, logger, ct);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to promote admin user. The API will still start.");
-        }
     }
 }
