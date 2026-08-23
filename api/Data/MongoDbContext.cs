@@ -20,12 +20,27 @@ public class MongoDbContext
         settings.ConnectTimeout = TimeSpan.FromSeconds(10);
         settings.SocketTimeout = TimeSpan.FromSeconds(10);
 
-        // Force TLS 1.2 for Atlas compatibility
-        settings.UseTls = true;
-        settings.SslSettings = new SslSettings
+        // TLS handshake only when the connection string requires it (SRV / explicit flag).
+        // Local mongod on `mongodb://localhost:27017` does NOT serve TLS, so we must not
+        // force it. Atlas (`mongodb+srv://...`) and `mongodb://...?tls=true` opt-in via
+        // the connection string itself; we additionally honour an explicit env override.
+        var wantsTls =
+            connectionString.StartsWith("mongodb+srv://", StringComparison.OrdinalIgnoreCase) ||
+            connectionString.Contains("tls=true", StringComparison.OrdinalIgnoreCase) ||
+            connectionString.Contains("ssl=true", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(
+                Environment.GetEnvironmentVariable("MONGO_USE_TLS"),
+                "true",
+                StringComparison.OrdinalIgnoreCase);
+
+        if (wantsTls)
         {
-            EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12
-        };
+            settings.UseTls = true;
+            settings.SslSettings = new SslSettings
+            {
+                EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12
+            };
+        }
 
         var client = new MongoClient(settings);
         _database = client.GetDatabase(databaseName);
