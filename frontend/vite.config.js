@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
+import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
@@ -7,10 +7,6 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
   },
   build: {
-    // Force Rollup to bundle react instead of externalizing it as CJS.
-    // Without this, Vercel's build container produces an externalized
-    // reference to "./cjs/react.production.min.js?commonjs-external"
-    // which then fails to resolve itself.
     commonjsOptions: {
       transformMixedEsModules: true,
       ignoreTryCatch: false,
