@@ -35,6 +35,8 @@ public class ProductsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<Product>> GetById(string id)
     {
+        if (string.IsNullOrWhiteSpace(id) || id.Length != 24 || !id.All(char.IsLetterOrDigit))
+            return BadRequest(new { message = "id không hợp lệ." });
         var product = await _productService.GetByIdAsync(id);
         if (product == null)
             return NotFound();

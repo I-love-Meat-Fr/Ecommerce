@@ -1,82 +1,97 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { productApi } from '../services/api'
 import { useCartStore } from '../store/cartStore'
 import ProductCard from '../components/ProductCard'
 import SafeImage from '../components/SafeImage'
-import { Minus, Plus, Heart, Share2, Check, Truck, ShieldCheck, Leaf, ArrowRight } from 'lucide-react'
-
-const sampleProduct = {
-  _id: '1',
-  name: 'Hoa Đồng Tiền Vàng Premium',
-  slug: 'hoa-dong-tien-vang',
-  description: 'Hoa đồng tiền vàng rực rỡ, dễ trồng và chăm sóc. Thích hợp cho ban công, sân vườn hoặc trang trí văn phòng. Cây có sức sống mạnh, ra hoa quanh năm, mang lại may mắn và tài lộc cho gia chủ.',
-  category: 'Cây Giống',
-  imageUrl: 'https://images.unsplash.com/photo-1526346698789-22fd84314424?w=1000',
-  variants: [
-    { sku: 'HDT-VANG-S', name: 'Nhỏ (15-20cm)', price: 150000, stock: 50 },
-    { sku: 'HDT-VANG-M', name: 'Vừa (25-30cm)', price: 250000, stock: 30 },
-    { sku: 'HDT-VANG-L', name: 'Lớn (35-40cm)', price: 380000, stock: 15 },
-  ],
-}
-
-const relatedProducts = [
-  { _id: '2', name: 'Hoa Đồng Tiền Đỏ', slug: 'hoa-dong-tien-do', imageUrl: 'https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=600', variants: [{ price: 280000, sku: 'HDT-DO-01' }] },
-  { _id: '3', name: 'Hoa Đồng Tiền Cam', slug: 'hoa-dong-tien-cam', imageUrl: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=600', variants: [{ price: 260000, sku: 'HDT-CAM-01' }] },
-  { _id: '4', name: 'Lan Ý Trắng', slug: 'lan-y-trang', imageUrl: 'https://images.unsplash.com/photo-1593691509543-c55fb32e7355?w=600', variants: [{ price: 350000, sku: 'LY-TRANG-01' }] },
-  { _id: '5', name: 'Monstera Deliciosa', slug: 'monstera-deliciosa', imageUrl: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600', variants: [{ price: 450000, sku: 'MON-DEL-01' }] },
-]
+import {
+  Minus, Plus, Heart, Share2, Check, Truck, ShieldCheck, Leaf, ArrowRight,
+} from 'lucide-react'
 
 function ProductDetailPage() {
-  const { slug } = useParams()
-  const [product, setProduct] = useState(sampleProduct)
+  const { id } = useParams()
+  const [product, setProduct] = useState(null)
+  const [related, setRelated] = useState([])
   const [selectedVariant, setSelectedVariant] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [loading, setLoading] = useState(true)
   const [addedToCart, setAddedToCart] = useState(false)
-  
   const addItem = useCartStore(state => state.addItem)
 
+  // Load product and auto-select first variant.
   useEffect(() => {
-    const fetchProduct = async () => {
-      setLoading(true)
-      try {
-        const data = await productApi.getById(slug)
-        if (data) setProduct(data)
-      } catch (error) {
-        // Keep sample
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchProduct()
-  }, [slug])
+    if (!id) return
+    let cancelled = false
+    setLoading(true)
+    setProduct(null)
+    setSelectedVariant(null)
 
+    productApi.getById(id)
+      .then(data => {
+        if (cancelled) return
+        setProduct(data)
+        if (data.variants?.length) {
+          setSelectedVariant(data.variants.find(v => v.isActive) ?? data.variants[0])
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [id])
+
+  // Fetch related products from the same category (excluding the current product).
   useEffect(() => {
-    if (product.variants?.length > 0 && !selectedVariant) {
-      setSelectedVariant(product.variants[1] || product.variants[0])
-    }
-  }, [product, selectedVariant])
+    if (!product?.category) return
+    let cancelled = false
+    productApi.getByCategory(product.category)
+      .then(list => {
+        if (cancelled) return
+        setRelated(list.filter(p => p.id !== id).slice(0, 4))
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [product?.category, id])
 
   const handleAddToCart = () => {
-    if (selectedVariant) {
-      addItem(product, selectedVariant)
-      setAddedToCart(true)
-      setTimeout(() => setAddedToCart(false), 2500)
-    }
+    if (!selectedVariant || selectedVariant.stock === 0) return
+    addItem(product, selectedVariant, quantity)
+    setAddedToCart(true)
+    setTimeout(() => setAddedToCart(false), 2500)
   }
 
   const handleShare = async () => {
-    if (navigator.share) {
-      try {
+    try {
+      if (navigator.share) {
         await navigator.share({ title: product.name, text: product.description, url: window.location.href })
-      } catch (err) {}
-    } else {
-      navigator.clipboard.writeText(window.location.href)
-    }
+      } else {
+        await navigator.clipboard.writeText(window.location.href)
+      }
+    } catch {}
   }
 
-  const formatPrice = (price) => new Intl.NumberFormat('vi-VN').format(price) + ' ₫'
+  const formatPrice = (price) =>
+    new Intl.NumberFormat('vi-VN').format(price) + ' ₫'
+
+  // Collect all image sources: main image first, then variant images that differ.
+  const allImages = useMemo(() => {
+    if (!product) return []
+    const seen = new Set()
+    const images = []
+    if (product.imageUrl) {
+      seen.add(product.imageUrl)
+      images.push({ key: 'main', src: product.imageUrl, label: 'Ảnh chính' })
+    }
+    for (const v of product.variants || []) {
+      if (v.imageUrl && !seen.has(v.imageUrl)) {
+        seen.add(v.imageUrl)
+        images.push({ key: v.sku || v.name, src: v.imageUrl, label: v.name })
+      }
+    }
+    return images
+  }, [product])
 
   if (loading) {
     return (
@@ -96,6 +111,19 @@ function ProductDetailPage() {
     )
   }
 
+  if (!product) {
+    return (
+      <div className="bg-ivory-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="font-display text-2xl text-ink-900 mb-4">Sản phẩm không tồn tại</p>
+          <Link to="/products" className="link-editorial">
+            ← Quay lại Bộ Sưu Tập
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-ivory-50">
       {/* Breadcrumb */}
@@ -105,6 +133,17 @@ function ProductDetailPage() {
             <Link to="/" className="text-ink-500 hover:text-ink-900 transition-colors">Trang Chủ</Link>
             <span className="text-ink-300">/</span>
             <Link to="/products" className="text-ink-500 hover:text-ink-900 transition-colors">Bộ Sưu Tập</Link>
+            {product.category && (
+              <>
+                <span className="text-ink-300">/</span>
+                <Link
+                  to={`/products?category=${encodeURIComponent(product.category)}`}
+                  className="text-ink-500 hover:text-ink-900 transition-colors"
+                >
+                  {product.category}
+                </Link>
+              </>
+            )}
             <span className="text-ink-300">/</span>
             <span className="text-ink-900 font-medium">{product.name}</span>
           </nav>
@@ -115,41 +154,41 @@ function ProductDetailPage() {
       <section className="pb-20 md:pb-28">
         <div className="container-custom">
           <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
-            {/* Image column */}
+
+            {/* Image column — main + variant thumbnails */}
             <div className="lg:col-span-7">
               <div className="grid grid-cols-12 gap-3 md:gap-4">
-                <div className="col-span-12 aspect-[4/5] overflow-hidden bg-ivory-200 hover-zoom">
-                  <SafeImage
-                    src={product.imageUrl}
-                    alt={product.name}
-                    fallbackSeed={product.id || product.slug || product.name}
-                    imgClassName="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="col-span-4 aspect-square overflow-hidden bg-ivory-200 hover-zoom">
-                  <SafeImage
-                    src="https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=400"
-                    alt=""
-                    fallbackSeed="thumb-1"
-                    imgClassName="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="col-span-4 aspect-square overflow-hidden bg-ivory-200 hover-zoom">
-                  <SafeImage
-                    src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400"
-                    alt=""
-                    fallbackSeed="thumb-2"
-                    imgClassName="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="col-span-4 aspect-square overflow-hidden bg-ivory-200 hover-zoom">
-                  <SafeImage
-                    src="https://images.unsplash.com/photo-1593691509543-c55fb32e7355?w=400"
-                    alt=""
-                    fallbackSeed="thumb-3"
-                    imgClassName="w-full h-full object-cover"
-                  />
-                </div>
+                {allImages.length > 0 ? (
+                  <>
+                    <div className="col-span-12 aspect-[4/5] overflow-hidden bg-ivory-200 hover-zoom">
+                      <SafeImage
+                        src={allImages[0].src}
+                        alt={product.name}
+                        fallbackSeed={product.id || product.name}
+                        imgClassName="w-full h-full object-cover"
+                      />
+                    </div>
+                    {allImages.slice(1).map((img) => (
+                      <div key={img.key} className="col-span-4 aspect-square overflow-hidden bg-ivory-200 hover-zoom">
+                        <SafeImage
+                          src={img.src}
+                          alt={img.label}
+                          fallbackSeed={img.key}
+                          imgClassName="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="col-span-12 aspect-[4/5] bg-ivory-200">
+                    <SafeImage
+                      src=""
+                      alt={product.name}
+                      fallbackSeed={product.id || product.name}
+                      imgClassName="w-full h-full"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -157,7 +196,9 @@ function ProductDetailPage() {
             <div className="lg:col-span-5 lg:sticky lg:top-32 lg:self-start">
               <div className="space-y-8">
                 <div>
-                  <p className="section-number mb-4">— Mã: {selectedVariant?.sku || 'HDT-VANG-M'}</p>
+                  <p className="section-number mb-4">
+                    — Mã: {selectedVariant?.sku || '—'}
+                  </p>
                   <h1 className="font-display text-4xl md:text-5xl text-ink-900 leading-[1.05] mb-4">
                     {product.name}
                   </h1>
@@ -181,36 +222,49 @@ function ProductDetailPage() {
                 )}
 
                 {/* Description */}
-                <p className="text-ink-600 leading-relaxed font-light">
-                  {product.description}
-                </p>
+                {product.description && (
+                  <p className="text-ink-600 leading-relaxed font-light">
+                    {product.description}
+                  </p>
+                )}
 
                 {/* Variants */}
                 {product.variants?.length > 0 && (
                   <div>
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-[10px] tracking-widest uppercase text-ink-900 font-semibold">
-                        Kích Thước
+                        Phân loại
                       </h3>
                       {selectedVariant && (
                         <span className="text-xs text-ink-500 font-light">
-                          Còn {selectedVariant.stock} sản phẩm
+                          {selectedVariant.stock > 0
+                            ? `Còn ${selectedVariant.stock} sản phẩm`
+                            : 'Hết hàng'}
                         </span>
                       )}
                     </div>
                     <div className="flex flex-col gap-2">
                       {product.variants.map((variant) => (
                         <button
-                          key={variant.sku}
-                          onClick={() => setSelectedVariant(variant)}
-                          className={`flex justify-between items-center p-4 border transition-all duration-300 ${
-                            selectedVariant?.sku === variant.sku
+                          key={variant.sku || variant.name}
+                          onClick={() => variant.isActive && setSelectedVariant(variant)}
+                          disabled={!variant.isActive || variant.stock === 0}
+                          className={`
+                            flex justify-between items-center p-4 border transition-all duration-300
+                            ${selectedVariant?.sku === variant.sku
                               ? 'border-ink-900 bg-ink-900 text-ivory-50'
-                              : 'border-ivory-300 hover:border-ink-900 text-ink-900'
-                          }`}
+                              : variant.isActive && variant.stock > 0
+                                ? 'border-ivory-300 hover:border-ink-900 text-ink-900'
+                                : 'border-ivory-200 text-ink-300 cursor-not-allowed line-through'}
+                          `}
                         >
-                          <span className="text-sm font-medium">{variant.name}</span>
-                          <span className={`font-display text-base ${selectedVariant?.sku === variant.sku ? 'text-champagne-300' : 'text-ink-900'}`}>
+                          <span className="text-sm font-medium">
+                            {variant.name}
+                            {variant.color && ` · ${variant.color}`}
+                          </span>
+                          <span className={`font-display text-base ${
+                            selectedVariant?.sku === variant.sku ? 'text-champagne-300' : 'text-ink-900'
+                          }`}>
                             {formatPrice(variant.price)}
                           </span>
                         </button>
@@ -226,8 +280,9 @@ function ProductDetailPage() {
                   </h3>
                   <div className="inline-flex items-center border border-ivory-300">
                     <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-12 h-12 flex items-center justify-center hover:bg-ivory-100 transition-colors"
+                      onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                      disabled={!selectedVariant || selectedVariant.stock === 0}
+                      className="w-12 h-12 flex items-center justify-center hover:bg-ivory-100 transition-colors disabled:opacity-30"
                     >
                       <Minus className="w-4 h-4" strokeWidth={1.5} />
                     </button>
@@ -237,10 +292,13 @@ function ProductDetailPage() {
                       onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                       className="w-16 text-center bg-transparent focus:outline-none font-display text-lg"
                       min="1"
+                      max={selectedVariant?.stock || 999}
+                      disabled={!selectedVariant || selectedVariant.stock === 0}
                     />
                     <button
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="w-12 h-12 flex items-center justify-center hover:bg-ivory-100 transition-colors"
+                      onClick={() => setQuantity(q => q + 1)}
+                      disabled={!selectedVariant || selectedVariant.stock === 0 || quantity >= (selectedVariant?.stock || 999)}
+                      className="w-12 h-12 flex items-center justify-center hover:bg-ivory-100 transition-colors disabled:opacity-30"
                     >
                       <Plus className="w-4 h-4" strokeWidth={1.5} />
                     </button>
@@ -252,13 +310,19 @@ function ProductDetailPage() {
                   <button
                     onClick={handleAddToCart}
                     disabled={!selectedVariant || selectedVariant.stock === 0}
-                    className={`w-full btn-luxury ${addedToCart ? 'bg-champagne-500 border-champagne-500' : ''}`}
+                    className={`w-full btn-luxury disabled:cursor-not-allowed disabled:opacity-40 ${
+                      addedToCart ? 'bg-champagne-500 border-champagne-500' : ''
+                    }`}
                   >
                     {addedToCart ? (
                       <>
                         <Check className="w-4 h-4" strokeWidth={1.5} />
                         Đã Thêm Vào Giỏ
                       </>
+                    ) : !selectedVariant ? (
+                      'Chọn phân loại'
+                    ) : selectedVariant.stock === 0 ? (
+                      'Hết Hàng'
                     ) : (
                       <>
                         Thêm Vào Giỏ Hàng
@@ -266,7 +330,7 @@ function ProductDetailPage() {
                       </>
                     )}
                   </button>
-                  
+
                   <div className="flex gap-3">
                     <button className="flex-1 btn-luxury-outline">
                       <Heart className="w-4 h-4" strokeWidth={1.5} />
@@ -300,29 +364,34 @@ function ProductDetailPage() {
         </div>
       </section>
 
-      {/* Related */}
-      <section className="py-16 md:py-20 bg-ivory-100">
-        <div className="container-custom">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
-            <div>
-              <p className="section-number mb-3">— Có Thể Bạn Cũng Thích</p>
-              <h2 className="font-display text-display-lg text-ink-900">
-                Sản phẩm <em className="italic">tương tự</em>
-              </h2>
+      {/* Related products */}
+      {related.length > 0 && (
+        <section className="py-16 md:py-20 bg-ivory-100">
+          <div className="container-custom">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+              <div>
+                <p className="section-number mb-3">— Cùng Danh Mục</p>
+                <h2 className="font-display text-display-lg text-ink-900">
+                  Sản phẩm <em className="italic">tương tự</em>
+                </h2>
+              </div>
+              <Link
+                to={`/products?category=${encodeURIComponent(product.category)}`}
+                className="link-editorial self-start md:self-end"
+              >
+                Xem Tất Cả
+                <ArrowRight className="w-3 h-3" strokeWidth={2} />
+              </Link>
             </div>
-            <Link to="/products" className="link-editorial self-start md:self-end">
-              Xem Tất Cả
-              <ArrowRight className="w-3 h-3" strokeWidth={2} />
-            </Link>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+              {related.map((p, i) => (
+                <ProductCard key={p.id} product={p} index={i} />
+              ))}
+            </div>
           </div>
-          
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
-            {relatedProducts.map((p, i) => (
-              <ProductCard key={p._id} product={p} index={i} />
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   )
 }

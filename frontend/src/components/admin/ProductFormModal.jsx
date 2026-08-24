@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { productApi, uploadApi } from '../../services/api'
+import { productApi, categoryApi } from '../../services/api'
 import { push } from './Toast'
 
 const emptyVariant = () => ({
@@ -24,53 +24,35 @@ function buildEmptyProduct() {
 }
 
 // One image field: handles file picker → upload → preview → replace → delete.
-// Keeps `value` in sync with form state via onChange(url|null).
 function ImageField({ label, value, onChange, onDelete, required = false }) {
   const [progress, setProgress] = useState(0)
   const [busy, setBusy] = useState(false)
   const [previewError, setPreviewError] = useState(false)
   const fileInputRef = useRef(null)
 
-  // Reset broken-image flag whenever the value changes.
-  useEffect(() => {
-    setPreviewError(false)
-  }, [value])
+  useEffect(() => { setPreviewError(false) }, [value])
 
-  const handlePick = () => {
-    fileInputRef.current?.click()
-  }
+  const handlePick = () => fileInputRef.current?.click()
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    // Reset so picking the same file twice still triggers onChange.
     e.target.value = ''
 
-    if (!file.type.startsWith('image/')) {
-      push('Vui lòng chọn file ảnh', 'error')
-      return
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      push('Ảnh tối đa 5 MB', 'error')
-      return
-    }
+    if (!file.type.startsWith('image/')) { push('Vui lòng chọn file ảnh', 'error'); return }
+    if (file.size > 5 * 1024 * 1024) { push('Ảnh tối đa 5 MB', 'error'); return }
 
-    // Capture the old URL so we can clean it up after the new upload
-    // succeeds (matches "delete_unused on replace" requirement).
     const previousUrl = value
-
     setBusy(true)
     setProgress(0)
     try {
-      const { url } = await uploadApi.upload(file, (pct) => setProgress(pct))
+      const { url } = await (await import('../../services/api')).uploadApi.upload(file, (pct) => setProgress(pct))
       onChange(url)
-      // Fire-and-forget the cleanup — don't block the form on it.
       if (previousUrl && previousUrl.startsWith('/uploads/')) {
-        uploadApi.remove(previousUrl).catch(() => {})
+        ;(await import('../../services/api')).uploadApi.remove(previousUrl).catch(() => {})
       }
     } catch (err) {
-      const msg = err?.response?.data?.message || 'Upload thất bại'
-      push(msg, 'error')
+      push(err?.response?.data?.message || 'Upload thất bại', 'error')
     } finally {
       setBusy(false)
       setProgress(0)
@@ -80,11 +62,7 @@ function ImageField({ label, value, onChange, onDelete, required = false }) {
   const handleDelete = async () => {
     if (!value) return
     if (value.startsWith('/uploads/')) {
-      try {
-        await uploadApi.remove(value)
-      } catch {
-        // Ignore — file might already be gone. We still clear the field.
-      }
+      try { await (await import('../../services/api')).uploadApi.remove(value) } catch {}
     }
     onDelete?.()
     onChange('')
@@ -101,68 +79,73 @@ function ImageField({ label, value, onChange, onDelete, required = false }) {
 
       {showImage ? (
         <div className="relative border border-ink-300 rounded-xs overflow-hidden bg-ivory-50">
-          <img
-            src={value}
-            alt=""
-            className="w-full h-32 object-cover"
-            onError={() => setPreviewError(true)}
-          />
+          <img src={value} alt="" className="w-full h-32 object-cover" onError={() => setPreviewError(true)} />
           <div className="absolute inset-x-0 bottom-0 flex gap-1 p-1.5 bg-white/90 backdrop-blur-sm">
-            <button
-              type="button"
-              onClick={handlePick}
-              disabled={busy}
-              className="flex-1 px-2 py-1 text-[11px] border border-ink-300 hover:bg-ink-100 disabled:opacity-50"
-            >
+            <button type="button" onClick={handlePick} disabled={busy}
+              className="flex-1 px-2 py-1 text-[11px] border border-ink-300 hover:bg-ink-100 disabled:opacity-50">
               Thay ảnh
             </button>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={busy}
-              className="px-2 py-1 text-[11px] border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50"
-            >
+            <button type="button" onClick={handleDelete} disabled={busy}
+              className="px-2 py-1 text-[11px] border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50">
               Xóa
             </button>
           </div>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={handlePick}
-          disabled={busy}
-          className="w-full h-32 border border-dashed border-ink-300 rounded-xs flex flex-col items-center justify-center gap-1 text-xs text-ink-500 hover:border-ink-900 hover:text-ink-900 hover:bg-ink-50 transition-colors disabled:opacity-50"
-        >
+        <button type="button" onClick={handlePick} disabled={busy}
+          className="w-full h-32 border border-dashed border-ink-300 rounded-xs flex flex-col items-center justify-center gap-1 text-xs text-ink-500 hover:border-ink-900 hover:text-ink-900 hover:bg-ink-50 transition-colors disabled:opacity-50">
           {busy ? (
-            <>
-              <span className="font-mono">{progress}%</span>
-              <span className="text-[10px] tracking-wider uppercase">Đang tải lên…</span>
-            </>
+            <><span className="font-mono">{progress}%</span><span className="text-[10px]">Đang tải lên…</span></>
           ) : (
-            <>
-              <span className="font-display text-lg">+</span>
-              <span>Chọn ảnh (jpg/png/webp, ≤ 5MB)</span>
-            </>
+            <><span className="font-display text-lg">+</span><span>Chọn ảnh (jpg/png/webp, ≤ 5MB)</span></>
           )}
         </button>
       )}
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        onChange={handleFileChange}
-        className="hidden"
-      />
+      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp"
+        onChange={handleFileChange} className="hidden" />
 
       {busy && (
         <div className="h-0.5 bg-ink-100 mt-1 overflow-hidden rounded-full">
-          <div
-            className="h-full bg-sage-600 transition-all duration-200"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="h-full bg-sage-600 transition-all duration-200" style={{ width: `${progress}%` }} />
         </div>
       )}
+    </div>
+  )
+}
+
+// Inline category form — used both in the dropdown and in standalone mode
+function CategoryForm({ editing, onSave, onCancel, saving }) {
+  const [name, setName] = useState(editing?.name || '')
+  const [desc, setDesc] = useState(editing?.description || '')
+
+  return (
+    <div className="border border-ink-300 rounded-xs bg-ivory-50 p-3 space-y-2">
+      <input
+        type="text" value={name} autoFocus
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Tên danh mục *"
+        className="w-full px-2.5 py-1.5 text-xs border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900"
+      />
+      <input
+        type="text" value={desc}
+        onChange={(e) => setDesc(e.target.value)}
+        placeholder="Mô tả (tùy chọn)"
+        className="w-full px-2.5 py-1.5 text-xs border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900"
+      />
+      <div className="flex gap-2">
+        <button
+          type="button" disabled={saving}
+          onClick={() => onSave({ name: name.trim(), description: desc.trim(), id: editing?.id })}
+          className="flex-1 py-1 text-[11px] bg-ink-900 text-white hover:bg-ink-800 disabled:opacity-50 rounded-xs transition-colors"
+        >
+          {saving ? '…' : editing ? 'Cập nhật' : 'Tạo'}
+        </button>
+        <button type="button" onClick={onCancel}
+          className="px-3 py-1 text-[11px] border border-ink-300 hover:bg-ink-100 rounded-xs transition-colors">
+          Hủy
+        </button>
+      </div>
     </div>
   )
 }
@@ -172,9 +155,40 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
   const [errors, setErrors] = useState({})
   const [busy, setBusy] = useState(false)
 
+  // --- Category state ---
+  const [categories, setCategories] = useState([])
+  const [catLoading, setCatLoading] = useState(false)
+  const [showCatDropdown, setShowCatDropdown] = useState(false)
+  const [catFormMode, setCatFormMode] = useState(null) // null | 'create' | Category object
+  const [savingCat, setSavingCat] = useState(false)
+  const [deletingCatId, setDeletingCatId] = useState(null)
+  const catInputRef = useRef(null)
+  const catDropdownRef = useRef(null)
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!open) return
+    const handler = (e) => {
+      if (catDropdownRef.current && !catDropdownRef.current.contains(e.target)) {
+        setShowCatDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  const fetchCategories = () => {
+    setCatLoading(true)
+    categoryApi.getAll()
+      .then(setCategories)
+      .catch(() => {})
+      .finally(() => setCatLoading(false))
+  }
+
   useEffect(() => {
     if (open) {
       setErrors({})
+      fetchCategories()
       if (product) {
         setForm({
           ...product,
@@ -188,9 +202,7 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
 
   if (!open) return null
 
-  const updateField = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
-  }
+  const updateField = (field, value) => setForm((prev) => ({ ...prev, [field]: value }))
 
   const updateVariant = (idx, field, value) => {
     setForm((prev) => {
@@ -200,26 +212,68 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
     })
   }
 
-  const addVariant = () => {
-    setForm((prev) => ({ ...prev, variants: [...prev.variants, emptyVariant()] }))
-  }
+  const addVariant = () => setForm((prev) => ({ ...prev, variants: [...prev.variants, emptyVariant()] }))
 
   const removeVariant = (idx) => {
     setForm((prev) => {
       const removed = prev.variants[idx]
-      // Best-effort cleanup of any uploaded variant image.
       if (removed?.imageUrl && removed.imageUrl.startsWith('/uploads/')) {
-        uploadApi.remove(removed.imageUrl).catch(() => {})
+        import('../../services/api').then(m => m.uploadApi.remove(removed.imageUrl).catch(() => {}))
       }
       return {
         ...prev,
-        variants: prev.variants.length > 1
-          ? prev.variants.filter((_, i) => i !== idx)
-          : prev.variants,
+        variants: prev.variants.length > 1 ? prev.variants.filter((_, i) => i !== idx) : prev.variants,
       }
     })
   }
 
+  // --- Category CRUD ---
+  const handleSaveCatForm = async ({ name, description, id }) => {
+    if (!name?.trim()) { push('Tên danh mục bắt buộc', 'error'); return }
+    setSavingCat(true)
+    try {
+      if (id) {
+        await categoryApi.update(id, { name: name.trim(), description: description?.trim() || '' })
+        push('Đã cập nhật danh mục', 'success')
+      } else {
+        await categoryApi.create({ name: name.trim(), description: description?.trim() || '' })
+        push('Đã tạo danh mục mới', 'success')
+      }
+      setCatFormMode(null)
+      fetchCategories()
+    } catch (err) {
+      push(err?.response?.data?.message || 'Lưu thất bại', 'error')
+    } finally {
+      setSavingCat(false)
+    }
+  }
+
+  const handleDeleteCat = async (id) => {
+    setDeletingCatId(id)
+    try {
+      await categoryApi.remove(id)
+      push('Đã xóa danh mục', 'success')
+      // If the deleted category was selected, clear the product form
+      if (form.category) {
+        const cat = categories.find(c => c.id === id)
+        if (cat && form.category === cat.name) {
+          updateField('category', '')
+        }
+      }
+      fetchCategories()
+    } catch (err) {
+      push(err?.response?.data?.message || 'Xóa thất bại', 'error')
+    } finally {
+      setDeletingCatId(null)
+    }
+  }
+
+  const selectCategory = (name) => {
+    updateField('category', name)
+    setShowCatDropdown(false)
+  }
+
+  // --- Product submit ---
   const validate = () => {
     const e = {}
     if (!form.name.trim()) e.name = 'Tên sản phẩm bắt buộc'
@@ -235,10 +289,7 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
 
   const handleSubmit = async (ev) => {
     ev.preventDefault()
-    if (!validate()) {
-      push('Vui lòng kiểm tra các trường được đánh dấu', 'error')
-      return
-    }
+    if (!validate()) { push('Vui lòng kiểm tra các trường được đánh dấu', 'error'); return }
     setBusy(true)
     try {
       const payload = {
@@ -267,12 +318,16 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
       onSaved?.()
       onClose()
     } catch (err) {
-      const msg = err?.response?.data?.message || 'Lưu thất bại'
-      push(msg, 'error')
+      push(err?.response?.data?.message || 'Lưu thất bại', 'error')
     } finally {
       setBusy(false)
     }
   }
+
+  // Filter categories as user types in the text input
+  const filteredCats = categories.filter(c =>
+    c.name.toLowerCase().includes((form.category || '').toLowerCase())
+  )
 
   return (
     <div className="fixed inset-0 z-[80] flex items-start justify-center p-4 bg-ink-900/50 backdrop-blur-sm overflow-y-auto">
@@ -280,64 +335,143 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
         onSubmit={handleSubmit}
         className="bg-white border border-ink-300 rounded-xs shadow-elevated w-full max-w-3xl my-8 animate-fade-up"
       >
+        {/* Modal Header */}
         <div className="px-5 py-4 border-b border-ink-200 flex items-center">
           <h2 className="font-display text-xl text-ink-900">
             {product ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới'}
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="ml-auto text-ink-500 hover:text-ink-900 text-xl leading-none"
-            aria-label="Đóng"
-          >
+          <button type="button" onClick={onClose}
+            className="ml-auto text-ink-500 hover:text-ink-900 text-xl leading-none" aria-label="Đóng">
             ×
           </button>
         </div>
 
         <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+
+          {/* Row: name + category + main image */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2 space-y-4">
+              {/* Tên sản phẩm */}
               <div>
                 <label className="block text-[11px] uppercase tracking-wider text-ink-600 font-mono mb-1">
                   Tên sản phẩm <span className="text-red-600">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={form.name}
+                <input type="text" value={form.name}
                   onChange={(e) => updateField('name', e.target.value)}
                   className={`w-full px-3 py-2 text-sm border rounded-xs focus:outline-none focus:border-ink-900 ${
-                    errors.name ? 'border-red-500' : 'border-ink-300'
-                  }`}
-                />
+                    errors.name ? 'border-red-500' : 'border-ink-300'}`} />
                 {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
               </div>
 
-              <div>
+              {/* Danh mục — custom dropdown + inline CRUD */}
+              <div ref={catDropdownRef} className="relative">
                 <label className="block text-[11px] uppercase tracking-wider text-ink-600 font-mono mb-1">
                   Danh mục
                 </label>
-                <input
-                  type="text"
-                  value={form.category || ''}
-                  onChange={(e) => updateField('category', e.target.value)}
-                  placeholder="Hoa sinh nhật"
-                  className="w-full px-3 py-2 text-sm border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900"
-                />
+
+                {/* Input-like trigger */}
+                <div
+                  className="w-full px-3 py-2 text-sm border border-ink-300 rounded-xs bg-white flex items-center justify-between cursor-pointer"
+                  onClick={() => { setShowCatDropdown(v => !v); setCatFormMode(null) }}
+                >
+                  <span className={form.category ? 'text-ink-900' : 'text-ink-400'}>
+                    {form.category || '— Chọn hoặc tạo danh mục —'}
+                  </span>
+                  <span className="text-ink-400 text-xs">▾</span>
+                </div>
+
+                {/* Dropdown panel */}
+                {showCatDropdown && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-ink-300 rounded-xs shadow-elevated max-h-64 overflow-y-auto">
+
+                    {/* Create new category */}
+                    {catFormMode === 'create' ? (
+                      <div className="p-3 border-b border-ink-200">
+                        <CategoryForm
+                          editing={null}
+                          onSave={handleSaveCatForm}
+                          onCancel={() => setCatFormMode(null)}
+                          saving={savingCat}
+                        />
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => { setCatFormMode('create'); setShowCatDropdown(true) }}
+                        className="w-full px-3 py-2 text-xs text-sage-600 hover:bg-sage-50 flex items-center gap-2 border-b border-ink-100"
+                      >
+                        <span className="text-base leading-none">+</span>
+                        Thêm danh mục mới
+                      </button>
+                    )}
+
+                    {/* Category list */}
+                    {catLoading ? (
+                      <div className="p-3 text-xs text-ink-400">Đang tải…</div>
+                    ) : filteredCats.length === 0 && !catFormMode ? (
+                      <div className="p-3 text-xs text-ink-400">Không có danh mục phù hợp</div>
+                    ) : (
+                      filteredCats.map((cat) => (
+                        <div key={cat.id} className="flex items-center border-b border-ink-50 last:border-0">
+                          {catFormMode?.id === cat.id ? (
+                            <div className="flex-1 p-2">
+                              <CategoryForm
+                                editing={cat}
+                                onSave={handleSaveCatForm}
+                                onCancel={() => setCatFormMode(null)}
+                                saving={savingCat}
+                              />
+                            </div>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => selectCategory(cat.name)}
+                                className={`flex-1 px-3 py-2 text-sm text-left hover:bg-ivory-50 ${
+                                  form.category === cat.name ? 'font-semibold text-ink-900 bg-ivory-50' : 'text-ink-700'
+                                }`}
+                              >
+                                {cat.name}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setCatFormMode(cat)}
+                                className="px-2 py-2 text-[10px] text-ink-400 hover:text-ink-900 border-l border-ink-100"
+                                title="Sửa"
+                              >
+                                ✎
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCat(cat.id)}
+                                disabled={deletingCatId === cat.id}
+                                className="px-2 py-2 text-[10px] text-red-400 hover:text-red-600 border-l border-ink-100 disabled:opacity-40"
+                                title="Xóa"
+                              >
+                                {deletingCatId === cat.id ? '…' : '×'}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
 
+              {/* Mô tả */}
               <div>
                 <label className="block text-[11px] uppercase tracking-wider text-ink-600 font-mono mb-1">
                   Mô tả
                 </label>
-                <textarea
-                  value={form.description || ''}
+                <textarea value={form.description || ''}
                   onChange={(e) => updateField('description', e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 text-sm border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900 resize-y"
-                />
+                  className="w-full px-3 py-2 text-sm border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900 resize-y" />
               </div>
             </div>
 
+            {/* Ảnh chính */}
             <div>
               <ImageField
                 label="Ảnh chính"
@@ -347,35 +481,25 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
             </div>
           </div>
 
+          {/* Biến thể */}
           <div className="border-t border-ink-200 pt-4">
             <div className="flex items-center mb-3">
               <h3 className="font-display text-lg text-ink-900">Biến thể</h3>
-              <span className="ml-2 text-xs text-ink-500 font-mono">
-                {form.variants.length} dòng
-              </span>
-              <button
-                type="button"
-                onClick={addVariant}
-                className="ml-auto px-3 py-1.5 text-xs border border-sage-600 text-sage-600 hover:bg-sage-600 hover:text-white rounded-xs transition-colors"
-              >
+              <span className="ml-2 text-xs text-ink-500 font-mono">{form.variants.length} dòng</span>
+              <button type="button" onClick={addVariant}
+                className="ml-auto px-3 py-1.5 text-xs border border-sage-600 text-sage-600 hover:bg-sage-600 hover:text-white rounded-xs transition-colors">
                 + Thêm biến thể
               </button>
             </div>
 
             <div className="space-y-2">
               {form.variants.map((v, idx) => (
-                <div
-                  key={idx}
-                  className="border border-ink-200 rounded-xs p-3 bg-ivory-50"
-                >
+                <div key={idx} className="border border-ink-200 rounded-xs p-3 bg-ivory-50">
                   <div className="flex items-center mb-2">
                     <span className="text-xs font-mono text-ink-500">#{idx + 1}</span>
                     {form.variants.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeVariant(idx)}
-                        className="ml-auto text-xs text-red-600 hover:text-red-700"
-                      >
+                      <button type="button" onClick={() => removeVariant(idx)}
+                        className="ml-auto text-xs text-red-600 hover:text-red-700">
                         Xóa biến thể
                       </button>
                     )}
@@ -383,75 +507,45 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
 
                   <div className="grid grid-cols-12 gap-2">
                     <div className="col-span-6 md:col-span-2">
-                      <input
-                        type="text"
-                        placeholder="SKU *"
-                        value={v.sku || ''}
+                      <input type="text" placeholder="SKU *" value={v.sku || ''}
                         onChange={(e) => updateVariant(idx, 'sku', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs border border-ink-300 rounded-xs font-mono focus:outline-none focus:border-ink-900"
-                      />
+                        className="w-full px-2.5 py-1.5 text-xs border border-ink-300 rounded-xs font-mono focus:outline-none focus:border-ink-900" />
                     </div>
                     <div className="col-span-6 md:col-span-3">
-                      <input
-                        type="text"
-                        placeholder="Tên biến thể *"
+                      <input type="text" placeholder="Tên biến thể *"
                         value={v.name}
                         onChange={(e) => updateVariant(idx, 'name', e.target.value)}
                         className={`w-full px-2.5 py-1.5 text-xs border rounded-xs focus:outline-none focus:border-ink-900 ${
-                          errors[`variant_${idx}_name`] ? 'border-red-500' : 'border-ink-300'
-                        }`}
-                      />
+                          errors[`variant_${idx}_name`] ? 'border-red-500' : 'border-ink-300'}`} />
                     </div>
                     <div className="col-span-4 md:col-span-2">
-                      <input
-                        type="text"
-                        placeholder="Màu"
-                        value={v.color || ''}
+                      <input type="text" placeholder="Màu" value={v.color || ''}
                         onChange={(e) => updateVariant(idx, 'color', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900"
-                      />
+                        className="w-full px-2.5 py-1.5 text-xs border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900" />
                     </div>
                     <div className="col-span-4 md:col-span-2">
-                      <input
-                        type="number"
-                        placeholder="Giá *"
-                        min="0"
-                        step="1000"
+                      <input type="number" placeholder="Giá *" min="0" step="1000"
                         value={v.price}
                         onChange={(e) => updateVariant(idx, 'price', e.target.value)}
                         className={`w-full px-2.5 py-1.5 text-xs border rounded-xs font-mono text-right focus:outline-none focus:border-ink-900 ${
-                          errors[`variant_${idx}_price`] ? 'border-red-500' : 'border-ink-300'
-                        }`}
-                      />
+                          errors[`variant_${idx}_price`] ? 'border-red-500' : 'border-ink-300'}`} />
                     </div>
                     <div className="col-span-4 md:col-span-1">
-                      <input
-                        type="number"
-                        placeholder="Kho *"
-                        min="0"
+                      <input type="number" placeholder="Kho *" min="0"
                         value={v.stock}
                         onChange={(e) => updateVariant(idx, 'stock', e.target.value)}
                         className={`w-full px-2.5 py-1.5 text-xs border rounded-xs font-mono text-right focus:outline-none focus:border-ink-900 ${
-                          errors[`variant_${idx}_stock`] ? 'border-red-500' : 'border-ink-300'
-                        }`}
-                      />
+                          errors[`variant_${idx}_stock`] ? 'border-red-500' : 'border-ink-300'}`} />
                     </div>
                     <div className="col-span-12 md:col-span-2">
-                      <ImageField
-                        label="Ảnh biến thể"
-                        value={v.imageUrl}
-                        onChange={(url) => updateVariant(idx, 'imageUrl', url)}
-                      />
+                      <ImageField label="Ảnh biến thể" value={v.imageUrl}
+                        onChange={(url) => updateVariant(idx, 'imageUrl', url)} />
                     </div>
-
                     <div className="col-span-12 flex items-center gap-2 pt-1">
                       <label className="flex items-center gap-1.5 text-xs text-ink-700 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={!!v.isActive}
+                        <input type="checkbox" checked={!!v.isActive}
                           onChange={(e) => updateVariant(idx, 'isActive', e.target.checked)}
-                          className="cursor-pointer"
-                        />
+                          className="cursor-pointer" />
                         Đang bán
                       </label>
                     </div>
@@ -462,20 +556,14 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
           </div>
         </div>
 
+        {/* Modal Footer */}
         <div className="px-5 py-4 border-t border-ink-200 flex justify-end gap-2 bg-ivory-50">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={busy}
-            className="px-4 py-2 text-sm border border-ink-300 text-ink-700 hover:bg-ink-100 rounded-xs transition-colors disabled:opacity-50"
-          >
+          <button type="button" onClick={onClose} disabled={busy}
+            className="px-4 py-2 text-sm border border-ink-300 text-ink-700 hover:bg-ink-100 rounded-xs transition-colors disabled:opacity-50">
             Hủy
           </button>
-          <button
-            type="submit"
-            disabled={busy}
-            className="px-4 py-2 text-sm font-medium bg-ink-900 text-white rounded-xs hover:bg-ink-800 transition-colors disabled:opacity-50"
-          >
+          <button type="submit" disabled={busy}
+            className="px-4 py-2 text-sm font-medium bg-ink-900 text-white rounded-xs hover:bg-ink-800 transition-colors disabled:opacity-50">
             {busy ? 'Đang lưu…' : product ? 'Cập nhật' : 'Tạo sản phẩm'}
           </button>
         </div>

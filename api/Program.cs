@@ -112,6 +112,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddSingleton<MongoDbContext>();
 builder.Services.AddSingleton<JwtService>();
 builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<OrderService>();
 

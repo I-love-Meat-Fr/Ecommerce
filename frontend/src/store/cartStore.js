@@ -6,7 +6,7 @@ export const useCartStore = create(
     (set, get) => ({
       items: [],
       
-      addItem: (product, variant) => {
+      addItem: (product, variant, quantity = 1) => {
         const items = get().items
         const existingIndex = items.findIndex(
           item => item.variant?.sku === variant?.sku
@@ -14,7 +14,7 @@ export const useCartStore = create(
 
         if (existingIndex >= 0) {
           const newItems = [...items]
-          newItems[existingIndex].quantity += 1
+          newItems[existingIndex].quantity += quantity
           set({ items: newItems })
         } else {
           set({
@@ -24,7 +24,7 @@ export const useCartStore = create(
                 id: Date.now(),
                 product,
                 variant,
-                quantity: 1,
+                quantity,
               },
             ],
           })

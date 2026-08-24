@@ -77,11 +77,11 @@ function CartPage() {
                         № {String(i + 1).padStart(2, '0')}
                       </span>
                       
-                      <Link to={`/products/${item.product.slug || item.product._id}`} className="flex-shrink-0 w-24 h-32 md:w-32 md:h-40 overflow-hidden bg-ivory-200 hover-zoom">
+                      <Link to={`/products/${item.product.id}`} className="flex-shrink-0 w-24 h-32 md:w-32 md:h-40 overflow-hidden bg-ivory-200 hover-zoom">
                         <SafeImage
                           src={item.product.imageUrl}
                           alt={item.product.name}
-                          fallbackSeed={item.product.id || item.product.slug || item.product.name}
+                          fallbackSeed={item.product.id || item.product.name}
                           imgClassName="w-full h-full object-cover"
                         />
                       </Link>
@@ -89,8 +89,8 @@ function CartPage() {
                       <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div className="flex justify-between gap-3">
                           <div className="min-w-0">
-                            <Link 
-                              to={`/products/${item.product.slug || item.product._id}`}
+                            <Link
+                              to={`/products/${item.product.id}`}
                               className="font-display text-xl md:text-2xl text-ink-900 hover:text-champagne-500 transition-colors block truncate"
                             >
                               {item.product.name}

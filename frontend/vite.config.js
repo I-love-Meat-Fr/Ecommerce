@@ -43,6 +43,12 @@ export default defineConfig(({ mode }) => {
           target: 'http://localhost:5126',
           changeOrigin: true,
         },
+        // Proxy /uploads/* so the backend-served images load in dev.
+        // In production (Vercel) the same-origin static handler takes over.
+        '/uploads': {
+          target: 'http://localhost:5126',
+          changeOrigin: true,
+        },
       },
     },
   }

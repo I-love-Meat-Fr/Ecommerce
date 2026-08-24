@@ -20,8 +20,8 @@ function ProductCard({ product, index = 0 }) {
   }
 
   return (
-    <Link 
-      to={`/products/${product.slug || product._id}`}
+    <Link
+      to={`/products/${product.id}`}
       className="group block"
     >
       {/* Image */}
@@ -30,7 +30,7 @@ function ProductCard({ product, index = 0 }) {
           <SafeImage
             src={product.imageUrl}
             alt={product.name}
-            fallbackSeed={product.id || product.slug || product.name}
+            fallbackSeed={product.id || product.name}
             imgClassName="w-full h-full object-cover"
           />
         </div>

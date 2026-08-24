@@ -190,7 +190,7 @@ function ProductsPage() {
           ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-14">
               {filteredProducts.map((product, i) => (
-                <ProductCard key={product._id} product={product} index={i} />
+                <ProductCard key={product.id} product={product} index={i} />
               ))}
             </div>
           ) : (

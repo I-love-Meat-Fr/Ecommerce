@@ -61,6 +61,9 @@ public class MongoDbContext
     public IMongoCollection<Order> Orders =>
         _database.GetCollection<Order>("orders");
 
+    public IMongoCollection<Category> Categories =>
+        _database.GetCollection<Category>("categories");
+
     /// <summary>
     /// Creates indexes idempotently. Safe to call on every startup.
     /// </summary>
@@ -90,6 +93,12 @@ public class MongoDbContext
             Builders<Order>.IndexKeys.Ascending(o => o.Status),
             new CreateIndexOptions { Name = "ix_orders_status" });
         await Orders.Indexes.CreateManyAsync(new[] { orderUserIdx, orderStatusIdx }, ct);
+
+        // categories: unique name
+        var categoryNameIdx = new CreateIndexModel<Category>(
+            Builders<Category>.IndexKeys.Ascending(c => c.Name),
+            new CreateIndexOptions { Unique = true, Name = "ux_categories_name" });
+        await Categories.Indexes.CreateOneAsync(categoryNameIdx, cancellationToken: ct);
     }
 
     /// <summary>

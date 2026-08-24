@@ -152,7 +152,7 @@ function HomePage() {
               {/* Side small image */}
               <div className="hidden md:block absolute top-8 -right-6 w-40 h-52 lg:w-48 lg:h-64 hover-zoom overflow-hidden shadow-elevated">
                 <img
-                  src="https://images.unsplash.com/photo-1509223197845-458d85218764?w=400&h=500&fit=crop"
+                  src="https://i.pinimg.com/736x/24/48/24/2448247c4cb0731f776a84dd6c263cfe.jpg"
                   alt="Chi tiết"
                   className="w-full h-full object-cover"
                 />

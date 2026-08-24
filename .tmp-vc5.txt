@@ -1,0 +1,10 @@
+chore: touch vercel.json to bust Vercel CDN cache
+
+The production alias florist-eta.vercel.app kept serving stale bundles
+even after promoting the latest deployment and the inspect command
+showed the right mapping -- Vercel's CDN edge had cached the previous
+build at some layer below the alias routing. Triggering one more
+build is the simplest cache invalidation since there is no manual
+purge for the static framework in the Vercel CLI.
+
+Co-authored-by: Cursor <cursoragent@cursor.com>

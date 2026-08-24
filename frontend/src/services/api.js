@@ -136,6 +136,33 @@ export const userApi = {
   },
 }
 
+export const categoryApi = {
+  getAll: async () => {
+    const response = await api.get('/categories')
+    return response.data
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/categories/${id}`)
+    return response.data
+  },
+
+  create: async (payload) => {
+    const response = await api.post('/categories', payload)
+    return response.data
+  },
+
+  update: async (id, payload) => {
+    const response = await api.patch(`/categories/${id}`, payload)
+    return response.data
+  },
+
+  remove: async (id) => {
+    const response = await api.delete(`/categories/${id}`)
+    return response.data
+  },
+}
+
 export const orderApi = {
   create: async (orderData) => {
     const response = await api.post('/orders', orderData)
