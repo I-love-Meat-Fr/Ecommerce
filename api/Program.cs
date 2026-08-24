@@ -85,7 +85,10 @@ var defaultOrigins = new[]
     "http://127.0.0.1:5173",
     "http://localhost:4173",      // vite preview
     "https://florist.vn",
-    "https://www.florist.vn"
+    "https://www.florist.vn",
+    "https://florist-eta.vercel.app",
+    "https://florist-git-main-i-love-meat-frs-projects.vercel.app",
+    "https://ecommerce-production-8755.up.railway.app",
 };
 
 var corsOrigins = Environment.GetEnvironmentVariable("CORS_ORIGINS");
