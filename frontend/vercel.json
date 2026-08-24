@@ -8,6 +8,10 @@
       "destination": "https://ecommerce-production-8755.up.railway.app/api/:path*"
     },
     {
+      "source": "/uploads/:path*",
+      "destination": "https://ecommerce-production-8755.up.railway.app/uploads/:path*"
+    },
+    {
       "source": "/:path*",
       "destination": "/index.html"
     }
