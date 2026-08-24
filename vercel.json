@@ -1,7 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "outputDirectory": "dist",
-  "_comment": "Browser sends /api/* to Vercel so the API call is same-origin",
   "rewrites": [
     {
       "source": "/api/:path*",
