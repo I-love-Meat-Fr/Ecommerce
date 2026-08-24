@@ -13,6 +13,16 @@ export default defineConfig({
     },
     rollupOptions: {
       external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
+      output: {
+        format: 'iife',
+        globals: {
+          react: 'React',
+          'react-dom': 'ReactDOM',
+          'react/jsx-runtime': 'jsxRuntime',
+          'react/jsx-dev-runtime': 'jsxDevRuntime',
+        },
+        inlineDynamicImports: true,
+      },
     },
   },
   server: {
