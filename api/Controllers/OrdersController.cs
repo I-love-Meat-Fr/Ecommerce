@@ -12,11 +12,13 @@ public class OrdersController : ControllerBase
 {
     private readonly OrderService _orderService;
     private readonly ProductService _productService;
+    private readonly OrderStatusLogService _logService;
 
-    public OrdersController(OrderService orderService, ProductService productService)
+    public OrdersController(OrderService orderService, ProductService productService, OrderStatusLogService logService)
     {
         _orderService = orderService;
         _productService = productService;
+        _logService = logService;
     }
 
     [HttpGet]
@@ -109,10 +111,30 @@ public class OrdersController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult> UpdateStatus(string id, [FromBody] StatusUpdate status)
     {
-        var success = await _orderService.UpdateStatusAsync(id, status.Status);
+        var order = await _orderService.GetByIdAsync(id);
+        if (order == null)
+            return NotFound();
+
+        var changedBy = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue("sub")
+            ?? "unknown";
+
+        var success = await _orderService.UpdateStatusAsync(id, status.Status, order.Status, changedBy, status.Note);
         if (!success)
             return NotFound();
         return NoContent();
+    }
+
+    [HttpGet("{id}/status-logs")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<List<OrderStatusLog>>> GetStatusLogs(string id)
+    {
+        var order = await _orderService.GetByIdAsync(id);
+        if (order == null)
+            return NotFound();
+
+        var logs = await _logService.GetByOrderIdAsync(id);
+        return Ok(logs);
     }
 
     [HttpDelete("{id}")]
@@ -129,4 +151,5 @@ public class OrdersController : ControllerBase
 public class StatusUpdate
 {
     public string Status { get; set; } = string.Empty;
+    public string? Note { get; set; }
 }

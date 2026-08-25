@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "0QJPbFmKaCm219rt5Ywh0e9NEby+CRYTxyUp/eODafE=",
+  "Hash": "wUSrrNR3xgEBZCoZg9Asdk4CZOb1bDC+p7wua1Z5KQA=",
   "Source": "Ecommer.Api",
   "BasePath": "_content/Ecommer.Api",
   "Mode": "Default",
@@ -16,6 +16,25 @@
     }
   ],
   "Assets": [
+    {
+      "Identity": "D:\\WorkSpace\\Ecommerce\\api\\wwwroot\\uploads\\2026\\08\\109d92301c184454a5d62aca6f2ae27d.jpg",
+      "SourceId": "Ecommer.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\WorkSpace\\Ecommerce\\api\\wwwroot\\",
+      "BasePath": "_content/Ecommer.Api",
+      "RelativePath": "uploads/2026/08/109d92301c184454a5d62aca6f2ae27d.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\2026\\08\\109d92301c184454a5d62aca6f2ae27d.jpg"
+    },
     {
       "Identity": "D:\\WorkSpace\\Ecommerce\\api\\wwwroot\\uploads\\2026\\08\\18494dc2ae0b4603a7cb6da8849a652f.jpg",
       "SourceId": "Ecommer.Api",
@@ -34,6 +53,44 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\uploads\\2026\\08\\18494dc2ae0b4603a7cb6da8849a652f.jpg"
+    },
+    {
+      "Identity": "D:\\WorkSpace\\Ecommerce\\api\\wwwroot\\uploads\\2026\\08\\3b0c679279a9490ab8a3a2ea4a764f62.jpg",
+      "SourceId": "Ecommer.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\WorkSpace\\Ecommerce\\api\\wwwroot\\",
+      "BasePath": "_content/Ecommer.Api",
+      "RelativePath": "uploads/2026/08/3b0c679279a9490ab8a3a2ea4a764f62.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\2026\\08\\3b0c679279a9490ab8a3a2ea4a764f62.jpg"
+    },
+    {
+      "Identity": "D:\\WorkSpace\\Ecommerce\\api\\wwwroot\\uploads\\2026\\08\\4ec8418b200a46bfa6582841bea42762.jpg",
+      "SourceId": "Ecommer.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\WorkSpace\\Ecommerce\\api\\wwwroot\\",
+      "BasePath": "_content/Ecommer.Api",
+      "RelativePath": "uploads/2026/08/4ec8418b200a46bfa6582841bea42762.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\2026\\08\\4ec8418b200a46bfa6582841bea42762.jpg"
     },
     {
       "Identity": "D:\\WorkSpace\\Ecommerce\\api\\wwwroot\\uploads\\2026\\08\\5b6fb858de044b2db69904fcc2438dac.jpg",
@@ -91,6 +148,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\uploads\\2026\\08\\a4a0a70bd8bd47368febefb735921171.jpg"
+    },
+    {
+      "Identity": "D:\\WorkSpace\\Ecommerce\\api\\wwwroot\\uploads\\2026\\08\\ab5f2f0ae5a746a19c0c21c9a6000aae.jpg",
+      "SourceId": "Ecommer.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\WorkSpace\\Ecommerce\\api\\wwwroot\\",
+      "BasePath": "_content/Ecommer.Api",
+      "RelativePath": "uploads/2026/08/ab5f2f0ae5a746a19c0c21c9a6000aae.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\2026\\08\\ab5f2f0ae5a746a19c0c21c9a6000aae.jpg"
     }
   ]
 }

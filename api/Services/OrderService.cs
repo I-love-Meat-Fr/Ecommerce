@@ -7,10 +7,12 @@ namespace Ecommer.Api.Services;
 public class OrderService
 {
     private readonly IMongoCollection<Order> _orders;
+    private readonly OrderStatusLogService _logService;
 
-    public OrderService(MongoDbContext context)
+    public OrderService(MongoDbContext context, OrderStatusLogService logService)
     {
         _orders = context.Orders;
+        _logService = logService;
     }
 
     public async Task<List<Order>> GetAllAsync()
@@ -35,10 +37,14 @@ public class OrderService
         return order;
     }
 
-    public async Task<bool> UpdateStatusAsync(string id, string status)
+    public async Task<bool> UpdateStatusAsync(string id, string status, string? fromStatus, string changedBy, string? note = null)
     {
         var update = Builders<Order>.Update.Set(o => o.Status, status);
         var result = await _orders.UpdateOneAsync(o => o.Id == id, update);
+        if (result.ModifiedCount > 0)
+        {
+            await _logService.CreateLogAsync(id, fromStatus, status, changedBy, note);
+        }
         return result.ModifiedCount > 0;
     }
 
