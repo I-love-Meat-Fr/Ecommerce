@@ -168,6 +168,26 @@ export const orderApi = {
     const response = await api.post('/orders', orderData)
     return response.data
   },
+
+  getAll: async () => {
+    const response = await api.get('/orders')
+    return response.data
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/orders/${id}`)
+    return response.data
+  },
+
+  updateStatus: async (id, status, note) => {
+    const response = await api.patch(`/orders/${id}/status`, { status, note })
+    return response.data
+  },
+
+  getStatusLogs: async (id) => {
+    const response = await api.get(`/orders/${id}/status-logs`)
+    return response.data
+  },
 }
 
 export const uploadApi = {

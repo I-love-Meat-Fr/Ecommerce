@@ -1,9 +1,12 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCartStore } from '../store/cartStore'
+import { useAuthStore } from '../store/authStore'
 import SafeImage from '../components/SafeImage'
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Truck, ShieldCheck, RotateCcw, ArrowRight } from 'lucide-react'
 
 function CartPage() {
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuthStore()
   const { items, removeItem, updateQuantity, getTotalPrice, clearCart } = useCartStore()
   
   const formatPrice = (price) => new Intl.NumberFormat('vi-VN').format(price) + ' ₫'
@@ -184,7 +187,16 @@ function CartPage() {
                 </div>
                 <p className="text-[10px] tracking-widest uppercase text-ink-500 -mt-6 mb-8">Đã bao gồm VAT</p>
 
-                <button className="w-full btn-luxury mb-3">
+                <button
+                  onClick={() => {
+                    if (!isAuthenticated()) {
+                      navigate('/login', { state: { from: { pathname: '/checkout' } } })
+                    } else {
+                      navigate('/checkout')
+                    }
+                  }}
+                  className="w-full btn-luxury mb-3"
+                >
                   Tiến Hành Thanh Toán
                   <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
                 </button>

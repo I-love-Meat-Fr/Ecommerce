@@ -12,7 +12,8 @@ const tiles = [
   {
     title: 'Đơn hàng',
     desc: 'Theo dõi và cập nhật trạng thái đơn hàng.',
-    ready: false,
+    to: '/admin/orders',
+    ready: true,
   },
   {
     title: 'Người dùng',

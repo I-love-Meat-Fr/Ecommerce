@@ -4,7 +4,7 @@ import { push } from './Toast'
 
 const navItems = [
   { label: 'Sản phẩm', to: '/admin/products', icon: '◧' },
-  { label: 'Đơn hàng', to: '/admin/orders', icon: '◇', disabled: true },
+  { label: 'Đơn hàng', to: '/admin/orders', icon: '◇' },
   { label: 'Người dùng', to: '/admin/users', icon: '◯' },
 ]
 

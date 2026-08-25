@@ -13,12 +13,18 @@ public class OrdersController : ControllerBase
     private readonly OrderService _orderService;
     private readonly ProductService _productService;
     private readonly OrderStatusLogService _logService;
+    private readonly UserService _userService;
 
-    public OrdersController(OrderService orderService, ProductService productService, OrderStatusLogService logService)
+    public OrdersController(
+        OrderService orderService,
+        ProductService productService,
+        OrderStatusLogService logService,
+        UserService userService)
     {
         _orderService = orderService;
         _productService = productService;
         _logService = logService;
+        _userService = userService;
     }
 
     [HttpGet]
@@ -62,7 +68,7 @@ public class OrdersController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    public async Task<ActionResult<Order>> Create([FromBody] Order order)
+    public async Task<ActionResult<Order>> Create([FromBody] CreateOrderRequest request)
     {
         // Always override userId from the verified JWT token — never trust the client body.
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -70,12 +76,15 @@ public class OrdersController : ControllerBase
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "Invalid token" });
 
-        if (order.Items == null || order.Items.Count == 0)
+        if (request.Items == null || request.Items.Count == 0)
             return BadRequest(new { message = "Order must contain at least one item" });
+
+        if (string.IsNullOrWhiteSpace(request.ShippingAddress))
+            return BadRequest(new { message = "Shipping address is required" });
 
         // Server-side price integrity: look up each product+variant in the DB
         // and ignore whatever UnitPrice / TotalAmount the client sent.
-        foreach (var item in order.Items)
+        foreach (var item in request.Items)
         {
             if (item.Quantity <= 0)
                 return BadRequest(new { message = "Quantity must be positive" });
@@ -101,9 +110,18 @@ public class OrdersController : ControllerBase
             item.Sku = variant.Sku;
         }
 
-        order.UserId = userId;
-        order.TotalAmount = order.Items.Sum(i => i.Quantity * i.UnitPrice);
+        var order = new Order
+        {
+            UserId = userId,
+            Items = request.Items,
+            TotalAmount = request.Items.Sum(i => i.Quantity * i.UnitPrice),
+            Status = "Pending",
+            PaymentMethod = request.PaymentMethod ?? "COD",
+            ShippingAddress = request.ShippingAddress,
+        };
+
         var created = await _orderService.CreateAsync(order);
+        await _logService.CreateLogAsync(created.Id!, null, "Pending", userId, "Order created");
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
@@ -152,4 +170,11 @@ public class StatusUpdate
 {
     public string Status { get; set; } = string.Empty;
     public string? Note { get; set; }
+}
+
+public class CreateOrderRequest
+{
+    public List<OrderItem> Items { get; set; } = new();
+    public string? PaymentMethod { get; set; }
+    public string? ShippingAddress { get; set; }
 }

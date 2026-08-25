@@ -21,6 +21,9 @@ public class Order
     [BsonElement("status")]
     public string Status { get; set; } = "Pending";
 
+    [BsonElement("paymentMethod")]
+    public string PaymentMethod { get; set; } = "COD"; // "COD" or "Online"
+
     [BsonElement("shippingAddress")]
     public string? ShippingAddress { get; set; }
 

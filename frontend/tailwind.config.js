@@ -97,6 +97,7 @@ colors: {
         'fade-in': 'fadeIn 1s ease-out forwards',
         'marquee': 'marquee 40s linear infinite',
         'shimmer': 'shimmer 2.5s linear infinite',
+        'slide-in-right': 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
       },
       keyframes: {
         fadeUp: {
@@ -114,6 +115,10 @@ colors: {
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
+        },
+        slideInRight: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
         },
       },
       transitionTimingFunction: {
