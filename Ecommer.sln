@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecommer.Api", "api\Ecommer.Api.csproj", "{FD73DD1E-1333-4937-B44F-DB84EC09AB8A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{45618076-B6B1-4AA1-B707-D3C2B8A34EF3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecommer.Api.Tests", "tests\Ecommer.Api.Tests\Ecommer.Api.Tests.csproj", "{96E4294C-2B1E-4096-9E11-7BB843D4A3EA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FD73DD1E-1333-4937-B44F-DB84EC09AB8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD73DD1E-1333-4937-B44F-DB84EC09AB8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD73DD1E-1333-4937-B44F-DB84EC09AB8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD73DD1E-1333-4937-B44F-DB84EC09AB8A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96E4294C-2B1E-4096-9E11-7BB843D4A3EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96E4294C-2B1E-4096-9E11-7BB843D4A3EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96E4294C-2B1E-4096-9E11-7BB843D4A3EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96E4294C-2B1E-4096-9E11-7BB843D4A3EA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{96E4294C-2B1E-4096-9E11-7BB843D4A3EA} = {45618076-B6B1-4AA1-B707-D3C2B8A34EF3}
+	EndGlobalSection
+EndGlobal

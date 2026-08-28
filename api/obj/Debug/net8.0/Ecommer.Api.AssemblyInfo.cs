@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Ecommer.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3c2be8e915190b92821830659fec749d413c4827")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ef260f73738d246d92bc274dfdc5decf7c541dd9")]
 [assembly: System.Reflection.AssemblyProductAttribute("Ecommer.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Ecommer.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

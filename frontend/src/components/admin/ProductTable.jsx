@@ -12,7 +12,7 @@ function formatVnd(n) {
 }
 
 function totalStock(product) {
-  return (product.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0)
+  return (product.variants || []).reduce((sum, v) => sum + (v.availableStock ?? v.stock ?? 0), 0)
 }
 
 function minPrice(product) {

@@ -33,9 +33,9 @@ public static class ProductsSeeder
                 UpdatedAt = now,
                 Variants = new List<ProductVariant>
                 {
-                    new() { Sku = "IP15P-NAT-256", Name = "Natural Titanium 256GB", Color = "Natural", Storage = "256GB", Price = 1199m, Stock = 25, ImageUrl = "https://example.com/img/iphone-15-pro-natural.jpg", IsActive = true },
-                    new() { Sku = "IP15P-BLU-512", Name = "Blue Titanium 512GB",     Color = "Blue",    Storage = "512GB", Price = 1399m, Stock = 12, ImageUrl = "https://example.com/img/iphone-15-pro-blue.jpg",    IsActive = true },
-                    new() { Sku = "IP15P-BLK-1TB", Name = "Black Titanium 1TB",       Color = "Black",   Storage = "1TB",   Price = 1599m, Stock =  8, ImageUrl = "https://example.com/img/iphone-15-pro-black.jpg",   IsActive = true },
+                    new() { Sku = "IP15P-NAT-256", Name = "Natural Titanium 256GB", Color = "Natural", Storage = "256GB", Price = 1199m, Stock = 25, LockedQuantity = 0, ImageUrl = "https://example.com/img/iphone-15-pro-natural.jpg", IsActive = true },
+                    new() { Sku = "IP15P-BLU-512", Name = "Blue Titanium 512GB",     Color = "Blue",    Storage = "512GB", Price = 1399m, Stock = 12, LockedQuantity = 0, ImageUrl = "https://example.com/img/iphone-15-pro-blue.jpg",    IsActive = true },
+                    new() { Sku = "IP15P-BLK-1TB", Name = "Black Titanium 1TB",       Color = "Black",   Storage = "1TB",   Price = 1599m, Stock =  8, LockedQuantity = 0, ImageUrl = "https://example.com/img/iphone-15-pro-black.jpg",   IsActive = true },
                 }
             },
             new()
@@ -48,8 +48,8 @@ public static class ProductsSeeder
                 UpdatedAt = now,
                 Variants = new List<ProductVariant>
                 {
-                    new() { Sku = "S24U-TIT-256", Name = "Titanium Gray 256GB", Color = "Titanium Gray", Storage = "256GB", Price = 1299m, Stock = 20, ImageUrl = null, IsActive = true },
-                    new() { Sku = "S24U-BLK-512", Name = "Titanium Black 512GB", Color = "Titanium Black", Storage = "512GB", Price = 1419m, Stock = 15, ImageUrl = null, IsActive = true },
+                    new() { Sku = "S24U-TIT-256", Name = "Titanium Gray 256GB", Color = "Titanium Gray", Storage = "256GB", Price = 1299m, Stock = 20, LockedQuantity = 0, ImageUrl = null, IsActive = true },
+                    new() { Sku = "S24U-BLK-512", Name = "Titanium Black 512GB", Color = "Titanium Black", Storage = "512GB", Price = 1419m, Stock = 15, LockedQuantity = 0, ImageUrl = null, IsActive = true },
                 }
             },
             new()
@@ -62,8 +62,8 @@ public static class ProductsSeeder
                 UpdatedAt = now,
                 Variants = new List<ProductVariant>
                 {
-                    new() { Sku = "MBA-M3-MID-256", Name = "Midnight 8GB / 256GB", Color = "Midnight", Storage = "256GB", Price = 1099m, Stock = 30, ImageUrl = null, IsActive = true },
-                    new() { Sku = "MBA-M3-SLV-512", Name = "Silver 16GB / 512GB",  Color = "Silver",   Storage = "512GB", Price = 1499m, Stock = 18, ImageUrl = null, IsActive = true },
+                    new() { Sku = "MBA-M3-MID-256", Name = "Midnight 8GB / 256GB", Color = "Midnight", Storage = "256GB", Price = 1099m, Stock = 30, LockedQuantity = 0, ImageUrl = null, IsActive = true },
+                    new() { Sku = "MBA-M3-SLV-512", Name = "Silver 16GB / 512GB",  Color = "Silver",   Storage = "512GB", Price = 1499m, Stock = 18, LockedQuantity = 0, ImageUrl = null, IsActive = true },
                 }
             },
             new()
@@ -76,8 +76,8 @@ public static class ProductsSeeder
                 UpdatedAt = now,
                 Variants = new List<ProductVariant>
                 {
-                    new() { Sku = "WH5-BLK", Name = "Black",  Color = "Black",  Storage = null, Price = 399m, Stock = 50, ImageUrl = null, IsActive = true },
-                    new() { Sku = "WH5-SLV", Name = "Silver", Color = "Silver", Storage = null, Price = 399m, Stock = 22, ImageUrl = null, IsActive = true },
+                    new() { Sku = "WH5-BLK", Name = "Black",  Color = "Black",  Storage = null, Price = 399m, Stock = 50, LockedQuantity = 0, ImageUrl = null, IsActive = true },
+                    new() { Sku = "WH5-SLV", Name = "Silver", Color = "Silver", Storage = null, Price = 399m, Stock = 22, LockedQuantity = 0, ImageUrl = null, IsActive = true },
                 }
             },
             new()
@@ -90,8 +90,8 @@ public static class ProductsSeeder
                 UpdatedAt = now,
                 Variants = new List<ProductVariant>
                 {
-                    new() { Sku = "MX3S-GRY", Name = "Graphite", Color = "Graphite", Storage = null, Price = 99m, Stock = 80, ImageUrl = null, IsActive = true },
-                    new() { Sku = "MX3S-PAL", Name = "Pale Gray", Color = "Pale Gray", Storage = null, Price = 99m, Stock = 40, ImageUrl = null, IsActive = true },
+                    new() { Sku = "MX3S-GRY", Name = "Graphite", Color = "Graphite", Storage = null, Price = 99m, Stock = 80, LockedQuantity = 0, ImageUrl = null, IsActive = true },
+                    new() { Sku = "MX3S-PAL", Name = "Pale Gray", Color = "Pale Gray", Storage = null, Price = 99m, Stock = 40, LockedQuantity = 0, ImageUrl = null, IsActive = true },
                 }
             },
             new()
@@ -104,8 +104,8 @@ public static class ProductsSeeder
                 UpdatedAt = now,
                 Variants = new List<ProductVariant>
                 {
-                    new() { Sku = "AW9-41-MID-ALU", Name = "41mm Midnight Aluminum / Sport Band", Color = "Midnight", Storage = "41mm", Price = 399m, Stock = 35, ImageUrl = null, IsActive = true },
-                    new() { Sku = "AW9-45-PNK-ALU", Name = "45mm Pink Aluminum / Sport Band",     Color = "Pink",    Storage = "45mm", Price = 429m, Stock = 28, ImageUrl = null, IsActive = true },
+                    new() { Sku = "AW9-41-MID-ALU", Name = "41mm Midnight Aluminum / Sport Band", Color = "Midnight", Storage = "41mm", Price = 399m, Stock = 35, LockedQuantity = 0, ImageUrl = null, IsActive = true },
+                    new() { Sku = "AW9-45-PNK-ALU", Name = "45mm Pink Aluminum / Sport Band",     Color = "Pink",    Storage = "45mm", Price = 429m, Stock = 28, LockedQuantity = 0, ImageUrl = null, IsActive = true },
                 }
             },
         };

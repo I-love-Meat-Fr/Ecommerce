@@ -8,6 +8,32 @@ public class MongoDbContext
 {
     private readonly IMongoDatabase _database;
 
+    // Overload so tests can inject a custom connection string + database name.
+    public MongoDbContext(string connectionString, string databaseName)
+    {
+        var settings = MongoClientSettings.FromConnectionString(connectionString);
+        settings.ServerSelectionTimeout = TimeSpan.FromSeconds(10);
+        settings.ConnectTimeout = TimeSpan.FromSeconds(10);
+        settings.SocketTimeout = TimeSpan.FromSeconds(10);
+
+        var wantsTls =
+            connectionString.StartsWith("mongodb+srv://", StringComparison.OrdinalIgnoreCase) ||
+            connectionString.Contains("tls=true", StringComparison.OrdinalIgnoreCase) ||
+            connectionString.Contains("ssl=true", StringComparison.OrdinalIgnoreCase);
+
+        if (wantsTls)
+        {
+            settings.UseTls = true;
+            settings.SslSettings = new SslSettings
+            {
+                EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12
+            };
+        }
+
+        var client = new MongoClient(settings);
+        _database = client.GetDatabase(databaseName);
+    }
+
     public MongoDbContext(IConfiguration configuration)
     {
         var connectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING")

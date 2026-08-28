@@ -29,7 +29,7 @@ public class ProductsController : ControllerBase
         {
             return Ok(await _productService.GetByCategoryAsync(category));
         }
-        return Ok(await _productService.GetAllAsync());
+        return Ok(await _productService.GetAllPublicAsync());
     }
 
     [HttpGet("{id}")]

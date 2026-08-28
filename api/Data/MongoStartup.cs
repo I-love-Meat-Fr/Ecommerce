@@ -38,6 +38,15 @@ public static class MongoStartup
 
         try
         {
+            await LockedQuantityMigrator.MigrateAsync(context, logger, ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to run LockedQuantityMigrator. The API will still start.");
+        }
+
+        try
+        {
             await UsersSeeder.SeedAsync(context, logger, ct);
         }
         catch (Exception ex)

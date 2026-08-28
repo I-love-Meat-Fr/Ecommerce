@@ -1922,7 +1922,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\quocanh\\.nuget\\packages\\": {}
+    "C:\\Users\\quocanh\\AppData\\Local\\Temp\\cursor-sandbox-cache\\8a9f2c3552ed61d74df318d0f7e489a6\\nuget": {}
   },
   "project": {
     "version": "1.0.0",
@@ -1930,7 +1930,7 @@
       "projectUniqueName": "D:\\WorkSpace\\Ecommerce\\api\\Ecommer.Api.csproj",
       "projectName": "Ecommer.Api",
       "projectPath": "D:\\WorkSpace\\Ecommerce\\api\\Ecommer.Api.csproj",
-      "packagesPath": "C:\\Users\\quocanh\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\quocanh\\AppData\\Local\\Temp\\cursor-sandbox-cache\\8a9f2c3552ed61d74df318d0f7e489a6\\nuget",
       "outputPath": "D:\\WorkSpace\\Ecommerce\\api\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [

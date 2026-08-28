@@ -18,6 +18,22 @@ public class ProductService
         return await _products.Find(_ => true).ToListAsync();
     }
 
+    /// <summary>
+    /// Trả về danh sách sản phẩm, chỉ giữ lại các variant có availableStock > 0.
+    /// Dùng cho endpoint công khai (GET /api/products) để ẩn sản phẩm đã bán hết khỏi website.
+    /// </summary>
+    public async Task<List<Product>> GetAllPublicAsync()
+    {
+        var products = await _products.Find(_ => true).ToListAsync();
+        foreach (var p in products)
+        {
+            p.Variants = p.Variants
+                .Where(v => v.IsActive && v.AvailableStock > 0)
+                .ToList();
+        }
+        return products.Where(p => p.Variants.Count > 0).ToList();
+    }
+
     public async Task<Product?> GetByIdAsync(string id)
     {
         return await _products.Find(p => p.Id == id).FirstOrDefaultAsync();

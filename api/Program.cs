@@ -114,6 +114,7 @@ builder.Services.AddSingleton<JwtService>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<InventoryService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<OrderStatusLogService>();
 

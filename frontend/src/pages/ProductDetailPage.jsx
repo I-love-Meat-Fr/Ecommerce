@@ -56,7 +56,7 @@ function ProductDetailPage() {
   }, [product?.category, id])
 
   const handleAddToCart = () => {
-    if (!selectedVariant || selectedVariant.stock === 0) return
+    if (!selectedVariant || selectedVariant.availableStock === 0) return
     addItem(product, selectedVariant, quantity)
     setAddedToCart(true)
     setTimeout(() => setAddedToCart(false), 2500)
@@ -237,8 +237,8 @@ function ProductDetailPage() {
                       </h3>
                       {selectedVariant && (
                         <span className="text-xs text-ink-500 font-light">
-                          {selectedVariant.stock > 0
-                            ? `Còn ${selectedVariant.stock} sản phẩm`
+                          {selectedVariant.availableStock > 0
+                            ? `Còn ${selectedVariant.availableStock} sản phẩm`
                             : 'Hết hàng'}
                         </span>
                       )}
@@ -248,12 +248,12 @@ function ProductDetailPage() {
                         <button
                           key={variant.sku || variant.name}
                           onClick={() => variant.isActive && setSelectedVariant(variant)}
-                          disabled={!variant.isActive || variant.stock === 0}
+                          disabled={!variant.isActive || variant.availableStock === 0}
                           className={`
                             flex justify-between items-center p-4 border transition-all duration-300
                             ${selectedVariant?.sku === variant.sku
                               ? 'border-ink-900 bg-ink-900 text-ivory-50'
-                              : variant.isActive && variant.stock > 0
+                              : variant.isActive && variant.availableStock > 0
                                 ? 'border-ivory-300 hover:border-ink-900 text-ink-900'
                                 : 'border-ivory-200 text-ink-300 cursor-not-allowed line-through'}
                           `}
@@ -281,7 +281,7 @@ function ProductDetailPage() {
                   <div className="inline-flex items-center border border-ivory-300">
                     <button
                       onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                      disabled={!selectedVariant || selectedVariant.stock === 0}
+                      disabled={!selectedVariant || selectedVariant.availableStock === 0}
                       className="w-12 h-12 flex items-center justify-center hover:bg-ivory-100 transition-colors disabled:opacity-30"
                     >
                       <Minus className="w-4 h-4" strokeWidth={1.5} />
@@ -292,12 +292,12 @@ function ProductDetailPage() {
                       onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                       className="w-16 text-center bg-transparent focus:outline-none font-display text-lg"
                       min="1"
-                      max={selectedVariant?.stock || 999}
-                      disabled={!selectedVariant || selectedVariant.stock === 0}
+                      max={selectedVariant?.availableStock || 999}
+                      disabled={!selectedVariant || selectedVariant.availableStock === 0}
                     />
                     <button
                       onClick={() => setQuantity(q => q + 1)}
-                      disabled={!selectedVariant || selectedVariant.stock === 0 || quantity >= (selectedVariant?.stock || 999)}
+                      disabled={!selectedVariant || selectedVariant.availableStock === 0 || quantity >= (selectedVariant?.availableStock || 999)}
                       className="w-12 h-12 flex items-center justify-center hover:bg-ivory-100 transition-colors disabled:opacity-30"
                     >
                       <Plus className="w-4 h-4" strokeWidth={1.5} />
@@ -309,7 +309,7 @@ function ProductDetailPage() {
                 <div className="space-y-3 pt-2">
                   <button
                     onClick={handleAddToCart}
-                    disabled={!selectedVariant || selectedVariant.stock === 0}
+                    disabled={!selectedVariant || selectedVariant.availableStock === 0}
                     className={`w-full btn-luxury disabled:cursor-not-allowed disabled:opacity-40 ${
                       addedToCart ? 'bg-champagne-500 border-champagne-500' : ''
                     }`}
@@ -321,7 +321,7 @@ function ProductDetailPage() {
                       </>
                     ) : !selectedVariant ? (
                       'Chọn phân loại'
-                    ) : selectedVariant.stock === 0 ? (
+                    ) : selectedVariant.availableStock === 0 ? (
                       'Hết Hàng'
                     ) : (
                       <>
