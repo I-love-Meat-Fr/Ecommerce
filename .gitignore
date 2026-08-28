@@ -1,11 +1,54 @@
+## .NET build output
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.pdb
+*.dll
+*.exe
+*.cache
+*.AssemblyInfo.cs
+*.AssemblyInfoInputs.cache
+*.csproj.AssemblyReference.cache
+*.csproj.CoreCompileInputs.cache
+*.csproj.nuget.dgspec.json
+*.csproj.nuget.g.props
+*.csproj.nuget.g.targets
+project.assets.json
+project.nuget.cache
+apphost.exe
+ref/
+refint/
+
+## Test results
+TestResults/
+*.trx
+*.coverage
+coverage/
+
+## Node / Frontend
 frontend/node_modules
 frontend/dist
+node_modules/
+dist/
+
+## Logs
+*.log
+
+## OS
+.DS_Store
+Thumbs.db
+
+## IDEs
+.vscode/
+.idea/
+
+## Deploy / hosting
+.vercel/
+
+## Local env files
 .env
 .env.local
 .env.*.local
-*.log
-.DS_Store
-.vscode
-.idea
-.vercel
 .env*
