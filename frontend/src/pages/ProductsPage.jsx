@@ -13,20 +13,9 @@ const categories = [
   { id: 'hot-deal', name: 'Hot Deal', subtitle: 'Ưu đãi' },
 ]
 
-const sampleProducts = [
-  { _id: '1', name: 'Hoa Đồng Tiền Vàng', slug: 'hoa-dong-tien-vang', description: 'Hoa đồng tiền vàng rực rỡ', imageUrl: 'https://images.unsplash.com/photo-1526346698789-22fd84314424?w=600', category: 'cay-giong', variants: [{ price: 250000, sku: 'HDT-VANG-01' }] },
-  { _id: '2', name: 'Hoa Đồng Tiền Đỏ', slug: 'hoa-dong-tien-do', description: 'Hoa đồng tiền đỏ thắm', imageUrl: 'https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=600', category: 'cay-giong', variants: [{ price: 280000, sku: 'HDT-DO-01' }] },
-  { _id: '3', name: 'Lan Ý Trắng', slug: 'lan-y-trang', description: 'Lan ý trắng tinh khiết', imageUrl: 'https://images.unsplash.com/photo-1593691509543-c55fb32e7355?w=600', category: 'lan-y', variants: [{ price: 350000, sku: 'LY-TRANG-01' }] },
-  { _id: '4', name: 'Lan Ý Hồng', slug: 'lan-y-hong', description: 'Lan ý hồng đẹp mắt', imageUrl: 'https://images.unsplash.com/photo-1616961686680-8f76a5d0e8e8?w=600', category: 'lan-y', variants: [{ price: 380000, sku: 'LY-HONG-01' }] },
-  { _id: '5', name: 'Monstera Deliciosa', slug: 'monstera-deliciosa', description: 'Cây Monstera lá xẻ', imageUrl: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600', category: 'monstera', variants: [{ price: 450000, sku: 'MON-DEL-01' }] },
-  { _id: '6', name: 'Monstera Obliqua', slug: 'monstera-obliqua', description: 'Monstera Obliqua hiếm', imageUrl: 'https://images.unsplash.com/photo-1637967886160-fd78dc3ce3f5?w=600', category: 'monstera', variants: [{ price: 850000, sku: 'MON-OBL-01' }] },
-  { _id: '7', name: 'Alocasia Polly', slug: 'alocasia-polly', description: 'Alocasia Polly lá mũi tên', imageUrl: 'https://images.unsplash.com/photo-1620803366004-119b57f54cd6?w=600', category: 'cay-giong', variants: [{ price: 380000, sku: 'ALO-POL-01' }] },
-  { _id: '8', name: 'Philodendron Gloriosum', slug: 'philodendron-gloriosum', description: 'Philodendron Gloriosum đẹp', imageUrl: 'https://images.unsplash.com/photo-1604762525953-f53a4b07962c?w=600', category: 'cay-giong', variants: [{ price: 520000, sku: 'PHI-GLO-01' }] },
-]
-
 function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [products, setProducts] = useState(sampleProducts)
+  const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
   
@@ -43,11 +32,9 @@ function ProductsPage() {
         } else {
           data = await productApi.getAll()
         }
-        if (data && data.length > 0) {
-          setProducts(data)
-        }
+        setProducts(Array.isArray(data) ? data : [])
       } catch (error) {
-        // Keep sample products
+        setProducts([])
       } finally {
         setLoading(false)
       }

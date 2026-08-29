@@ -11,10 +11,6 @@ function formatVnd(n) {
   return new Intl.NumberFormat('vi-VN').format(n) + '₫'
 }
 
-function totalStock(product) {
-  return (product.variants || []).reduce((sum, v) => sum + (v.availableStock ?? v.stock ?? 0), 0)
-}
-
 function minPrice(product) {
   const prices = (product.variants || []).map((v) => v.price || 0)
   return prices.length ? Math.min(...prices) : null
@@ -216,7 +212,6 @@ export default function ProductTable({ onEdit, refreshSignal }) {
               <th className="px-4 py-2.5">Tên sản phẩm</th>
               <th className="px-4 py-2.5">Danh mục</th>
               <th className="px-4 py-2.5 text-right">Giá từ</th>
-              <th className="px-4 py-2.5 text-right">Tồn kho</th>
               <th className="px-4 py-2.5 text-center">Biến thể</th>
               <th className="px-4 py-2.5 text-center">Trạng thái</th>
               <th className="px-4 py-2.5 text-right w-32">Thao tác</th>
@@ -225,23 +220,20 @@ export default function ProductTable({ onEdit, refreshSignal }) {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={9} className="px-4 py-12 text-center text-ink-500">
+                <td colSpan={8} className="px-4 py-12 text-center text-ink-500">
                   Đang tải…
                 </td>
               </tr>
             )}
             {!loading && filtered.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-12 text-center text-ink-500">
+                <td colSpan={8} className="px-4 py-12 text-center text-ink-500">
                   Không có sản phẩm nào.
                 </td>
               </tr>
             )}
             {!loading &&
               filtered.map((p) => {
-                const stock = totalStock(p)
-                const lowStock = stock > 0 && stock < 10
-                const outStock = stock === 0
                 return (
                   <tr
                     key={p.id}
@@ -274,15 +266,6 @@ export default function ProductTable({ onEdit, refreshSignal }) {
                     <td className="px-4 py-2.5 text-ink-700">{p.category || '—'}</td>
                     <td className="px-4 py-2.5 text-right font-mono text-ink-900">
                       {formatVnd(minPrice(p))}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-mono">
-                      {outStock ? (
-                        <span className="text-red-600 font-medium">Hết</span>
-                      ) : lowStock ? (
-                        <span className="text-amber-600">{stock}</span>
-                      ) : (
-                        <span className="text-ink-900">{stock}</span>
-                      )}
                     </td>
                     <td className="px-4 py-2.5 text-center">
                       <span className="font-mono text-xs text-ink-700">

@@ -59,23 +59,6 @@ public class ProductVariant
     [BsonElement("price")]
     public decimal Price { get; set; }
 
-    [BsonElement("stock")]
-    public int Stock { get; set; }
-
-    /// <summary>
-    /// Số lượng đang bị tạm giữ trong các đơn hàng Pending / Processing / Shipped.
-    /// Không bao gồm đơn Cancelled (hoàn kho khi hủy).
-    /// </summary>
-    [BsonElement("lockedQuantity")]
-    public int LockedQuantity { get; set; }
-
-    /// <summary>
-    /// Số lượng khả dụng = stock − lockedQuantity.
-    /// Chỉ dùng khi trả về cho client; không persist vào MongoDB.
-    /// </summary>
-    [BsonIgnore]
-    public int AvailableStock => Math.Max(0, Stock - LockedQuantity);
-
     [BsonElement("imageUrl")]
     public string? ImageUrl { get; set; }
 

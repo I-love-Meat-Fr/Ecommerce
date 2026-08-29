@@ -14,20 +14,17 @@ public class OrdersController : ControllerBase
     private readonly ProductService _productService;
     private readonly OrderStatusLogService _logService;
     private readonly UserService _userService;
-    private readonly InventoryService _inventoryService;
 
     public OrdersController(
         OrderService orderService,
         ProductService productService,
         OrderStatusLogService logService,
-        UserService userService,
-        InventoryService inventoryService)
+        UserService userService)
     {
         _orderService = orderService;
         _productService = productService;
         _logService = logService;
         _userService = userService;
-        _inventoryService = inventoryService;
     }
 
     [HttpGet]
@@ -103,14 +100,6 @@ public class OrdersController : ControllerBase
             if (!variant.IsActive)
                 return BadRequest(new { message = $"Variant '{variant.Name}' is no longer available" });
 
-            var available = variant.Stock - variant.LockedQuantity;
-            if (available < item.Quantity)
-            {
-                if (available == 0)
-                    return BadRequest(new { message = $"Sản phẩm '{variant.Name}' hiện đã hết hàng." });
-                return BadRequest(new { message = $"Sản phẩm '{variant.Name}' chỉ còn {available} trong kho (yêu cầu {item.Quantity})." });
-            }
-
             // Overwrite everything derived from the DB. Client cannot tamper with prices or names.
             item.UnitPrice = variant.Price;
             item.ProductName = product.Name;
@@ -128,7 +117,7 @@ public class OrdersController : ControllerBase
             ShippingAddress = request.ShippingAddress,
         };
 
-        var created = await _orderService.CreateOrderWithLockAsync(order);
+        var created = await _orderService.CreateAsync(order);
         await _logService.CreateLogAsync(created.Id!, null, "Pending", userId, "Order created");
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
@@ -150,24 +139,6 @@ public class OrdersController : ControllerBase
         var success = await _orderService.UpdateStatusAsync(id, status.Status, fromStatus, changedBy, status.Note);
         if (!success)
             return NotFound();
-
-        // Xử lý tồn kho theo trạng thái chuyển đổi
-        if (status.Status == "Cancelled")
-        {
-            foreach (var item in order.Items)
-            {
-                var sku = item.Sku ?? item.VariantId;
-                await _inventoryService.UnlockStockAsync(item.ProductId, sku, item.Quantity);
-            }
-        }
-        else if (status.Status == "Delivered")
-        {
-            foreach (var item in order.Items)
-            {
-                var sku = item.Sku ?? item.VariantId;
-                await _inventoryService.CommitStockAsync(item.ProductId, sku, item.Quantity);
-            }
-        }
 
         return NoContent();
     }

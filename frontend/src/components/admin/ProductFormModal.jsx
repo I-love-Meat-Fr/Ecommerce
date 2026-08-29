@@ -8,7 +8,6 @@ const emptyVariant = () => ({
   color: '',
   storage: '',
   price: 0,
-  stock: 0,
   imageUrl: '',
   isActive: true,
 })
@@ -281,7 +280,6 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
     form.variants.forEach((v, i) => {
       if (!v.name.trim()) e[`variant_${i}_name`] = 'Tên biến thể bắt buộc'
       if (v.price == null || v.price < 0) e[`variant_${i}_price`] = 'Giá không hợp lệ'
-      if (v.stock == null || v.stock < 0) e[`variant_${i}_stock`] = 'Tồn kho không hợp lệ'
     })
     setErrors(e)
     return Object.keys(e).length === 0
@@ -303,7 +301,6 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
           color: (v.color || '').trim(),
           storage: (v.storage || '').trim(),
           price: Number(v.price) || 0,
-          stock: Number(v.stock) || 0,
           imageUrl: (v.imageUrl || '').trim(),
           isActive: !!v.isActive,
         })),
@@ -530,14 +527,7 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
                         className={`w-full px-2.5 py-1.5 text-xs border rounded-xs font-mono text-right focus:outline-none focus:border-ink-900 ${
                           errors[`variant_${idx}_price`] ? 'border-red-500' : 'border-ink-300'}`} />
                     </div>
-                    <div className="col-span-4 md:col-span-1">
-                      <input type="number" placeholder="Kho *" min="0"
-                        value={v.stock}
-                        onChange={(e) => updateVariant(idx, 'stock', e.target.value)}
-                        className={`w-full px-2.5 py-1.5 text-xs border rounded-xs font-mono text-right focus:outline-none focus:border-ink-900 ${
-                          errors[`variant_${idx}_stock`] ? 'border-red-500' : 'border-ink-300'}`} />
-                    </div>
-                    <div className="col-span-12 md:col-span-2">
+                    <div className="col-span-12 md:col-span-3">
                       <ImageField label="Ảnh biến thể" value={v.imageUrl}
                         onChange={(url) => updateVariant(idx, 'imageUrl', url)} />
                     </div>

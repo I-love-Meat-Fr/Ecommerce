@@ -45,15 +45,9 @@ function HomePage() {
     }
   }, [])
 
-  // Pick the 4 products with the highest available stock across their variants.
-  // Falls back to the first 4 when there's no stock data.
+  // Display the first four products returned by the API.
   const featuredProducts = useMemo(() => {
-    if (!allProducts.length) return []
-    const totalAvailable = (p) =>
-      (p.variants || []).reduce((sum, v) => sum + (v.availableStock ?? v.stock ?? 0), 0)
-    const withStock = allProducts.filter((p) => totalAvailable(p) > 0)
-    const pool = withStock.length >= 4 ? withStock : allProducts
-    return [...pool].sort((a, b) => totalAvailable(b) - totalAvailable(a)).slice(0, 4)
+    return allProducts.slice(0, 4)
   }, [allProducts])
 
   // Derive categories from real product data. Each category becomes a tile

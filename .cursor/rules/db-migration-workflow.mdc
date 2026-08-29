@@ -1,9 +1,6 @@
 ---
-description: Database modification workflow for MongoDB
-globs: **/*.cs
 alwaysApply: false
 ---
-
 # Database Modification Workflow
 
 When modifying the MongoDB database, follow this strict sequence:
