@@ -35,16 +35,12 @@ function MobileMenu({ isOpen, onClose }) {
     navigate('/')
   }
 
-  // Flatten the tree into link rows so each child has its own line and we
-  // can stagger the animation cleanly. Indentation is conveyed by font size
-  // (smaller for children) — no DOM-level padding hack.
-  const treeLinks = []
-  for (const root of categoryTree) {
-    treeLinks.push({ name: root.name, href: `/san-pham?category=${encodeURIComponent(root.slug)}`, depth: 0 })
-    for (const child of root.children || []) {
-      treeLinks.push({ name: child.name, href: `/san-pham?category=${encodeURIComponent(child.slug)}`, depth: 1 })
-    }
-  }
+  // Flatten the category list into link rows. Each category gets one line —
+  // no hierarchy to collapse since the model is flat.
+  const treeLinks = categoryTree.map((cat) => ({
+    name: cat.name,
+    href: `/san-pham?category=${encodeURIComponent(cat.slug)}`,
+  }))
 
   // Compose the full menu: static editorial labels first, then dynamic
   // category tree (only if loaded). Each item is one line so the animation

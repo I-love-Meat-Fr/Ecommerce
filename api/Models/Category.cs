@@ -3,6 +3,13 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Ecommer.Api.Models;
 
+/// <summary>
+/// Flat taxonomy: every document is a standalone category. There is no
+/// parent/child relationship — each product's <c>category</c> field is a
+/// single slug pointing at exactly one of these documents. Storing the list
+/// flat keeps admin CRUD trivial and removes any ambiguity when a product's
+/// category is deleted.
+/// </summary>
 public class Category
 {
     [BsonId]
@@ -19,27 +26,12 @@ public class Category
     public string? Description { get; set; }
 
     /// <summary>
-    /// Parent category ObjectId. <c>null</c> for top-level categories.
-    /// Self-referencing — supports an N-level hierarchy (currently 3 levels used:
-    /// Cây Cảnh → Monstera → Monstera Deliciosa).
-    /// </summary>
-    [BsonElement("parentId")]
-    [BsonIgnoreIfNull]
-    public string? ParentId { get; set; }
-
-    /// <summary>
-    /// Manual sort order within siblings (lower numbers first).
+    /// Manual sort order (lower numbers first). Used by storefront filters
+    /// and the admin list. Ties broken alphabetically by name.
     /// </summary>
     [BsonElement("sortOrder")]
     public int SortOrder { get; set; } = 0;
 
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    /// <summary>
-    /// Children populated by <c>CategoryService.GetTreeAsync</c>. Not persisted
-    /// (no <c>[BsonElement]</c>) — MongoDB storage stays flat.
-    /// </summary>
-    [BsonIgnore]
-    public List<Category> Children { get; set; } = new();
 }

@@ -76,13 +76,12 @@ function HomePage() {
     return idx
   }, [allProducts])
 
-  // Prefer the server's category tree (gives us proper names & ordering).
-  // Fall back to deriving from products when the tree endpoint fails — keeps
-  // the homepage working even on cold-start or transient Atlas hiccups.
+  // Prefer the server's flat category list (gives us proper names & ordering).
+  // Fall back to deriving from products when the endpoint fails.
   const categoryTiles = useMemo(() => {
     if (categoryTree.length > 0) {
       const out = []
-      const visit = (node) => {
+      for (const node of categoryTree) {
         const meta = productIndex.get(node.slug)
         if (meta) {
           out.push({
@@ -92,9 +91,7 @@ function HomePage() {
             imageUrl: meta.imageUrl,
           })
         }
-        for (const child of node.children || []) visit(child)
       }
-      for (const root of categoryTree) visit(root)
       return out.sort((a, b) => b.count - a.count).slice(0, 4)
     }
     // Fallback: derive from products.

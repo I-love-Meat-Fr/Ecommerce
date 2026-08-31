@@ -74,14 +74,12 @@ function ProductDetailPage() {
     return () => { mounted = false }
   }, [])
 
-  // Build slug → name lookup map from the tree for O(1) resolution.
+  // Build slug → name lookup map from the flat category list for O(1) resolution.
   const catNameMap = useMemo(() => {
     const map = new Map()
-    const visit = (node) => {
+    for (const node of categoryTree) {
       map.set(node.slug, node.name)
-      for (const c of node.children || []) visit(c)
     }
-    for (const root of categoryTree) visit(root)
     return map
   }, [categoryTree])
 

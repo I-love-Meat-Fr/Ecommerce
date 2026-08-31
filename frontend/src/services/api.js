@@ -102,6 +102,8 @@ export const productApi = {
     return {
       items: unwrapProductList(data),
       total: data.total ?? 0,
+      totalSkus: data.totalSkus ?? 0,
+      totalProducts: data.totalProducts ?? 0,
       page: data.page ?? 1,
       pageSize: data.pageSize ?? 0,
       totalPages: data.totalPages ?? 0,
@@ -237,19 +239,15 @@ export const userApi = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const categoryApi = {
-  /** Flat list (legacy admin flat view). */
+  /** Flat list of all categories, ordered by sortOrder + name. */
   getAll: async () => {
     const response = await api.get('/categories')
     return response.data
   },
 
-  /**
-   * Full N-level tree (CategoryNode[]). Roots first; each node carries its
-   * `children` list recursively. Used by the storefront mega-menu / filter
-   * sidebar and by the admin tree view.
-   */
+  /** Alias of getAll — maintained for any call-sites that still use getTree. */
   getTree: async () => {
-    const response = await api.get('/categories/tree')
+    const response = await api.get('/categories')
     return response.data || []
   },
 
@@ -259,7 +257,6 @@ export const categoryApi = {
   },
 
   create: async (payload) => {
-    // `parentId` is optional — undefined/empty produces a root category.
     const response = await api.post('/categories', payload)
     return response.data
   },

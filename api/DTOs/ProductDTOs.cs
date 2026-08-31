@@ -70,8 +70,14 @@ public class ProductListResponse
     /// <summary>Products for the current page, each enriched with per-SKU stats and ratings.</summary>
     public List<ProductWithStats> Items { get; set; } = new();
 
-    /// <summary>Total matching products across all pages (after filters, before pagination).</summary>
+    /// <summary>Total matching products across all pages (after filters, before pagination). Used for pagination math.</summary>
     public int Total { get; set; }
+
+    /// <summary>Total active SKU count across all pages (after filters). Used for display counts.</summary>
+    public int TotalSkus { get; set; }
+
+    /// <summary>Total product documents across all pages (after filters, before pagination). Same as Total but explicit.</summary>
+    public int TotalProducts { get; set; }
 
     /// <summary>Echo of the page number that produced this slice.</summary>
     public int Page { get; set; }
@@ -91,8 +97,8 @@ public class ProductListResponse
 
 /// <summary>
 /// Lightweight projection of <see cref="Category"/> for the
-/// <c>GET /api/categories/tree</c> endpoint. Excludes description and
-/// timestamps to keep the payload small for the storefront mega-menu.
+/// <c>GET /api/categories</c> endpoint. Excludes description and
+/// timestamps to keep the payload small for the storefront filter bar.
 /// </summary>
 public class CategoryNode
 {
@@ -105,7 +111,6 @@ public class CategoryNode
 
     public int SortOrder { get; set; }
 
-    /// <summary>Direct children; empty for leaf nodes.</summary>
-    public List<CategoryNode> Children { get; set; } = new();
+    public string? Description { get; set; }
 }
 

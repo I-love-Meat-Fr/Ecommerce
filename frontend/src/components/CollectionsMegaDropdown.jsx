@@ -1,67 +1,60 @@
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import SafeImage from './SafeImage'
 import { productApi } from '../services/api'
 import { formatVnd } from '../services/skuHelpers'
-import { ChevronRight, Sparkles } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 
 /**
  * Mega dropdown for the "Bộ Sưu Tập" navbar link.
  *
- * Layout (4 columns on lg+):
- *   1. Danh mục cây (root categories only — level 1)
- *   2. Danh mục cấp 2 của cate đang chọn (children of hovered root)
- *   3. Sản phẩm nổi bật theo danh mục đang chọn (top 3 popular SKUs)
- *   4. Reserved for future content (placeholder)
+ * Layout (3 columns on lg+):
+ *   1. Sản phẩm — top 5 popular products (compact list, hover to preview)
+ *   2. Phiên bản — top 5 active SKUs/variants of the hovered product
+ *   3. Nổi bật — top 3 newest products (visual cards)
  *
- * Interaction: hover a root in column 1 → column 2 swaps to its children
- * and column 3 fetches the most popular products under that root.
+ * Interaction: hover a product in column 1 → column 2 swaps its SKUs.
+ * Falls back to the first product on open.
  *
  * Props:
- *   tree             : full category tree from `categoryApi.getTree()`
- *   onMouseEnter     : forwarded hover signal to the trigger (keeps the panel
- *                      open while moving from trigger → panel)
- *   onMouseLeave     : same in reverse
- *   onClose          : called when user explicitly clicks a nav link inside
+ *   onMouseEnter: forwarded hover signal to keep panel open
+ *   onMouseLeave: same in reverse
  */
-function CollectionsMegaDropdown({ tree, onMouseEnter, onMouseLeave }) {
-  // First root = default selection so columns 2 & 3 aren't empty on open.
-  const firstRoot = tree[0]
-  const [hoveredSlug, setHoveredSlug] = useState(firstRoot?.slug || null)
+function CollectionsMegaDropdown({ onMouseEnter, onMouseLeave }) {
+  const [products, setProducts] = useState([])
   const [featured, setFeatured] = useState([])
+  const [hoveredProductId, setHoveredProductId] = useState(null)
+  const [productsLoading, setProductsLoading] = useState(false)
   const [featuredLoading, setFeaturedLoading] = useState(false)
   const abortRef = useRef(null)
 
-  // Root list (level 1) — top-level entries from the tree.
-  const rootCategories = useMemo(() => Array.isArray(tree) ? tree : [], [tree])
-
-  // Children of the currently hovered root (level 2). Falls back to empty
-  // array when nothing is hovered or the root has no children.
-  const hoveredRoot = useMemo(
-    () => rootCategories.find((r) => r.slug === hoveredSlug) || null,
-    [rootCategories, hoveredSlug],
-  )
-  const subCategories = hoveredRoot?.children || []
-
-  // Fetch featured products under the hovered root. Re-runs when the user
-  // moves the mouse to a different root. Includes descendants of children
-  // so e.g. "Cây Cảnh" surfaces Monstera, Lan Ý, Sen Đá products.
+  // Fetch top 5 popular products (column 1).
   useEffect(() => {
-    if (!hoveredRoot) {
-      setFeatured([])
-      return
-    }
     if (abortRef.current) abortRef.current.abort()
     const controller = new AbortController()
     abortRef.current = controller
+    setProductsLoading(true)
+    productApi
+      .getList({ sortBy: 'popular', pageSize: 5, page: 1 })
+      .then((data) => {
+        if (!controller.signal.aborted) setProducts(data.items || [])
+      })
+      .catch((err) => {
+        if (err?.name === 'CanceledError' || err?.name === 'AbortError') return
+        setProducts([])
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setProductsLoading(false)
+      })
+    return () => controller.abort()
+  }, [])
+
+  // Fetch top 3 newest products (column 3 — "Mới về").
+  useEffect(() => {
+    const controller = new AbortController()
     setFeaturedLoading(true)
     productApi
-      .getList({
-        category: hoveredRoot.slug,
-        sortBy: 'popular',
-        pageSize: 3,
-        page: 1,
-      })
+      .getList({ sortBy: 'newest', pageSize: 3, page: 1 })
       .then((data) => {
         if (!controller.signal.aborted) setFeatured(data.items || [])
       })
@@ -73,12 +66,18 @@ function CollectionsMegaDropdown({ tree, onMouseEnter, onMouseLeave }) {
         if (!controller.signal.aborted) setFeaturedLoading(false)
       })
     return () => controller.abort()
-  }, [hoveredRoot])
+  }, [])
 
-  // Keep a sensible default when the tree finishes loading after first paint.
+  // Default to first product when the list loads after first paint.
   useEffect(() => {
-    if (!hoveredSlug && firstRoot) setHoveredSlug(firstRoot.slug)
-  }, [firstRoot, hoveredSlug])
+    if (!hoveredProductId && products.length) setHoveredProductId(products[0].id)
+  }, [products, hoveredProductId])
+
+  // Resolve the hovered product + its top 5 active variants (column 2).
+  const hoveredProduct = products.find((p) => p.id === hoveredProductId) || null
+  const variants = (hoveredProduct?.variants || [])
+    .filter((v) => v.isActive !== false)
+    .slice(0, 5)
 
   return (
     <div
@@ -87,43 +86,79 @@ function CollectionsMegaDropdown({ tree, onMouseEnter, onMouseLeave }) {
       onMouseLeave={onMouseLeave}
     >
       <div
-        className="bg-ivory-50 border border-ivory-300 shadow-elevated w-[1100px] max-w-[92vw] p-8 grid grid-cols-4 gap-6 animate-fade-in"
+        className="bg-ivory-50 border border-ivory-300 shadow-elevated w-[960px] max-w-[92vw] p-8 grid grid-cols-3 gap-6 animate-fade-in"
         role="menu"
         aria-label="Bộ sưu tập"
       >
-        {/* ─── Column 1: level-1 (root) categories ─── */}
+        {/* ─── Column 1: top 5 products ─── */}
         <div>
-          <ColumnHeader icon="01" title="Danh mục" subtitle="Cây & hoa" />
+          <ColumnHeader icon="01" title="Sản phẩm" subtitle="Phổ biến nhất" />
           <ul className="mt-4 space-y-0.5">
-            {rootCategories.map((root) => {
-              const active = hoveredSlug === root.slug
-              return (
-                <li key={root.id || root.slug}>
-                  <button
-                    type="button"
-                    onMouseEnter={() => setHoveredSlug(root.slug)}
-                    onFocus={() => setHoveredSlug(root.slug)}
-                    className={`group w-full text-left px-3 py-2 flex items-center justify-between transition-colors ${
-                      active
-                        ? 'bg-sage-50 text-ink-900'
-                        : 'text-ink-600 hover:bg-ivory-100 hover:text-ink-900'
-                    }`}
-                  >
-                    <span className="text-sm font-medium tracking-wide">
-                      {root.name}
-                    </span>
-                    <ChevronRight
-                      className={`w-3 h-3 transition-transform ${
-                        active
-                          ? 'text-sage-600 translate-x-0.5'
-                          : 'text-ink-300'
-                      }`}
-                      strokeWidth={1.5}
-                    />
-                  </button>
+            {productsLoading && products.length === 0 ? (
+              [...Array(5)].map((_, i) => (
+                <li key={i} className="flex items-center gap-3 px-3 py-2">
+                  <div className="w-10 h-10 shimmer flex-shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-2.5 shimmer w-3/4" />
+                    <div className="h-2.5 shimmer w-1/3" />
+                  </div>
                 </li>
-              )
-            })}
+              ))
+            ) : products.length === 0 ? (
+              <li className="text-xs text-ink-400 font-light px-3 py-2">
+                Chưa có sản phẩm nào.
+              </li>
+            ) : (
+              products.map((p) => {
+                const active = hoveredProductId === p.id
+                const firstActive =
+                  (p.variants || []).find((v) => v.isActive !== false) ||
+                  (p.variants || [])[0]
+                const price = firstActive?.price
+                const imageUrl = firstActive?.imageUrl || p.imageUrl
+                const name = p.name || '—'
+                return (
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      onMouseEnter={() => setHoveredProductId(p.id)}
+                      onFocus={() => setHoveredProductId(p.id)}
+                      className={`group w-full text-left px-3 py-2 flex items-center gap-3 transition-colors ${
+                        active
+                          ? 'bg-sage-50 text-ink-900'
+                          : 'text-ink-600 hover:bg-ivory-100 hover:text-ink-900'
+                      }`}
+                    >
+                      <div className="w-10 h-10 bg-ivory-100 overflow-hidden flex-shrink-0">
+                        <SafeImage
+                          src={imageUrl}
+                          alt={name}
+                          fallbackSeed={p.slug || name}
+                          imgClassName="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className="text-sm font-medium tracking-wide line-clamp-1"
+                          title={name}
+                        >
+                          {name}
+                        </p>
+                        <p className="text-[11px] text-ink-500 mt-0.5 font-light">
+                          {price != null ? formatVnd(price) : 'Liên hệ'}
+                        </p>
+                      </div>
+                      <ChevronRight
+                        className={`w-3 h-3 transition-transform ${
+                          active ? 'text-sage-600 translate-x-0.5' : 'text-ink-300'
+                        }`}
+                        strokeWidth={1.5}
+                      />
+                    </button>
+                  </li>
+                )
+              })
+            )}
           </ul>
           <Link
             to="/san-pham"
@@ -134,49 +169,87 @@ function CollectionsMegaDropdown({ tree, onMouseEnter, onMouseLeave }) {
           </Link>
         </div>
 
-        {/* ─── Column 2: level-2 children of the hovered root ─── */}
+        {/* ─── Column 2: top 5 SKUs of the hovered product ─── */}
         <div>
           <ColumnHeader
             icon="02"
-            title="Danh mục cấp 2"
-            subtitle={hoveredRoot?.name || '—'}
+            title="Phiên bản"
+            subtitle={hoveredProduct?.name || '—'}
           />
-          <div className="mt-4">
-            {subCategories.length === 0 ? (
+          <div className="mt-4 space-y-1">
+            {!hoveredProduct ? (
               <p className="text-xs text-ink-400 font-light leading-relaxed">
-                {hoveredRoot
-                  ? 'Danh mục này chưa có phân loại cấp 2.'
-                  : 'Chọn một danh mục ở cột 1 để xem cấp 2.'}
+                Di chuột qua một sản phẩm để xem các phiên bản.
+              </p>
+            ) : variants.length === 0 ? (
+              <p className="text-xs text-ink-400 font-light leading-relaxed">
+                Sản phẩm này chưa có phiên bản nào.
               </p>
             ) : (
-              <ul className="space-y-0.5">
-                {subCategories.map((sub) => (
-                  <li key={sub.id || sub.slug}>
-                    <Link
-                      to={`/san-pham?category=${encodeURIComponent(sub.slug)}`}
-                      className="block px-3 py-2 text-sm text-ink-700 hover:bg-ivory-100 hover:text-ink-900 transition-colors"
-                    >
-                      {sub.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              variants.map((variant) => {
+                const variantLabel = variant.name || variant.sku || '—'
+                const variantMeta = [variant.color, variant.storage]
+                  .filter(Boolean)
+                  .join(' · ')
+                const skuHandle = `${hoveredProduct.id}-${encodeURIComponent(
+                  variant.sku || ''
+                )}`
+                return (
+                  <Link
+                    key={variant.sku || variant.name}
+                    to={`/san-pham/${skuHandle}`}
+                    className="flex items-center gap-3 px-2 py-1.5 hover:bg-ivory-100 transition-colors"
+                  >
+                    <div className="w-9 h-9 bg-ivory-100 overflow-hidden flex-shrink-0">
+                      <SafeImage
+                        src={variant.imageUrl || hoveredProduct.imageUrl}
+                        alt={variantLabel}
+                        fallbackSeed={variant.sku || variantLabel}
+                        imgClassName="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className="text-xs text-ink-900 line-clamp-1 font-medium"
+                        title={variantLabel}
+                      >
+                        {variantLabel}
+                      </p>
+                      {variantMeta && (
+                        <p className="text-[10px] text-ink-500 mt-0.5 font-light line-clamp-1">
+                          {variantMeta}
+                        </p>
+                      )}
+                      <p className="text-[11px] text-sage-600 mt-0.5 font-semibold">
+                        {variant.price != null ? formatVnd(variant.price) : 'Liên hệ'}
+                      </p>
+                    </div>
+                  </Link>
+                )
+              })
             )}
           </div>
+          {hoveredProduct && (
+            <Link
+              to={`/san-pham/${encodeURIComponent(
+                hoveredProduct.slug || hoveredProduct.id
+              )}`}
+              className="mt-4 inline-flex items-center gap-1 text-[10px] tracking-widest uppercase text-sage-600 hover:text-sage-700 transition-colors"
+            >
+              Xem chi tiết {hoveredProduct.name}
+              <ChevronRight className="w-3 h-3" strokeWidth={1.5} />
+            </Link>
+          )}
         </div>
 
-        {/* ─── Column 3: featured products under the hovered root ─── */}
-        <div className="col-span-1">
-          <ColumnHeader
-            icon="03"
-            title="Nổi bật"
-            subtitle={hoveredRoot ? `Top ${hoveredRoot.name}` : '—'}
-          />
+        {/* ─── Column 3: top 3 featured (newest) ─── */}
+        <div>
+          <ColumnHeader icon="03" title="Nổi bật" subtitle="Mới về" />
           <div className="mt-4 space-y-3">
             {featuredLoading && featured.length === 0 ? (
               [...Array(3)].map((_, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-12 h-12 shimmer flex-shrink-0" />
+                  <div className="w-14 h-14 shimmer flex-shrink-0" />
                   <div className="flex-1 space-y-1.5">
                     <div className="h-2.5 shimmer w-3/4" />
                     <div className="h-2.5 shimmer w-1/3" />
@@ -185,52 +258,26 @@ function CollectionsMegaDropdown({ tree, onMouseEnter, onMouseLeave }) {
               ))
             ) : featured.length === 0 ? (
               <p className="text-xs text-ink-400 font-light leading-relaxed">
-                Chưa có sản phẩm nổi bật cho danh mục này.
+                Chưa có sản phẩm nổi bật.
               </p>
             ) : (
-              featured.map((p) => (
-                <FeaturedProductRow key={p.id} product={p} />
-              ))
+              featured.map((p) => <FeaturedProductCard key={p.id} product={p} />)
             )}
           </div>
-          {hoveredRoot && (
-            <Link
-              to={`/san-pham?category=${encodeURIComponent(hoveredRoot.slug)}`}
-              className="mt-4 inline-flex items-center gap-1 text-[10px] tracking-widest uppercase text-ink-500 hover:text-ink-900 transition-colors"
-            >
-              Xem tất cả
-              <ChevronRight className="w-3 h-3" strokeWidth={1.5} />
-            </Link>
-          )}
-        </div>
-
-        {/* ─── Column 4: reserved (placeholder) ─── */}
-        <div>
-          <ColumnHeader
-            icon="04"
-            title="Khám phá"
-            subtitle="Sắp ra mắt"
-          />
-          <div className="mt-4 aspect-[4/3] bg-ivory-100 flex flex-col items-center justify-center text-center px-4 border border-dashed border-ivory-300">
-            <Sparkles
-              className="w-5 h-5 text-sage-500 mb-2"
-              strokeWidth={1.5}
-            />
-            <p className="text-[11px] tracking-widest uppercase text-ink-500 font-medium">
-              Sắp Ra Mắt
-            </p>
-            <p className="text-[10px] text-ink-400 mt-1 font-light leading-relaxed">
-              Phần này sẽ được bổ sung trong thời gian tới.
-            </p>
-          </div>
+          <Link
+            to="/san-pham?sortBy=newest"
+            className="mt-4 inline-flex items-center gap-1 text-[10px] tracking-widest uppercase text-ink-500 hover:text-ink-900 transition-colors"
+          >
+            Xem tất cả
+            <ChevronRight className="w-3 h-3" strokeWidth={1.5} />
+          </Link>
         </div>
       </div>
     </div>
   )
 }
 
-// Small editorial header for each dropdown column. The "01"–"04" badge
-// keeps the four columns visually anchored to the same rhythm.
+// Small editorial header for each dropdown column.
 function ColumnHeader({ icon, title, subtitle }) {
   return (
     <div className="flex items-baseline gap-2 pb-2 border-b border-ivory-200">
@@ -249,39 +296,46 @@ function ColumnHeader({ icon, title, subtitle }) {
   )
 }
 
-/**
- * FeaturedProductRow — compact "list row" preview: small image on the left,
- * name + price stacked on the right. Clicking navigates to the detail page.
- */
-function FeaturedProductRow({ product }) {
+// Visual card for the "Nổi bật" column — image-forward layout, distinct from
+// the compact rows used in column 1 so the two read as different surfaces.
+function FeaturedProductCard({ product }) {
   const variants = product.variants || []
-  // Pick the first active variant for the price + image.
-  const firstActive = variants.find((v) => v.isActive !== false) || variants[0]
+  const firstActive =
+    variants.find((v) => v.isActive !== false) || variants[0]
   const price = firstActive?.price
+  const originalPrice = firstActive?.originalPrice
   const imageUrl = firstActive?.imageUrl || product.imageUrl
   const name = product.name || '—'
-  const detailPath = `/san-pham/${encodeURIComponent(product.slug || product.id)}`
+  const detailPath = `/san-pham/${encodeURIComponent(
+    product.slug || product.id
+  )}`
+  const onSale =
+    Number.isFinite(Number(originalPrice)) &&
+    Number(originalPrice) > Number(price)
   return (
-    <Link
-      to={detailPath}
-      className="flex items-center gap-3 px-2 py-1.5 hover:bg-ivory-100 transition-colors"
-    >
-      <div className="w-12 h-12 bg-ivory-100 overflow-hidden flex-shrink-0">
+    <Link to={detailPath} className="block group">
+      <div className="aspect-[4/3] bg-ivory-100 overflow-hidden mb-2">
         <SafeImage
           src={imageUrl}
           alt={name}
           fallbackSeed={product.slug || name}
-          imgClassName="w-full h-full object-cover"
+          imgClassName="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs text-ink-900 line-clamp-1 font-medium" title={name}>
-          {name}
-        </p>
-        <p className="text-[11px] text-ink-500 mt-0.5 font-light">
-          {price != null ? formatVnd(price) : 'Liên hệ'}
-        </p>
-      </div>
+      <p
+        className="text-xs text-ink-900 line-clamp-1 font-medium"
+        title={name}
+      >
+        {name}
+      </p>
+      <p className="text-[11px] text-sage-600 mt-0.5 font-semibold">
+        {price != null ? formatVnd(price) : 'Liên hệ'}
+        {onSale && (
+          <span className="ml-1 text-ink-400 font-light line-through">
+            {formatVnd(originalPrice)}
+          </span>
+        )}
+      </p>
     </Link>
   )
 }

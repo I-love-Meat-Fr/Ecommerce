@@ -19,28 +19,6 @@ const SORT_LABEL = Object.fromEntries(
   PRODUCT_SORT_OPTIONS.map((o) => [o.value, o.label])
 )
 
-// Walk the category tree to find which root contains the given slug. Used
-// to drive the level-2 sub-bar — when the user is on a child slug we still
-// want to highlight the root above it. Returns null when no category is
-// selected or the slug is not found anywhere in the tree.
-function findRootOfSlug(tree, slug) {
-  if (!Array.isArray(tree) || !slug || slug === ALL) return null
-  for (const root of tree) {
-    if (root.slug === slug) return root
-    if (containsSlug(root.children, slug)) return root
-  }
-  return null
-}
-
-function containsSlug(children, slug) {
-  if (!Array.isArray(children)) return false
-  for (const c of children) {
-    if (c.slug === slug) return true
-    if (containsSlug(c.children, slug)) return true
-  }
-  return false
-}
-
 function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -68,7 +46,7 @@ function ProductsPage() {
   // ── Component state ──────────────────────────────────────────────────
   const [categoryTree, setCategoryTree] = useState([])
   const [productsResponse, setProductsResponse] = useState({
-    items: [], page: 1, pageSize: DEFAULT_PAGE_SIZE, total: 0, totalPages: 0,
+    items: [], page: 1, pageSize: DEFAULT_PAGE_SIZE, total: 0, totalSkus: 0, totalProducts: 0, totalPages: 0,
   })
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
@@ -128,6 +106,8 @@ function ProductsPage() {
         setProductsResponse({
           items: data.items || [],
           total: data.total || 0,
+          totalSkus: data.totalSkus || 0,
+          totalProducts: data.totalProducts || 0,
           page: data.page || 1,
           pageSize: data.pageSize || DEFAULT_PAGE_SIZE,
           totalPages: data.totalPages || 0,
@@ -138,7 +118,7 @@ function ProductsPage() {
       .catch(() => {
         if (cancelled) return
         setProductsResponse({
-          items: [], total: 0, page: 1, pageSize: DEFAULT_PAGE_SIZE,
+          items: [], total: 0, totalSkus: 0, totalProducts: 0, page: 1, pageSize: DEFAULT_PAGE_SIZE,
           totalPages: 0, hasNextPage: false, hasPrevPage: false,
         })
       })
@@ -227,40 +207,25 @@ function ProductsPage() {
     [productsResponse.items]
   )
 
-  // Build a flat list of category options for the sidebar. Roots first,
-  // then their children, with their name indented to convey depth. This is
-  // the "mega-menu lite" used both for browsing and for filter context.
-  const flatCategoryOptions = useMemo(() => {
-    const out = [{ id: ALL, slug: ALL, name: 'Tất Cả', subtitle: 'Toàn bộ', depth: 0 }]
-    const visit = (node, depth) => {
-      out.push({
-        id: node.id, slug: node.slug, name: node.name, depth,
-      })
-      for (const child of node.children || []) {
-        visit(child, depth + 1)
-      }
+  // Flat list of category options for the sidebar. "Tất Cả" sentinel first,
+  // then the categories returned by the API (already sorted by sortOrder).
+  const categoryOptions = useMemo(() => {
+    const out = [{ id: ALL, slug: ALL, name: 'Tất Cả', subtitle: 'Toàn bộ' }]
+    for (const cat of categoryTree) {
+      out.push({ id: cat.id, slug: cat.slug, name: cat.name })
     }
-    for (const root of categoryTree) visit(root, 1)
     return out
   }, [categoryTree])
 
-  // Resolve the currently-selected category (by slug) so the header card can
-  // show its proper display name + subtitle.
+  // Resolve the currently-selected category so the header card can show its
+  // proper display name + subtitle.
   const currentCategory = useMemo(() => {
     if (categoryParam === ALL) {
       return { slug: ALL, name: 'Toàn Bộ', subtitle: 'Sản Phẩm' }
     }
-    const found = flatCategoryOptions.find((c) => c.slug === categoryParam)
+    const found = categoryOptions.find((c) => c.slug === categoryParam)
     return found || { slug: categoryParam, name: categoryParam, subtitle: '' }
-  }, [categoryParam, flatCategoryOptions])
-
-  // The root that owns the currently selected slug. Used to render the
-  // level-2 sub-bar — even when the user is deep inside the tree we still
-  // know which level-1 pill to keep highlighted above.
-  const activeRoot = useMemo(
-    () => findRootOfSlug(categoryTree, categoryParam),
-    [categoryTree, categoryParam]
-  )
+  }, [categoryParam, categoryOptions])
 
   const hasActiveFilters =
     categoryParam !== ALL ||
@@ -301,7 +266,7 @@ function ProductsPage() {
                 mang đến vẻ đẹp tinh tế cho không gian sống của bạn.
               </p>
               <p className="text-[10px] tracking-widest uppercase text-champagne-500 font-semibold mt-4">
-                Hiển thị {allSkus.length} / {productsResponse.total} sản phẩm
+                Hiển thị {allSkus.length} / {productsResponse.totalSkus} sản phẩm
               </p>
             </div>
           </div>
@@ -310,18 +275,15 @@ function ProductsPage() {
 
       <div className="container-custom"><div className="divider-thin" /></div>
 
-      {/* ========== CATEGORY FILTER BAR (Level 1 + Level 2) ========== */}
-      {/* Two-row pill strip: level 1 = root categories, level 2 = children of
-          the active root. Mirrors the URL `category` param so picking a pill
-          drives the same fetch as typing the slug directly. Hidden until
-          the tree finishes loading so we don't render an empty bar. */}
+      {/* ========== CATEGORY FILTER BAR ========== */}
+      {/* Single-row pill strip — flat list, no hierarchy. Hidden until the
+          category list finishes loading so we don't render an empty bar. */}
       {categoryTree.length > 0 && (
         <section
           aria-label="Bộ lọc danh mục"
           className="border-b border-ivory-300 bg-ivory-50"
         >
-          <div className="container-custom py-5 md:py-6 space-y-3 md:space-y-4">
-            {/* Level 1 — root categories */}
+          <div className="container-custom py-5 md:py-6">
             <div className="flex items-center gap-2 md:gap-3 -mx-6 px-6 md:mx-0 md:px-0 overflow-x-auto md:overflow-visible scrollbar-hide">
               <span className="hidden md:inline-block text-[10px] tracking-[0.25em] uppercase text-ink-400 font-semibold mr-1 flex-shrink-0">
                 Danh Mục
@@ -331,39 +293,15 @@ function ProductsPage() {
                 active={categoryParam === ALL}
                 onClick={() => setCategory(ALL)}
               />
-              {categoryTree.map((root) => (
+              {categoryTree.map((cat) => (
                 <CategoryPill
-                  key={root.id || root.slug}
-                  label={root.name}
-                  active={activeRoot?.slug === root.slug}
-                  onClick={() => setCategory(root.slug)}
+                  key={cat.id || cat.slug}
+                  label={cat.name}
+                  active={categoryParam === cat.slug}
+                  onClick={() => setCategory(cat.slug)}
                 />
               ))}
             </div>
-
-            {/* Level 2 — children of the active root. Hidden when no root is
-                active or when the root has no children. The "Tất cả" pill at
-                the head of the row clears back to the root itself. */}
-            {activeRoot?.children?.length > 0 && (
-              <div className="flex items-center gap-1.5 md:gap-2 md:pl-[104px] -mx-6 px-6 md:mx-0 md:px-0 overflow-x-auto md:overflow-visible scrollbar-hide">
-                <span className="hidden md:inline-block text-[10px] tracking-[0.25em] uppercase text-ink-300 font-semibold mr-1 flex-shrink-0">
-                  —
-                </span>
-                <SubCategoryPill
-                  label="Tất cả"
-                  active={categoryParam === activeRoot.slug}
-                  onClick={() => setCategory(activeRoot.slug)}
-                />
-                {activeRoot.children.map((sub) => (
-                  <SubCategoryPill
-                    key={sub.id || sub.slug}
-                    label={sub.name}
-                    active={categoryParam === sub.slug}
-                    onClick={() => setCategory(sub.slug)}
-                  />
-                ))}
-              </div>
-            )}
           </div>
         </section>
       )}
@@ -384,7 +322,7 @@ function ProductsPage() {
             {/* Desktop — small count + active category breadcrumb */}
             <div className="hidden lg:flex items-center gap-3 text-[11px] tracking-widest uppercase text-ink-500">
               <span className="font-semibold text-ink-900">
-                {productsResponse.total}
+                {productsResponse.totalSkus}
               </span>
               <span>sản phẩm</span>
               {categoryParam !== ALL && (
@@ -538,28 +476,6 @@ function CategoryPill({ label, active, onClick }) {
         active
           ? 'bg-ink-900 text-ivory-50 border-ink-900'
           : 'bg-transparent text-ink-700 border-ivory-300 hover:border-ink-900 hover:text-ink-900'
-      }`}
-    >
-      {label}
-    </button>
-  )
-}
-
-/**
- * SubCategoryPill — level-2 pill. Softer active state (sage-600) so it
- * reads as subordinate to whichever CategoryPill is filled above. Smaller
- * type and tighter padding to reinforce the hierarchy.
- */
-function SubCategoryPill({ label, active, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`flex-shrink-0 px-3 md:px-3.5 py-1.5 text-[10px] md:text-[11px] tracking-[0.12em] uppercase font-medium border transition-colors duration-300 whitespace-nowrap ${
-        active
-          ? 'bg-sage-600 text-ivory-50 border-sage-600'
-          : 'bg-transparent text-ink-600 border-ivory-200 hover:border-sage-500 hover:text-sage-700'
       }`}
     >
       {label}

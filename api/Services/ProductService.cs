@@ -84,15 +84,17 @@ public class ProductService
 
     /// <summary>
     /// Server-side paginated listing used by <c>GET /api/products</c>.
+    /// Returns items for the current page, plus both product-count (for
+    /// pagination) and SKU-count (for display counters).
     /// </summary>
     /// <remarks>
     /// Filters compose with AND. The category slug is expanded to its leaf
     /// descendants before being applied (see
-    /// <see cref="CategoryService.GetDescendantSlugsAsync"/>). Price and care
+    /// <see cref="CategoryService.ResolveFilterSlugsAsync"/>). Price and care
     /// level ranges are evaluated against the first matching active variant;
     /// MongoDB's <c>$elemMatch</c> handles this without server-side joins.
     /// </remarks>
-    public async Task<(List<Product> Items, long Total)> GetFilteredAsync(
+    public async Task<(List<Product> Items, long TotalProducts, long TotalSkus)> GetFilteredAsync(
         ProductQueryParams p, System.Threading.CancellationToken ct = default)
     {
         // Defensive bounds — prevents runaway pagination if a client passes
@@ -104,22 +106,12 @@ public class ProductService
         var fb = Builders<Product>.Filter;
         var filters = new List<FilterDefinition<Product>>();
 
-        // Category: expand slug → leaf descendants, then IN-clause match.
-        // This is what makes a parent filter feel "natural" in the storefront
-        // (selecting "Monstera" should include every Monstera variety).
+        // Category: flat taxonomy — match the slug exactly. (Previously the
+        // service expanded a parent slug to all leaf descendants; with the
+        // flat model that's a no-op so we go straight to the equality path.)
         if (!string.IsNullOrEmpty(p.Category))
         {
-            var leafSlugs = await _categoryService.GetDescendantSlugsAsync(p.Category, ct);
-            if (leafSlugs.Count == 1)
-            {
-                // Cheap equality path — uses the (category, name) index.
-                var onlySlug = leafSlugs[0];
-                filters.Add(fb.Eq(x => x.Category, onlySlug));
-            }
-            else
-            {
-                filters.Add(fb.In(x => x.Category, leafSlugs));
-            }
+            filters.Add(fb.Eq(x => x.Category, p.Category));
         }
 
         // Free-text search across name + variant fields.
@@ -175,7 +167,30 @@ public class ProductService
 
         var combined = filters.Count > 0 ? fb.And(filters) : fb.Empty;
 
-        var total = await _products.CountDocumentsAsync(combined, cancellationToken: ct);
+        var totalProducts = await _products.CountDocumentsAsync(combined, cancellationToken: ct);
+
+        // Count total active SKUs by fetching only the variants.count field for
+        // all matching documents. This is more efficient than the full document
+        // for large collections and avoids aggregation pipeline complexity.
+        // isActive=false variants are already excluded from the combined filter.
+        long totalSkus = 0L;
+        try
+        {
+            var variantCountDocs = await _products
+                .Find(combined)
+                .Project(Builders<Product>.Projection.Include(p => p.Variants))
+                .ToListAsync(ct);
+            foreach (var doc in variantCountDocs)
+            {
+                var variants = doc.GetValue("variants", new BsonArray());
+                totalSkus += variants.AsBsonArray.Count;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Projection failure is non-fatal; fall back to 0.
+            System.Console.Error.WriteLine($"[ProductService] SKU count projection failed: {ex.Message}");
+        }
 
         // Sort. "popular" is intentionally a tie-breaker on CreatedAt so
         // brand-new products with zero sales still surface in a deterministic
@@ -218,6 +233,6 @@ public class ProductService
             .Limit(p.PageSize)
             .ToListAsync(ct);
 
-        return (items, total);
+        return (items, totalProducts, totalSkus);
     }
 }

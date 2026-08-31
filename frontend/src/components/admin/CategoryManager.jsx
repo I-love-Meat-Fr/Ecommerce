@@ -1,58 +1,34 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { categoryApi } from '../../services/api'
 import { push } from './Toast'
-import { ChevronRight, ChevronDown } from 'lucide-react'
-
-// Build a Map<id, node> for O(1) lookups when we need to find a node's
-// parent by id while rendering the tree.
-function indexById(nodes, out = new Map()) {
-  for (const n of nodes || []) {
-    out.set(n.id, n)
-    if (n.children?.length) indexById(n.children, out)
-  }
-  return out
-}
 
 export default function CategoryManager() {
-  const [tree, setTree] = useState([])
-  const [flat, setFlat] = useState([])
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null) // null = create, Category = edit
   const [formName, setFormName] = useState('')
   const [formDesc, setFormDesc] = useState('')
-  const [formParentId, setFormParentId] = useState('')
+  const [formSort, setFormSort] = useState('')
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
-  const [expandedIds, setExpandedIds] = useState(() => new Set())
+  const [deleting, setDeleting] = useState(false)
 
-  const fetchTree = () => {
+  const fetchAll = () => {
     setLoading(true)
-    categoryApi.getTree()
-      .then((data) => {
-        setTree(data || [])
-        // Build a flat list of all nodes for the parent-picker <select>.
-        const out = []
-        const visit = (node, depth) => {
-          out.push({ id: node.id, name: node.name, slug: node.slug, depth })
-          for (const c of node.children || []) visit(c, depth + 1)
-        }
-        for (const root of data || []) visit(root, 0)
-        setFlat(out)
-      })
+    categoryApi.getAll()
+      .then((data) => setCategories(data || []))
       .catch(() => push('Không tải được danh mục', 'error'))
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchTree() }, [])
-
-  const byId = useMemo(() => indexById(tree), [tree])
+  useEffect(() => { fetchAll() }, [])
 
   const openCreate = () => {
     setEditing(null)
     setFormName('')
     setFormDesc('')
-    setFormParentId('')
+    setFormSort('')
     setShowForm(true)
   }
 
@@ -60,17 +36,8 @@ export default function CategoryManager() {
     setEditing(cat)
     setFormName(cat.name)
     setFormDesc(cat.description || '')
-    setFormParentId(cat.parentId || '')
+    setFormSort(String(cat.sortOrder || 0))
     setShowForm(true)
-  }
-
-  const toggleExpanded = (id) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
   }
 
   const handleSave = async (e) => {
@@ -85,9 +52,6 @@ export default function CategoryManager() {
         name: formName.trim(),
         description: formDesc?.trim() || '',
       }
-      // Only attach parentId when explicitly chosen. The backend treats empty
-      // parentId as "make this a root category".
-      if (formParentId) payload.parentId = formParentId
       if (editing) {
         await categoryApi.update(editing.id, payload)
         push('Đã cập nhật danh mục', 'success')
@@ -96,7 +60,7 @@ export default function CategoryManager() {
         push('Đã tạo danh mục mới', 'success')
       }
       setShowForm(false)
-      fetchTree()
+      fetchAll()
     } catch (err) {
       const msg = err?.response?.data?.message || 'Lưu thất bại'
       push(msg, 'error')
@@ -106,21 +70,19 @@ export default function CategoryManager() {
   }
 
   const handleDelete = async (id) => {
+    setDeleting(true)
     try {
       await categoryApi.remove(id)
       push('Đã xóa danh mục', 'success')
       setConfirmDelete(null)
-      fetchTree()
+      fetchAll()
     } catch (err) {
       const msg = err?.response?.data?.message || 'Xóa thất bại'
       push(msg, 'error')
+    } finally {
+      setDeleting(false)
     }
   }
-
-  // Resolve the parent name for the delete confirmation dialog.
-  const confirmDeleteParent = confirmDelete
-    ? byId.get(confirmDelete.parentId)?.name || null
-    : null
 
   return (
     <div className="space-y-4">
@@ -128,7 +90,7 @@ export default function CategoryManager() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-2xl text-ink-900">Danh mục sản phẩm</h2>
-          <p className="text-xs text-ink-500 mt-0.5 font-mono">{flat.length} danh mục · cấu trúc cây N cấp</p>
+          <p className="text-xs text-ink-500 mt-0.5 font-mono">{categories.length} danh mục · danh sách phẳng</p>
         </div>
         <button
           onClick={openCreate}
@@ -138,12 +100,12 @@ export default function CategoryManager() {
         </button>
       </div>
 
-      {/* Tree */}
+      {/* Table */}
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3].map(i => <div key={i} className="h-10 shimmer rounded-xs" />)}
         </div>
-      ) : flat.length === 0 ? (
+      ) : categories.length === 0 ? (
         <div className="text-center py-12 text-ink-500">
           <p className="font-display text-lg">Chưa có danh mục nào</p>
           <p className="text-xs mt-1">Tạo danh mục đầu tiên để quản lý sản phẩm</p>
@@ -151,25 +113,48 @@ export default function CategoryManager() {
       ) : (
         <div className="border border-ink-200 rounded-xs overflow-hidden">
           <div className="bg-ivory-100 border-b border-ink-200 px-4 py-3">
-            <div className="grid md:grid-cols-12 gap-3 text-[10px] uppercase tracking-widest text-ink-600 font-mono">
-              <div className="md:col-span-5">Tên danh mục</div>
-              <div className="md:col-span-3 hidden md:block">Slug</div>
-              <div className="md:col-span-2 hidden md:block">Cấp</div>
-              <div className="md:col-span-2 text-right">Thao tác</div>
+            <div className="grid grid-cols-12 gap-3 text-[10px] uppercase tracking-widest text-ink-600 font-mono">
+              <div className="col-span-5">Tên danh mục</div>
+              <div className="col-span-4 hidden md:block">Slug</div>
+              <div className="col-span-1 hidden md:block text-center">Thứ tự</div>
+              <div className="col-span-2 text-right">Thao tác</div>
             </div>
           </div>
           <div className="divide-y divide-ink-100">
-            {tree.map((node) => (
-              <TreeRow
-                key={node.id}
-                node={node}
-                depth={0}
-                expandedIds={expandedIds}
-                onToggle={toggleExpanded}
-                onEdit={openEdit}
-                onDelete={setConfirmDelete}
-                byId={byId}
-              />
+            {categories.map((cat) => (
+              <div key={cat.id} className="px-4 py-3 hover:bg-ivory-50 transition-colors">
+                <div className="grid grid-cols-12 gap-3 items-center text-sm">
+                  <div className="col-span-5 flex items-center gap-2 min-w-0">
+                    <span className="w-2 h-2 rounded-full bg-sage-400 flex-shrink-0" />
+                    <span className="font-medium text-ink-900 truncate">{cat.name}</span>
+                  </div>
+                  <div className="col-span-4 hidden md:block font-mono text-xs text-ink-500 truncate">
+                    {cat.slug}
+                  </div>
+                  <div className="col-span-1 hidden md:block text-center text-xs text-ink-400 font-mono">
+                    {cat.sortOrder ?? 0}
+                  </div>
+                  <div className="col-span-2 flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => openEdit(cat)}
+                      className="px-3 py-1 text-xs border border-ink-300 hover:border-ink-900 hover:bg-ink-900 hover:text-white rounded-xs transition-colors"
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(cat)}
+                      className="px-3 py-1 text-xs border border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 rounded-xs transition-colors"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+                {cat.description && (
+                  <p className="mt-1 text-xs text-ink-500 font-light pl-4 truncate">
+                    {cat.description}
+                  </p>
+                )}
+              </div>
             ))}
           </div>
         </div>
@@ -208,29 +193,6 @@ export default function CategoryManager() {
                   autoFocus
                   className="w-full px-3 py-2 text-sm border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900"
                 />
-              </div>
-
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-ink-600 font-mono mb-1">
-                  Danh mục cha
-                </label>
-                <select
-                  value={formParentId}
-                  onChange={(e) => setFormParentId(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900 bg-white"
-                >
-                  <option value="">— Gốc (không có cha) —</option>
-                  {flat
-                    .filter((c) => !editing || c.id !== editing.id) // can't parent yourself
-                    .map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {'· '.repeat(c.depth)} {c.name}
-                      </option>
-                    ))}
-                </select>
-                <p className="text-[11px] text-ink-400 mt-1 font-light">
-                  Để trống để tạo danh mục cấp cao nhất (gốc).
-                </p>
               </div>
 
               <div>
@@ -274,96 +236,28 @@ export default function CategoryManager() {
           <div className="bg-white border border-ink-300 rounded-xs shadow-elevated w-full max-w-sm animate-fade-up p-6">
             <h3 className="font-display text-xl text-ink-900 mb-2">Xóa danh mục?</h3>
             <p className="text-sm text-ink-600 mb-6">
-              Danh mục <strong>"{confirmDelete.name}"</strong>
-              {confirmDeleteParent && <> (con của <em>{confirmDeleteParent}</em>)</>}{' '}
-              sẽ bị xóa vĩnh viễn. Sản phẩm đang dùng danh mục này sẽ không bị xóa nhưng sẽ mất liên kết danh mục.
+              Danh mục <strong>"{confirmDelete.name}"</strong> sẽ bị xóa vĩnh viễn.
+              Sản phẩm đang dùng danh mục này sẽ không bị xóa nhưng sẽ mất liên kết danh mục.
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="px-4 py-2 text-sm border border-ink-300 text-ink-700 hover:bg-ink-100 rounded-xs transition-colors"
+                disabled={deleting}
+                className="px-4 py-2 text-sm border border-ink-300 text-ink-700 hover:bg-ink-100 rounded-xs transition-colors disabled:opacity-50"
               >
                 Hủy
               </button>
               <button
                 onClick={() => handleDelete(confirmDelete.id)}
-                className="px-4 py-2 text-sm font-medium bg-red-600 text-white hover:bg-red-700 rounded-xs transition-colors"
+                disabled={deleting}
+                className="px-4 py-2 text-sm font-medium bg-red-600 text-white hover:bg-red-700 rounded-xs transition-colors disabled:opacity-50"
               >
-                Xóa vĩnh viễn
+                {deleting ? 'Đang xóa…' : 'Xóa vĩnh viễn'}
               </button>
             </div>
           </div>
         </div>
       )}
     </div>
-  )
-}
-
-// Recursive tree row. Each level adds left padding so the hierarchy reads
-// at a glance without the visual noise of nested <ul>s.
-function TreeRow({ node, depth, expandedIds, onToggle, onEdit, onDelete, byId }) {
-  const hasChildren = (node.children || []).length > 0
-  const isExpanded = expandedIds.has(node.id)
-  const parent = byId.get(node.parentId)
-
-  return (
-    <>
-      <div className="px-4 py-3 hover:bg-ivory-50 transition-colors group">
-        <div className="grid md:grid-cols-12 gap-3 items-center text-sm">
-          <div className="md:col-span-5 flex items-center gap-2 min-w-0" style={{ paddingLeft: `${depth * 24}px` }}>
-            {hasChildren ? (
-              <button
-                onClick={() => onToggle(node.id)}
-                className="p-0.5 -ml-1 text-ink-500 hover:text-ink-900"
-                aria-label={isExpanded ? 'Thu gọn' : 'Mở rộng'}
-              >
-                {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-              </button>
-            ) : (
-              <span className="w-4 inline-block" />
-            )}
-            <span className="font-medium text-ink-900 truncate">{node.name}</span>
-            {hasChildren && (
-              <span className="text-[10px] uppercase tracking-widest text-ink-400 font-mono">
-                ({node.children.length})
-              </span>
-            )}
-          </div>
-          <div className="md:col-span-3 hidden md:block font-mono text-xs text-ink-500 truncate">
-            {node.slug}
-          </div>
-          <div className="md:col-span-2 hidden md:block text-xs text-ink-500">
-            Cấp {depth + 1}
-            {parent && <span className="text-ink-400"> · con của {parent.name}</span>}
-          </div>
-          <div className="md:col-span-2 flex items-center justify-end gap-2">
-            <button
-              onClick={() => onEdit(node)}
-              className="px-3 py-1 text-xs border border-ink-300 hover:border-ink-900 hover:bg-ink-900 hover:text-white rounded-xs transition-colors"
-            >
-              Sửa
-            </button>
-            <button
-              onClick={() => onDelete(node)}
-              className="px-3 py-1 text-xs border border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 rounded-xs transition-colors"
-            >
-              Xóa
-            </button>
-          </div>
-        </div>
-      </div>
-      {hasChildren && isExpanded && node.children.map((child) => (
-        <TreeRow
-          key={child.id}
-          node={child}
-          depth={depth + 1}
-          expandedIds={expandedIds}
-          onToggle={onToggle}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          byId={byId}
-        />
-      ))}
-    </>
   )
 }

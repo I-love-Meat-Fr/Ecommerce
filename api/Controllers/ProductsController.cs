@@ -26,12 +26,14 @@ public class ProductsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<ProductListResponse>> GetAll([FromQuery] ProductQueryParams query)
     {
-        var (items, total) = await _productService.GetFilteredAsync(query);
+        var (items, totalProducts, totalSkus) = await _productService.GetFilteredAsync(query);
         var withStats = await BuildStatsAsync(items);
         return Ok(new ProductListResponse
         {
             Items = withStats,
-            Total = (int)total,
+            Total = (int)totalProducts,
+            TotalProducts = (int)totalProducts,
+            TotalSkus = (int)totalSkus,
             Page = query.Page,
             PageSize = query.PageSize,
         });

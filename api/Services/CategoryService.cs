@@ -8,6 +8,11 @@ using Ecommer.Api.Models;
 
 namespace Ecommer.Api.Services;
 
+/// <summary>
+/// Flat-list operations on the <c>categories</c> collection. Categories are
+/// intentionally a single-tier taxonomy: each product references exactly one
+/// category slug, and every category document is a peer of every other.
+/// </summary>
 public class CategoryService
 {
     private readonly IMongoCollection<Category> _categories;
@@ -17,6 +22,11 @@ public class CategoryService
         _categories = context.Categories;
     }
 
+    /// <summary>
+    /// Returns every category sorted by <c>(SortOrder ASC, Name ASC)</c>.
+    /// The storefront uses this for the category filter bar; admin uses it
+    /// for the CRUD table.
+    /// </summary>
     public async Task<List<Category>> GetAllAsync()
     {
         return await _categories.Find(_ => true)
@@ -67,97 +77,19 @@ public class CategoryService
     }
 
     /// <summary>
-    /// Loads every category and assembles the full N-level tree in memory.
-    /// Sibling order: <c>SortOrder ASC, Name ASC</c>. Returned <c>Category</c>
-    /// instances have their <c>Children</c> list populated recursively.
+    /// Returns the slugs a product-filter query should match. In the flat
+    /// taxonomy model this is always a single-element list containing the
+    /// incoming slug — there is no subtree expansion. Unknown slugs are
+    /// returned verbatim so an unknown filter returns zero products (not a 500).
     /// </summary>
-    public async Task<List<Category>> GetTreeAsync(System.Threading.CancellationToken ct = default)
+    public Task<List<string>> ResolveFilterSlugsAsync(
+        string slug, System.Threading.CancellationToken ct = default)
     {
-        var all = await _categories.Find(_ => true)
-            .SortBy(c => c.SortOrder).ThenBy(c => c.Name)
-            .ToListAsync(ct);
-
-        // Group by parent key. Root nodes use a sentinel string since
-        // Category.ParentId is a nullable string (no ObjectId magic values
-        // allowed in Bson for our schema).
-        var byParent = all
-            .GroupBy(c => c.ParentId ?? "__root__")
-            .ToDictionary(g => g.Key, g => g.ToList());
-
-        return BuildTree(byParent, parentId: null);
-    }
-
-    private static List<Category> BuildTree(
-        Dictionary<string, List<Category>> byParent, string? parentId)
-    {
-        var key = parentId ?? "__root__";
-        if (!byParent.TryGetValue(key, out var nodes))
-            return new List<Category>();
-
-        foreach (var node in nodes)
-        {
-            // Reset in case the same Category was loaded twice via a shared
-            // reference (defensive — IMongoCollection.ToListAsync already
-            // returns fresh instances).
-            node.Children = BuildTree(byParent, node.Id);
-        }
-        return nodes;
-    }
-
-    /// <summary>
-    /// Returns the set of leaf-category slugs reachable from
-    /// <paramref name="parentSlug"/>. If the parent has no children, it is
-    /// treated as a leaf and its own slug is returned. The result is always
-    /// distinct (a category could legitimately be referenced from multiple
-    /// branches via data inconsistency).
-    /// </summary>
-    /// <remarks>
-    /// Single-pass BFS — O(N) where N is the number of categories.
-    /// Acceptable because the categories collection is small (tens of
-    /// documents) and this only runs when the user filters by category.
-    /// </remarks>
-    public async Task<List<string>> GetDescendantSlugsAsync(
-        string parentSlug, System.Threading.CancellationToken ct = default)
-    {
-        var all = await _categories.Find(_ => true).ToListAsync(ct);
-
-        // Find every category with this slug — usually one, but the API
-        // does not enforce slug uniqueness at the model level so we tolerate
-        // (and merge) duplicates safely.
-        var roots = all.Where(c => c.Slug == parentSlug).ToList();
-        if (roots.Count == 0)
-        {
-            // Unknown slug: be permissive and let the caller fall back to an
-            // exact match. This matches the previous behavior of
-            // ProductService.GetByCategoryAsync so we don't break clients
-            // that pass arbitrary strings.
-            return new List<string> { parentSlug };
-        }
-
-        var leaves = new List<string>();
-        var queue = new Queue<Category>(roots);
-        var visited = new HashSet<string>(StringComparer.Ordinal);
-
-        while (queue.Count > 0)
-        {
-            var node = queue.Dequeue();
-            var nodeId = node.Id ?? string.Empty;
-            if (nodeId.Length > 0 && !visited.Add(nodeId))
-                continue;
-
-            var children = all.Where(c => c.ParentId == node.Id).ToList();
-            if (children.Count == 0 && !string.IsNullOrEmpty(node.Slug))
-            {
-                // Leaf (or node with no children in our dataset).
-                leaves.Add(node.Slug);
-            }
-            foreach (var c in children)
-                queue.Enqueue(c);
-        }
-
-        if (leaves.Count == 0)
-            leaves.Add(parentSlug);
-        return leaves.Distinct().ToList();
+        if (string.IsNullOrEmpty(slug)) return Task.FromResult(new List<string>());
+        // Return the slug regardless of whether it exists in the DB so that
+        // an unknown filter naturally matches zero products rather than
+        // accidentally matching everything.
+        return Task.FromResult(new List<string> { slug });
     }
 
     private static string GenerateSlug(string name)

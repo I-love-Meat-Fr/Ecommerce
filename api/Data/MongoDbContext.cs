@@ -137,15 +137,15 @@ public class MongoDbContext
             new CreateIndexOptions { Name = "ix_orderstatuslogs_orderId_changedAt" });
         await OrderStatusLogs.Indexes.CreateManyAsync(new[] { logOrderIdx }, ct);
 
-        // categories: unique slug + (parent + sort) for sibling order and subtree traversal
+        // categories: unique slug + (sortOrder, name) for the flat list ordering
         var categoryNameIdx = new CreateIndexModel<Category>(
             Builders<Category>.IndexKeys.Ascending(c => c.Slug),
             new CreateIndexOptions { Unique = true, Name = "ux_categories_slug" });
-        var categoryParentIdx = new CreateIndexModel<Category>(
-            Builders<Category>.IndexKeys.Ascending(c => c.ParentId).Ascending(c => c.SortOrder),
-            new CreateIndexOptions { Name = "ix_categories_parent_sort" });
+        var categorySortIdx = new CreateIndexModel<Category>(
+            Builders<Category>.IndexKeys.Ascending(c => c.SortOrder).Ascending(c => c.Name),
+            new CreateIndexOptions { Name = "ix_categories_sort_name" });
         await Categories.Indexes.CreateManyAsync(
-            new[] { categoryNameIdx, categoryParentIdx }, ct);
+            new[] { categoryNameIdx, categorySortIdx }, ct);
 
         // reviews: (productId, variantSku) + createdAt desc
         var reviewProductIdx = new CreateIndexModel<Review>(

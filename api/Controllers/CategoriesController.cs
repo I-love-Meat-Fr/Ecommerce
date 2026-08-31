@@ -17,6 +17,10 @@ public class CategoriesController : ControllerBase
         _categoryService = categoryService;
     }
 
+    /// <summary>
+    /// Flat list of categories ordered by <c>(SortOrder, Name)</c>.
+    /// Used by the storefront category filter bar and the admin CRUD page.
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<List<Category>>> GetAll()
     {
@@ -24,14 +28,15 @@ public class CategoriesController : ControllerBase
     }
 
     /// <summary>
-    /// Full N-level category tree used by the storefront mega-menu.
-    /// Roots first; each node includes its direct children recursively.
+    /// Lightweight payload used by the storefront filter UI. Mirrors the
+    /// full <c>Category</c> shape but is documented separately so future
+    /// tree-style payloads don't surprise the storefront.
     /// </summary>
-    [HttpGet("tree")]
-    public async Task<ActionResult<List<CategoryNode>>> GetTree()
+    [HttpGet("nodes")]
+    public async Task<ActionResult<List<CategoryNode>>> GetNodes()
     {
-        var tree = await _categoryService.GetTreeAsync();
-        return Ok(tree.Select(MapNode).ToList());
+        var all = await _categoryService.GetAllAsync();
+        return Ok(all.Select(MapNode).ToList());
     }
 
     private static CategoryNode MapNode(Category c) => new()
@@ -40,7 +45,7 @@ public class CategoriesController : ControllerBase
         Name = c.Name,
         Slug = c.Slug,
         SortOrder = c.SortOrder,
-        Children = c.Children.Select(MapNode).ToList(),
+        Description = c.Description,
     };
 
     [HttpGet("{id}")]
@@ -66,7 +71,12 @@ public class CategoriesController : ControllerBase
         if (existing != null)
             return Conflict(new { message = "Danh mục đã tồn tại." });
 
-        var category = await _categoryService.CreateAsync(new Category { Name = dto.Name.Trim() });
+        var category = await _categoryService.CreateAsync(new Category
+        {
+            Name = dto.Name.Trim(),
+            Description = dto.Description?.Trim(),
+            SortOrder = dto.SortOrder ?? 0,
+        });
         return CreatedAtAction(nameof(GetById), new { id = category.Id }, category);
     }
 
@@ -102,6 +112,7 @@ public class CategoryCreateDto
 {
     public string? Name { get; set; }
     public string? Description { get; set; }
+    public int? SortOrder { get; set; }
 }
 
 public class CategoryUpdateDto

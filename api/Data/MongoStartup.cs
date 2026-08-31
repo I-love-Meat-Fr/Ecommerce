@@ -27,9 +27,7 @@ public static class MongoStartup
             return;
         }
 
-        // Categories first — products reference category slugs and the
-        // (parent + sort) index needs to exist before the storefront sends
-        // tree requests.
+        // Categories first — products reference category slugs by exact match.
         try
         {
             await CategorySeeder.SeedAsync(context, logger, ct);
