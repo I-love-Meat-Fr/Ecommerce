@@ -24,6 +24,17 @@ public class Product
     [BsonElement("variants")]
     public List<ProductVariant> Variants { get; set; } = new();
 
+    /// <summary>
+    /// Denormalized cumulative sold count across all non-cancelled orders.
+    /// Used by <c>sortBy=popular</c> to avoid re-aggregating the orders collection
+    /// on every list query. Incremented in <c>OrderService.UpdateStatusAsync</c>
+    /// when an order transitions to <c>Delivered</c>; back-filled for historical
+    /// data by <c>RecomputeTotalSoldCountSeeder</c>.
+    /// </summary>
+    [BsonElement("totalSoldCount")]
+    [BsonIgnoreIfNull]
+    public int TotalSoldCount { get; set; } = 0;
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

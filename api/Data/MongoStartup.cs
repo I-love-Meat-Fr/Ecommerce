@@ -27,6 +27,18 @@ public static class MongoStartup
             return;
         }
 
+        // Categories first — products reference category slugs and the
+        // (parent + sort) index needs to exist before the storefront sends
+        // tree requests.
+        try
+        {
+            await CategorySeeder.SeedAsync(context, logger, ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to seed categories. The API will still start.");
+        }
+
         try
         {
             await ProductsSeeder.SeedAsync(context, logger, ct);

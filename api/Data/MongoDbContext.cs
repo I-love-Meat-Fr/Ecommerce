@@ -114,8 +114,13 @@ public class MongoDbContext
         var productSkuIdx = new CreateIndexModel<Product>(
             Builders<Product>.IndexKeys.Ascending("variants.sku"),
             new CreateIndexOptions { Name = "ix_products_sku", Sparse = true });
+        // products: totalSoldCount desc — backs `sortBy=popular` without a collection scan.
+        // Sparse so legacy documents that lack the field don't show up in index entries.
+        var productSoldIdx = new CreateIndexModel<Product>(
+            Builders<Product>.IndexKeys.Descending(p => p.TotalSoldCount),
+            new CreateIndexOptions { Name = "ix_products_totalSoldCount", Sparse = true });
         await Products.Indexes.CreateManyAsync(
-            new[] { productCategoryIdx, productSkuIdx }, ct);
+            new[] { productCategoryIdx, productSkuIdx, productSoldIdx }, ct);
 
         // orders: userId + createdAt desc
         var orderUserIdx = new CreateIndexModel<Order>(
@@ -132,11 +137,15 @@ public class MongoDbContext
             new CreateIndexOptions { Name = "ix_orderstatuslogs_orderId_changedAt" });
         await OrderStatusLogs.Indexes.CreateManyAsync(new[] { logOrderIdx }, ct);
 
-        // categories: unique name
+        // categories: unique slug + (parent + sort) for sibling order and subtree traversal
         var categoryNameIdx = new CreateIndexModel<Category>(
-            Builders<Category>.IndexKeys.Ascending(c => c.Name),
-            new CreateIndexOptions { Unique = true, Name = "ux_categories_name" });
-        await Categories.Indexes.CreateOneAsync(categoryNameIdx, cancellationToken: ct);
+            Builders<Category>.IndexKeys.Ascending(c => c.Slug),
+            new CreateIndexOptions { Unique = true, Name = "ux_categories_slug" });
+        var categoryParentIdx = new CreateIndexModel<Category>(
+            Builders<Category>.IndexKeys.Ascending(c => c.ParentId).Ascending(c => c.SortOrder),
+            new CreateIndexOptions { Name = "ix_categories_parent_sort" });
+        await Categories.Indexes.CreateManyAsync(
+            new[] { categoryNameIdx, categoryParentIdx }, ct);
 
         // reviews: (productId, variantSku) + createdAt desc
         var reviewProductIdx = new CreateIndexModel<Review>(

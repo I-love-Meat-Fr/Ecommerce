@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Ecommer.Api.DTOs;
 using Ecommer.Api.Models;
 using Ecommer.Api.Services;
 
@@ -21,6 +22,26 @@ public class CategoriesController : ControllerBase
     {
         return Ok(await _categoryService.GetAllAsync());
     }
+
+    /// <summary>
+    /// Full N-level category tree used by the storefront mega-menu.
+    /// Roots first; each node includes its direct children recursively.
+    /// </summary>
+    [HttpGet("tree")]
+    public async Task<ActionResult<List<CategoryNode>>> GetTree()
+    {
+        var tree = await _categoryService.GetTreeAsync();
+        return Ok(tree.Select(MapNode).ToList());
+    }
+
+    private static CategoryNode MapNode(Category c) => new()
+    {
+        Id = c.Id,
+        Name = c.Name,
+        Slug = c.Slug,
+        SortOrder = c.SortOrder,
+        Children = c.Children.Select(MapNode).ToList(),
+    };
 
     [HttpGet("{id}")]
     public async Task<ActionResult<Category>> GetById(string id)

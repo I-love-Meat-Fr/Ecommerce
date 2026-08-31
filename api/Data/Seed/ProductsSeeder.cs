@@ -4,113 +4,217 @@ using Ecommer.Api.Models;
 namespace Ecommer.Api.Data.Seed;
 
 /// <summary>
-/// Inserts a curated set of products only when the products collection is empty.
-/// Idempotent: safe to run on every startup.
+/// Seeds the botanical product catalog used by the storefront. Each SKU
+/// carries the full <see cref="PlantAttributes"/> profile so that size and
+/// care-level filters work out of the box.
 /// </summary>
+/// <remarks>
+/// <para>Idempotent and additive: only inserts products whose <c>Name</c> is
+/// not already present. Existing rows are NEVER touched — admins may have
+/// hand-curated the catalog (variant names, images, prices) and we must not
+/// clobber that work.</para>
+/// <para>Re-running the app on a fresh DB still produces the full canonical
+/// catalog; re-running on a partially-seeded DB only adds the missing rows.</para>
+/// </remarks>
 public static class ProductsSeeder
 {
     public static async Task SeedAsync(MongoDbContext context, ILogger logger, CancellationToken ct = default)
     {
         var products = context.Products;
 
-        var existing = await products.CountDocumentsAsync(FilterDefinition<Product>.Empty, cancellationToken: ct);
-        if (existing > 0)
+        // Load just the names — we don't need the full documents to dedupe.
+        var existingNames = await products
+            .Find(_ => true)
+            .Project(p => p.Name)
+            .ToListAsync(ct);
+        var takenNames = new HashSet<string>(existingNames, StringComparer.OrdinalIgnoreCase);
+
+        var catalog = BuildCatalog(DateTime.UtcNow);
+        var toInsert = catalog.Where(p => !takenNames.Contains(p.Name)).ToList();
+
+        if (toInsert.Count == 0)
         {
-            logger.LogInformation("Products collection already has {Count} documents. Skipping seed.", existing);
+            logger.LogInformation(
+                "All {Total} catalog products already present. Skipping seed.",
+                catalog.Count);
             return;
         }
 
-        var now = DateTime.UtcNow;
-        var sample = new List<Product>
+        if (takenNames.Count > 0)
         {
-            new()
-            {
-                Name = "iPhone 15 Pro",
-                Description = "Titanium design, A17 Pro chip, ProMotion display.",
-                Category = "phones",
-                ImageUrl = "https://example.com/img/iphone-15-pro.jpg",
-                CreatedAt = now,
-                UpdatedAt = now,
-                Variants = new List<ProductVariant>
-                {
-                    new() { Sku = "IP15P-NAT-256", Name = "Natural Titanium 256GB", Color = "Natural", Storage = "256GB", Price = 1199m, ImageUrl = "https://example.com/img/iphone-15-pro-natural.jpg", IsActive = true },
-                    new() { Sku = "IP15P-BLU-512", Name = "Blue Titanium 512GB",     Color = "Blue",    Storage = "512GB", Price = 1399m, ImageUrl = "https://example.com/img/iphone-15-pro-blue.jpg",    IsActive = true },
-                    new() { Sku = "IP15P-BLK-1TB", Name = "Black Titanium 1TB",       Color = "Black",   Storage = "1TB",   Price = 1599m, ImageUrl = "https://example.com/img/iphone-15-pro-black.jpg",   IsActive = true },
-                }
-            },
-            new()
-            {
-                Name = "Samsung Galaxy S24 Ultra",
-                Description = "Snapdragon 8 Gen 3, 200MP camera, S Pen built-in.",
-                Category = "phones",
-                ImageUrl = "https://example.com/img/galaxy-s24-ultra.jpg",
-                CreatedAt = now,
-                UpdatedAt = now,
-                Variants = new List<ProductVariant>
-                {
-                    new() { Sku = "S24U-TIT-256", Name = "Titanium Gray 256GB", Color = "Titanium Gray", Storage = "256GB", Price = 1299m, ImageUrl = null, IsActive = true },
-                    new() { Sku = "S24U-BLK-512", Name = "Titanium Black 512GB", Color = "Titanium Black", Storage = "512GB", Price = 1419m, ImageUrl = null, IsActive = true },
-                }
-            },
-            new()
-            {
-                Name = "MacBook Air M3",
-                Description = "13-inch, fanless, up to 18h battery.",
-                Category = "laptops",
-                ImageUrl = "https://example.com/img/macbook-air-m3.jpg",
-                CreatedAt = now,
-                UpdatedAt = now,
-                Variants = new List<ProductVariant>
-                {
-                    new() { Sku = "MBA-M3-MID-256", Name = "Midnight 8GB / 256GB", Color = "Midnight", Storage = "256GB", Price = 1099m, ImageUrl = null, IsActive = true },
-                    new() { Sku = "MBA-M3-SLV-512", Name = "Silver 16GB / 512GB",  Color = "Silver",   Storage = "512GB", Price = 1499m, ImageUrl = null, IsActive = true },
-                }
-            },
-            new()
-            {
-                Name = "Sony WH-1000XM5",
-                Description = "Industry-leading noise cancelling over-ear headphones.",
-                Category = "audio",
-                ImageUrl = "https://example.com/img/sony-xm5.jpg",
-                CreatedAt = now,
-                UpdatedAt = now,
-                Variants = new List<ProductVariant>
-                {
-                    new() { Sku = "WH5-BLK", Name = "Black",  Color = "Black",  Storage = null, Price = 399m, ImageUrl = null, IsActive = true },
-                    new() { Sku = "WH5-SLV", Name = "Silver", Color = "Silver", Storage = null, Price = 399m, ImageUrl = null, IsActive = true },
-                }
-            },
-            new()
-            {
-                Name = "Logitech MX Master 3S",
-                Description = "Wireless ergonomic productivity mouse.",
-                Category = "accessories",
-                ImageUrl = "https://example.com/img/mx-master-3s.jpg",
-                CreatedAt = now,
-                UpdatedAt = now,
-                Variants = new List<ProductVariant>
-                {
-                    new() { Sku = "MX3S-GRY", Name = "Graphite", Color = "Graphite", Storage = null, Price = 99m, ImageUrl = null, IsActive = true },
-                    new() { Sku = "MX3S-PAL", Name = "Pale Gray", Color = "Pale Gray", Storage = null, Price = 99m, ImageUrl = null, IsActive = true },
-                }
-            },
-            new()
-            {
-                Name = "Apple Watch Series 9",
-                Description = "S9 chip, brighter Always-On display, Double Tap.",
-                Category = "wearables",
-                ImageUrl = "https://example.com/img/apple-watch-s9.jpg",
-                CreatedAt = now,
-                UpdatedAt = now,
-                Variants = new List<ProductVariant>
-                {
-                    new() { Sku = "AW9-41-MID-ALU", Name = "41mm Midnight Aluminum / Sport Band", Color = "Midnight", Storage = "41mm", Price = 399m, ImageUrl = null, IsActive = true },
-                    new() { Sku = "AW9-45-PNK-ALU", Name = "45mm Pink Aluminum / Sport Band",     Color = "Pink",    Storage = "45mm", Price = 429m, ImageUrl = null, IsActive = true },
-                }
-            },
-        };
+            logger.LogInformation(
+                "Catalog has {Catalog} products, {Existing} already present, inserting {Insert} new.",
+                catalog.Count, catalog.Count - toInsert.Count, toInsert.Count);
+        }
 
-        await products.InsertManyAsync(sample, cancellationToken: ct);
-        logger.LogInformation("Seeded {Count} sample products.", sample.Count);
+        await products.InsertManyAsync(toInsert, cancellationToken: ct);
+        logger.LogInformation("Seeded {Count} new botanical products.", toInsert.Count);
     }
+
+    /// <summary>
+    /// Builds the canonical botanical catalog. Returned as a fresh list on
+    /// every call so callers can filter without mutating the source.
+    /// </summary>
+    private static List<Product> BuildCatalog(DateTime now) => new()
+    {
+        // ── Monstera Deliciosa (3 variants) ────────────────────────────
+        new()
+        {
+            Name = "Monstera Deliciosa",
+            Description = "Lá xẻ đặc trưng, dễ chăm, hợp không gian sáng gián tiếp. Cây trưởng thành có lá cắt sâu hình cánh — điểm nhấn botanical cho phòng khách, ban công hoặc văn phòng.",
+            Category = "monstera-deliciosa",
+            ImageUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=800",
+            CreatedAt = now,
+            UpdatedAt = now,
+            Variants = new List<ProductVariant>
+            {
+                new() { Sku = "MOND-S", Name = "Monstera Deliciosa – Small (Chậu 12cm)",  Price = 450_000m, OriginalPrice = 520_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 4, Size = 1, Humidity = 3, Suitability = 5 } },
+                new() { Sku = "MOND-M", Name = "Monstera Deliciosa – Medium (Chậu 17cm)", Price = 750_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1602491453631-e2a5ad10a8a0?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 4, Size = 3, Humidity = 3, Suitability = 5 } },
+                new() { Sku = "MOND-L", Name = "Monstera Deliciosa – Large (Chậu 25cm)",   Price = 1_200_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1620503374956-c942862f0372?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 4, Size = 5, Humidity = 3, Suitability = 5 } },
+            },
+        },
+
+        // ── Monstera Thai Constellation (3 variants) ───────────────────
+        new()
+        {
+            Name = "Monstera Thai Constellation",
+            Description = "Phiên bản đột biến với lá variegated trắng – xanh. Mỗi chiếc lá là một bức tranh không trùng lặp — sống động như dải ngân hà. Đây là dòng 'collector' được yêu thích nhất hiện nay.",
+            Category = "monstera-thai-constellation",
+            ImageUrl = "https://images.unsplash.com/photo-1632207691143-643c0bc1f5a5?w=800",
+            CreatedAt = now,
+            UpdatedAt = now,
+            Variants = new List<ProductVariant>
+            {
+                new() { Sku = "MONTC-S", Name = "Monstera Thai Constellation – Small (Chậu 12cm)", Price = 850_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1632207691143-643c0bc1f5a5?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 3, Size = 1, Humidity = 4, Suitability = 3 } },
+                new() { Sku = "MONTC-M", Name = "Monstera Thai Constellation – Medium (Chậu 17cm)", Price = 1_500_000m, OriginalPrice = 1_800_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1593482892290-f54927ae1bb6?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 3, Size = 3, Humidity = 4, Suitability = 3 } },
+                new() { Sku = "MONTC-L", Name = "Monstera Thai Constellation – Large (Chậu 25cm)", Price = 2_400_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 3, Size = 5, Humidity = 4, Suitability = 3 } },
+            },
+        },
+
+        // ── Monstera Adansonii (2 variants) ───────────────────────────
+        new()
+        {
+            Name = "Monstera Adansonii",
+            Description = "Còn gọi là 'Swiss Cheese Vine' — lá nhỏ xẻ lỗ, thích hợp treo ban công hoặc để bàn. Tốc độ phát triển nhanh, dễ nhân giống bằng cắt cành.",
+            Category = "monstera-adansonii",
+            ImageUrl = "https://images.unsplash.com/photo-1593482892290-f54927ae1bb6?w=800",
+            CreatedAt = now,
+            UpdatedAt = now,
+            Variants = new List<ProductVariant>
+            {
+                new() { Sku = "MONA-M", Name = "Monstera Adansonii – Medium (Chậu 14cm, dây leo 30cm)", Price = 320_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1593482892290-f54927ae1bb6?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 5, Size = 2, Humidity = 3, Suitability = 5 } },
+                new() { Sku = "MONA-L", Name = "Monstera Adansonii – Large (Chậu 18cm, dây leo 60cm)", Price = 580_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 5, Size = 3, Humidity = 3, Suitability = 5 } },
+            },
+        },
+
+        // ── Monstera Burle Flame (2 variants) ─────────────────────────
+        new()
+        {
+            Name = "Monstera Burle Flame",
+            Description = "Lá dài thon, viền gợn sóng mềm mại — điểm nhấn tối giản cho không gian hiện đại. Hiếm, được yêu thích trong giới sưu tầm.",
+            Category = "monstera-burle-flame",
+            ImageUrl = "https://images.unsplash.com/photo-1620503374956-c942862f0372?w=800",
+            CreatedAt = now,
+            UpdatedAt = now,
+            Variants = new List<ProductVariant>
+            {
+                new() { Sku = "MONBF-M", Name = "Monstera Burle Flame – Medium (Chậu 14cm)", Price = 950_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1620503374956-c942862f0372?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 3, Size = 2, Humidity = 4, Suitability = 4 } },
+                new() { Sku = "MONBF-L", Name = "Monstera Burle Flame – Large (Chậu 20cm)", Price = 1_650_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1632207691143-643c0bc1f5a5?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 3, Size = 4, Humidity = 4, Suitability = 4 } },
+            },
+        },
+
+        // ── Lan Ý Mini (1 variant) ─────────────────────────────────────
+        new()
+        {
+            Name = "Lan Ý Mini",
+            Description = "Lan Ý size mini để bàn — NASA Clean Air Study xếp vào nhóm cây lọc formaldehyde và benzene hiệu quả nhất. Hoa trắng nở vài lần trong năm.",
+            Category = "lan-y-mini",
+            ImageUrl = "https://images.unsplash.com/photo-1593691509545-c55fb32d1d7e?w=800",
+            CreatedAt = now,
+            UpdatedAt = now,
+            Variants = new List<ProductVariant>
+            {
+                new() { Sku = "LYM-S", Name = "Lan Ý Mini (Chậu 9cm, cao 18cm)", Price = 180_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1593691509545-c55fb32d1d7e?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 5, Size = 1, Humidity = 3, Suitability = 5 } },
+            },
+        },
+
+        // ── Lan Ý Standard (3 variants) ────────────────────────────────
+        new()
+        {
+            Name = "Lan Ý Standard",
+            Description = "Lan size tiêu chuẩn, lá xanh bóng đậm, hoa trắng mo (spathe) nổi bật. Sống tốt trong ánh sáng yếu — lựa chọn hàng đầu cho văn phòng và phòng ngủ.",
+            Category = "lan-y-standard",
+            ImageUrl = "https://images.unsplash.com/photo-1463320726281-696a485928c7?w=800",
+            CreatedAt = now,
+            UpdatedAt = now,
+            Variants = new List<ProductVariant>
+            {
+                new() { Sku = "LYS-S", Name = "Lan Ý Standard – Small (Chậu 12cm)",  Price = 280_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1463320726281-696a485928c7?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 5, Size = 2, Humidity = 3, Suitability = 5 } },
+                new() { Sku = "LYS-M", Name = "Lan Ý Standard – Medium (Chậu 17cm)", Price = 380_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1593691509545-c55fb32d1d7e?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 5, Size = 3, Humidity = 3, Suitability = 5 } },
+                new() { Sku = "LYS-L", Name = "Lan Ý Standard – Large (Chậu 22cm)",  Price = 480_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1545241047-6083a3684587?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 5, Size = 4, Humidity = 3, Suitability = 5 } },
+            },
+        },
+
+        // ── Sen Đá (1 variant) ─────────────────────────────────────────
+        new()
+        {
+            Name = "Sen Đá Ngọc",
+            Description = "Sen đá để bàn size mini — lá dày mọng nước hình ngọc bích, gần như không cần chăm. Quà tặng đầu tiên lý tưởng cho người mới chơi cây.",
+            Category = "sen-da",
+            ImageUrl = "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=800",
+            CreatedAt = now,
+            UpdatedAt = now,
+            Variants = new List<ProductVariant>
+            {
+                new() { Sku = "SDN-MINI", Name = "Sen Đá Ngọc (Chậu 6cm, mini)", Price = 90_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 5, Size = 1, Humidity = 1, Suitability = 5 } },
+            },
+        },
+
+        // ── Hoa Đồng Tiền (1 variant) ──────────────────────────────────
+        new()
+        {
+            Name = "Hoa Đồng Tiền Đỏ",
+            Description = "Hoa Đồng Tiền (Gerbera) đỏ rực — tượng trưng cho may mắn và tài lộc. Mỗi cành là một bông hoa lớn, sặc sỡ, nở suốt mùa hè. Thích hợp làm quà tặng, cắm lọ hoặc trồng chậu.",
+            Category = "hoa-dong-tien",
+            ImageUrl = "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=800",
+            CreatedAt = now,
+            UpdatedAt = now,
+            Variants = new List<ProductVariant>
+            {
+                new() { Sku = "HDT-M", Name = "Hoa Đồng Tiền Đỏ – Medium (Chậu 14cm)", Price = 250_000m,
+                    IsActive = true, ImageUrl = "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=600",
+                    PlantAttributes = new PlantAttributes { CareLevel = 3, Size = 2, Humidity = 2, Suitability = 4 } },
+            },
+        },
+    };
 }

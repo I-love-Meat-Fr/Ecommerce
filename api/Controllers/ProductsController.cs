@@ -19,25 +19,37 @@ public class ProductsController : ControllerBase
         _statsService = statsService;
     }
 
+    /// <summary>
+    /// Paginated product listing with server-side filtering & sort.
+    /// Query parameters bind via <see cref="ProductQueryParams"/>.
+    /// </summary>
     [HttpGet]
-    public async Task<ActionResult<List<ProductWithStats>>> GetAll(
-        [FromQuery] string? category = null,
-        [FromQuery] string? search = null)
+    public async Task<ActionResult<ProductListResponse>> GetAll([FromQuery] ProductQueryParams query)
     {
-        List<Product> products;
-        if (!string.IsNullOrEmpty(search))
+        var (items, total) = await _productService.GetFilteredAsync(query);
+        var withStats = await BuildStatsAsync(items);
+        return Ok(new ProductListResponse
         {
-            products = await _productService.SearchAsync(search);
-        }
-        else if (!string.IsNullOrEmpty(category))
-        {
-            products = await _productService.GetByCategoryAsync(category);
-        }
-        else
-        {
-            products = await _productService.GetAllAsync();
-        }
-        return Ok(await BuildStatsAsync(products));
+            Items = withStats,
+            Total = (int)total,
+            Page = query.Page,
+            PageSize = query.PageSize,
+        });
+    }
+
+    /// <summary>
+    /// Lightweight search endpoint used by admin UI for product lookup.
+    /// Returns at most 500 matches without pagination — the new
+    /// paginated <c>GET /</c> supersedes this for the storefront.
+    /// </summary>
+    [HttpGet("search")]
+    public async Task<ActionResult<List<ProductWithStats>>> Search([FromQuery] string? q)
+    {
+        if (string.IsNullOrWhiteSpace(q))
+            return Ok(new List<ProductWithStats>());
+        var results = await _productService.SearchAsync(q);
+        var withStats = await BuildStatsAsync(results);
+        return Ok(withStats);
     }
 
     [HttpGet("{id}")]
