@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { productApi, categoryApi } from '../../services/api'
 import { push } from './Toast'
+import { Sparkles, Ruler, Droplets, Sun, Leaf } from 'lucide-react'
 
 const emptyVariant = () => ({
   sku: '',
@@ -8,8 +9,15 @@ const emptyVariant = () => ({
   color: '',
   storage: '',
   price: 0,
+  originalPrice: '',
   imageUrl: '',
   isActive: true,
+  plantAttributes: {
+    careLevel: null,
+    size: null,
+    humidity: null,
+    suitability: null,
+  },
 })
 
 function buildEmptyProduct() {
@@ -21,6 +29,10 @@ function buildEmptyProduct() {
     variants: [emptyVariant()],
   }
 }
+
+// (Per-variant plant attributes UI in the admin modal uses numeric
+// 1–5 buttons rather than human labels — the labels live on the
+// storefront render instead.)
 
 // One image field: handles file picker → upload → preview → replace → delete.
 function ImageField({ label, value, onChange, onDelete, required = false }) {
@@ -191,7 +203,15 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
       if (product) {
         setForm({
           ...product,
-          variants: (product.variants || []).map((v) => ({ ...v })),
+          variants: (product.variants || []).map((v) => ({
+            ...v,
+            plantAttributes: {
+              careLevel:    v.plantAttributes?.careLevel    ?? null,
+              size:         v.plantAttributes?.size         ?? null,
+              humidity:     v.plantAttributes?.humidity     ?? null,
+              suitability:  v.plantAttributes?.suitability  ?? null,
+            },
+          })),
         })
       } else {
         setForm(buildEmptyProduct())
@@ -295,15 +315,29 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
         description: form.description?.trim() || '',
         category: form.category?.trim() || '',
         imageUrl: form.imageUrl?.trim() || '',
-        variants: form.variants.map((v) => ({
-          sku: (v.sku || '').trim(),
-          name: v.name.trim(),
-          color: (v.color || '').trim(),
-          storage: (v.storage || '').trim(),
-          price: Number(v.price) || 0,
-          imageUrl: (v.imageUrl || '').trim(),
-          isActive: !!v.isActive,
-        })),
+        variants: form.variants.map((v) => {
+          const orig = v.originalPrice === '' || v.originalPrice == null
+            ? null
+            : Number(v.originalPrice)
+          return {
+            sku: (v.sku || '').trim(),
+            name: v.name.trim(),
+            color: (v.color || '').trim(),
+            storage: (v.storage || '').trim(),
+            price: Number(v.price) || 0,
+            // Send null (not 0) when blank so the backend leaves the field
+            // untouched instead of clobbering a real compare-at price with 0.
+            originalPrice: Number.isFinite(orig) ? orig : null,
+            imageUrl: (v.imageUrl || '').trim(),
+            isActive: !!v.isActive,
+            plantAttributes: {
+              careLevel:    v.plantAttributes?.careLevel    ?? null,
+              size:         v.plantAttributes?.size         ?? null,
+              humidity:     v.plantAttributes?.humidity     ?? null,
+              suitability:  v.plantAttributes?.suitability  ?? null,
+            },
+          }
+        }),
       }
       if (product?.id) {
         await productApi.update(product.id, payload)
@@ -531,13 +565,141 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
                       <ImageField label="Ảnh biến thể" value={v.imageUrl}
                         onChange={(url) => updateVariant(idx, 'imageUrl', url)} />
                     </div>
-                    <div className="col-span-12 flex items-center gap-2 pt-1">
+
+                    {/* Second row: storage + originalPrice + active toggle */}
+                    <div className="col-span-12 md:col-span-2">
+                      <input type="text" placeholder="Dung lượng" value={v.storage || ''}
+                        onChange={(e) => updateVariant(idx, 'storage', e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900" />
+                    </div>
+                    <div className="col-span-12 md:col-span-2">
+                      <input type="number" placeholder="Giá gốc (so sánh)" min="0" step="1000"
+                        value={v.originalPrice ?? ''}
+                        onChange={(e) => updateVariant(idx, 'originalPrice', e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs border border-ink-300 rounded-xs font-mono text-right focus:outline-none focus:border-ink-900" />
+                    </div>
+                    <div className="col-span-12 md:col-span-8 flex items-center gap-2 pt-1">
                       <label className="flex items-center gap-1.5 text-xs text-ink-700 cursor-pointer">
                         <input type="checkbox" checked={!!v.isActive}
                           onChange={(e) => updateVariant(idx, 'isActive', e.target.checked)}
                           className="cursor-pointer" />
                         Đang bán
                       </label>
+                      <span className="text-[10px] text-ink-400">
+                        (Để trống "Giá gốc" nếu không muốn hiển thị % giảm.)
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Per-variant plant attributes — 4 compact 1–5 sliders */}
+                  <div className="mt-3 pt-3 border-t border-ink-200">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Leaf className="w-3 h-3 text-brand-600" strokeWidth={1.5} />
+                      <span className="text-[10px] tracking-widest uppercase text-ink-600 font-semibold">
+                        Thông số cây trồng của biến thể này
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {/* Care Level */}
+                      <div className="bg-white border border-ink-200 rounded-xs p-2">
+                        <div className="flex items-center gap-1 mb-1">
+                          <Sparkles className="w-3 h-3 text-brand-600" strokeWidth={1.5} />
+                          <span className="text-[10px] uppercase tracking-wider text-ink-600 font-semibold">Dễ chăm sóc</span>
+                        </div>
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <button
+                              key={n} type="button"
+                              onClick={() => updateVariant(idx, 'plantAttributes', {
+                                ...(v.plantAttributes || {}),
+                                careLevel: v.plantAttributes?.careLevel === n ? null : n,
+                              })}
+                              className={`flex-1 h-6 rounded-xs border text-[10px] font-semibold transition-colors ${
+                                v.plantAttributes?.careLevel === n
+                                  ? 'bg-brand-500 border-brand-500 text-white'
+                                  : 'bg-white border-ink-300 text-ink-700 hover:border-brand-400 hover:text-brand-600'
+                              }`}
+                            >
+                              {n}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Size */}
+                      <div className="bg-white border border-ink-200 rounded-xs p-2">
+                        <div className="flex items-center gap-1 mb-1">
+                          <Ruler className="w-3 h-3 text-brand-600" strokeWidth={1.5} />
+                          <span className="text-[10px] uppercase tracking-wider text-ink-600 font-semibold">Kích thước</span>
+                        </div>
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <button
+                              key={n} type="button"
+                              onClick={() => updateVariant(idx, 'plantAttributes', {
+                                ...(v.plantAttributes || {}),
+                                size: v.plantAttributes?.size === n ? null : n,
+                              })}
+                              className={`flex-1 h-6 rounded-xs border text-[10px] font-semibold transition-colors ${
+                                v.plantAttributes?.size === n
+                                  ? 'bg-brand-500 border-brand-500 text-white'
+                                  : 'bg-white border-ink-300 text-ink-700 hover:border-brand-400 hover:text-brand-600'
+                              }`}
+                            >
+                              {n}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Humidity */}
+                      <div className="bg-white border border-ink-200 rounded-xs p-2">
+                        <div className="flex items-center gap-1 mb-1">
+                          <Droplets className="w-3 h-3 text-brand-600" strokeWidth={1.5} />
+                          <span className="text-[10px] uppercase tracking-wider text-ink-600 font-semibold">Độ ẩm</span>
+                        </div>
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <button
+                              key={n} type="button"
+                              onClick={() => updateVariant(idx, 'plantAttributes', {
+                                ...(v.plantAttributes || {}),
+                                humidity: v.plantAttributes?.humidity === n ? null : n,
+                              })}
+                              className={`flex-1 h-6 rounded-xs border text-[10px] font-semibold transition-colors ${
+                                v.plantAttributes?.humidity === n
+                                  ? 'bg-brand-500 border-brand-500 text-white'
+                                  : 'bg-white border-ink-300 text-ink-700 hover:border-brand-400 hover:text-brand-600'
+                              }`}
+                            >
+                              {n}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Suitability */}
+                      <div className="bg-white border border-ink-200 rounded-xs p-2">
+                        <div className="flex items-center gap-1 mb-1">
+                          <Sun className="w-3 h-3 text-brand-600" strokeWidth={1.5} />
+                          <span className="text-[10px] uppercase tracking-wider text-ink-600 font-semibold">Phù hợp</span>
+                        </div>
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <button
+                              key={n} type="button"
+                              onClick={() => updateVariant(idx, 'plantAttributes', {
+                                ...(v.plantAttributes || {}),
+                                suitability: v.plantAttributes?.suitability === n ? null : n,
+                              })}
+                              className={`flex-1 h-6 rounded-xs border text-[10px] font-semibold transition-colors ${
+                                v.plantAttributes?.suitability === n
+                                  ? 'bg-brand-500 border-brand-500 text-white'
+                                  : 'bg-white border-ink-300 text-ink-700 hover:border-brand-400 hover:text-brand-600'
+                              }`}
+                            >
+                              {n}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

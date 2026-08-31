@@ -4,9 +4,9 @@ import { X, ArrowUpRight, LogOut } from 'lucide-react'
 
 const navigation = [
   { name: 'Trang chủ', href: '/' },
-  { name: 'Bộ Sưu Tập', href: '/products' },
-  { name: 'Cây Giống Hoa', href: '/products?category=cay-giong' },
-  { name: 'Hoa Đồng Tiền', href: '/products?category=hoa-dong-tien' },
+  { name: 'Bộ Sưu Tập', href: '/san-pham' },
+  { name: 'Cây Giống Hoa', href: '/san-pham?category=cay-giong' },
+  { name: 'Hoa Đồng Tiền', href: '/san-pham?category=hoa-dong-tien' },
   { name: 'Câu Chuyện', href: '/about' },
   { name: 'Tạp Chí', href: '/blog' },
   { name: 'Liên Hệ', href: '/contact' },

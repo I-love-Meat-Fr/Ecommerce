@@ -141,7 +141,7 @@ export default function CheckoutPage() {
               <button onClick={() => navigate('/account')} className="btn-luxury w-full">
                 Xem đơn hàng của tôi
               </button>
-              <Link to="/products" className="btn-luxury-outline w-full block text-center">
+              <Link to="/san-pham" className="btn-luxury-outline w-full block text-center">
                 Tiếp tục mua sắm
               </Link>
             </div>
@@ -157,7 +157,7 @@ export default function CheckoutPage() {
         <div className="container-custom py-20 text-center">
           <p className="eyebrow mb-3">— Giỏ hàng trống</p>
           <h1 className="font-display text-3xl text-ink-900 mb-6">Không có sản phẩm nào để đặt</h1>
-          <Link to="/products" className="btn-luxury">
+          <Link to="/san-pham" className="btn-luxury">
             Khám phá sản phẩm
           </Link>
         </div>

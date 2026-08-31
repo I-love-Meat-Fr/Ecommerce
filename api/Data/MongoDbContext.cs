@@ -93,6 +93,9 @@ public class MongoDbContext
     public IMongoCollection<OrderStatusLog> OrderStatusLogs =>
         _database.GetCollection<OrderStatusLog>("order_status_logs");
 
+    public IMongoCollection<Review> Reviews =>
+        _database.GetCollection<Review>("reviews");
+
     /// <summary>
     /// Creates indexes idempotently. Safe to call on every startup.
     /// </summary>
@@ -134,6 +137,15 @@ public class MongoDbContext
             Builders<Category>.IndexKeys.Ascending(c => c.Name),
             new CreateIndexOptions { Unique = true, Name = "ux_categories_name" });
         await Categories.Indexes.CreateOneAsync(categoryNameIdx, cancellationToken: ct);
+
+        // reviews: (productId, variantSku) + createdAt desc
+        var reviewProductIdx = new CreateIndexModel<Review>(
+            Builders<Review>.IndexKeys
+                .Ascending(r => r.ProductId)
+                .Ascending(r => r.VariantSku)
+                .Descending(r => r.CreatedAt),
+            new CreateIndexOptions { Name = "ix_reviews_product_variant_createdAt" });
+        await Reviews.Indexes.CreateOneAsync(reviewProductIdx, cancellationToken: ct);
     }
 
     /// <summary>

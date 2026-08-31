@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import ProductCard from '../components/ProductCard'
+import SkuCard from '../components/SkuCard'
 import SafeImage from '../components/SafeImage'
 import { productApi } from '../services/api'
+import { flattenSkus } from '../services/skuHelpers'
 import { ArrowRight, ArrowUpRight, Award, Truck, Leaf, ShieldCheck, Sparkles, Quote } from 'lucide-react'
 
 const promises = [
@@ -45,14 +46,12 @@ function HomePage() {
     }
   }, [])
 
-  // Display the first four products returned by the API.
-  const featuredProducts = useMemo(() => {
-    return allProducts.slice(0, 4)
-  }, [allProducts])
+  // Flatten all products to SKUs, then show the first four.
+  const featuredSkus = useMemo(() => flattenSkus(allProducts).slice(0, 4), [allProducts])
 
   // Derive categories from real product data. Each category becomes a tile
   // with a thumbnail (first product's image), a real product count, and the
-  // raw category slug for the /products?category=… filter link.
+  // raw category slug for the /san-pham?category=… filter link.
   const categoryTiles = useMemo(() => {
     const map = new Map()
     for (const p of allProducts) {
@@ -95,7 +94,7 @@ function HomePage() {
                 </p>
 
                 <div className="flex flex-wrap items-center gap-6 pt-4">
-                  <Link to="/products" className="btn-luxury-gold">
+                  <Link to="/san-pham" className="btn-luxury-gold">
                     Khám Phá Ngay
                     <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
                   </Link>
@@ -203,7 +202,7 @@ function HomePage() {
                 Bộ sưu tập <em className="italic">nổi bật</em>
               </h2>
             </div>
-            <Link to="/products" className="link-editorial self-start md:self-end">
+            <Link to="/san-pham" className="link-editorial self-start md:self-end">
               Tất Cả Danh Mục
               <ArrowUpRight className="w-3 h-3" strokeWidth={2} />
             </Link>
@@ -213,7 +212,7 @@ function HomePage() {
             {categoryTiles.map((cat, i) => (
               <Link
                 key={cat.slug}
-                to={`/products?category=${encodeURIComponent(cat.slug)}`}
+                to={`/san-pham?category=${encodeURIComponent(cat.slug)}`}
                 className="group relative aspect-[3/4] overflow-hidden bg-ink-900"
               >
                 <div className="hover-zoom absolute inset-0">
@@ -277,10 +276,10 @@ function HomePage() {
                 </div>
               ))}
             </div>
-          ) : featuredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
-              {featuredProducts.map((product, i) => (
-                <ProductCard key={product.id} product={product} index={i} />
+          ) : featuredSkus.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-10">
+              {featuredSkus.map((sku, i) => (
+                <SkuCard key={`${sku.productId}-${sku.sku}`} sku={sku} index={i} />
               ))}
             </div>
           ) : (
@@ -293,7 +292,7 @@ function HomePage() {
                   ? 'Vui lòng thử lại sau hoặc xem toàn bộ bộ sưu tập.'
                   : 'Bộ sưu tập đang được cập nhật.'}
               </p>
-              <Link to="/products" className="btn-luxury-outline">
+              <Link to="/san-pham" className="btn-luxury-outline">
                 Xem Tất Cả Sản Phẩm
                 <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
               </Link>
@@ -301,7 +300,7 @@ function HomePage() {
           )}
 
           <div className="text-center mt-16">
-            <Link to="/products" className="btn-luxury-outline">
+            <Link to="/san-pham" className="btn-luxury-outline">
               Xem Toàn Bộ Bộ Sưu Tập
               <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
             </Link>

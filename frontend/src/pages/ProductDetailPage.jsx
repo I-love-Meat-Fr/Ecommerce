@@ -2,14 +2,17 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { productApi } from '../services/api'
 import { useCartStore } from '../store/cartStore'
-import ProductCard from '../components/ProductCard'
+import SkuCard from '../components/SkuCard'
 import SafeImage from '../components/SafeImage'
+import { flattenSkus, parseSkuHandle } from '../services/skuHelpers'
 import {
   Minus, Plus, Heart, Share2, Check, Truck, ShieldCheck, Leaf, ArrowRight,
+  Droplets, Ruler, Sparkles, Sun,
 } from 'lucide-react'
 
 function ProductDetailPage() {
-  const { id } = useParams()
+  const { handle } = useParams()
+  const { productId, variantSku } = useMemo(() => parseSkuHandle(handle), [handle])
   const [product, setProduct] = useState(null)
   const [related, setRelated] = useState([])
   const [selectedVariant, setSelectedVariant] = useState(null)
@@ -18,20 +21,26 @@ function ProductDetailPage() {
   const [addedToCart, setAddedToCart] = useState(false)
   const addItem = useCartStore(state => state.addItem)
 
-  // Load product and auto-select first variant.
+  // Load product and auto-select the variant that matches the URL SKU.
   useEffect(() => {
-    if (!id) return
+    if (!productId) return
     let cancelled = false
     setLoading(true)
     setProduct(null)
     setSelectedVariant(null)
 
-    productApi.getById(id)
+    productApi.getById(productId)
       .then(data => {
         if (cancelled) return
         setProduct(data)
         if (data.variants?.length) {
-          setSelectedVariant(data.variants.find(v => v.isActive) ?? data.variants[0])
+          // Prefer the exact SKU from the URL; fall back to the first active
+          // variant, then to any variant.
+          const fromUrl = variantSku
+            ? data.variants.find((v) => v.sku === variantSku)
+            : null
+          const fallback = data.variants.find((v) => v.isActive) ?? data.variants[0]
+          setSelectedVariant(fromUrl || fallback)
         }
       })
       .catch(() => {})
@@ -40,7 +49,7 @@ function ProductDetailPage() {
       })
 
     return () => { cancelled = true }
-  }, [id])
+  }, [productId, variantSku])
 
   // Fetch related products from the same category (excluding the current product).
   useEffect(() => {
@@ -49,11 +58,11 @@ function ProductDetailPage() {
     productApi.getByCategory(product.category)
       .then(list => {
         if (cancelled) return
-        setRelated(list.filter(p => p.id !== id).slice(0, 4))
+        setRelated(list.filter(p => p.id !== productId).slice(0, 4))
       })
       .catch(() => {})
     return () => { cancelled = true }
-  }, [product?.category, id])
+  }, [product?.category, productId])
 
   const handleAddToCart = () => {
     if (!selectedVariant) return
@@ -93,6 +102,11 @@ function ProductDetailPage() {
     return images
   }, [product])
 
+  // Flatten related products → SKUs (one card per variant, capped to 4).
+  const relatedSkus = useMemo(() => {
+    return flattenSkus(related).slice(0, 4)
+  }, [related])
+
   if (loading) {
     return (
       <div className="bg-ivory-50 min-h-screen py-20">
@@ -116,7 +130,7 @@ function ProductDetailPage() {
       <div className="bg-ivory-50 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="font-display text-2xl text-ink-900 mb-4">Sản phẩm không tồn tại</p>
-          <Link to="/products" className="link-editorial">
+          <Link to="/san-pham" className="link-editorial">
             ← Quay lại Bộ Sưu Tập
           </Link>
         </div>
@@ -132,12 +146,12 @@ function ProductDetailPage() {
           <nav className="flex items-center gap-2 text-[11px] tracking-widest uppercase">
             <Link to="/" className="text-ink-500 hover:text-ink-900 transition-colors">Trang Chủ</Link>
             <span className="text-ink-300">/</span>
-            <Link to="/products" className="text-ink-500 hover:text-ink-900 transition-colors">Bộ Sưu Tập</Link>
+            <Link to="/san-pham" className="text-ink-500 hover:text-ink-900 transition-colors">Bộ Sưu Tập</Link>
             {product.category && (
               <>
                 <span className="text-ink-300">/</span>
                 <Link
-                  to={`/products?category=${encodeURIComponent(product.category)}`}
+                  to={`/san-pham?category=${encodeURIComponent(product.category)}`}
                   className="text-ink-500 hover:text-ink-900 transition-colors"
                 >
                   {product.category}
@@ -226,6 +240,98 @@ function ProductDetailPage() {
                   <p className="text-ink-600 leading-relaxed font-light">
                     {product.description}
                   </p>
+                )}
+
+                {/* Plant Attributes — shown when the selected variant has them set */}
+                {selectedVariant?.plantAttributes && (
+                  <div className="space-y-3">
+                    {/* Row 1: care level + size */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {selectedVariant.plantAttributes.careLevel != null && (
+                        <div className="flex items-center gap-3 p-3 bg-brand-50 rounded-md border border-brand-200">
+                          <Sparkles className="w-4 h-4 text-brand-600 flex-shrink-0" strokeWidth={1.5} />
+                          <div className="min-w-0">
+                            <p className="text-[10px] tracking-widest uppercase text-ink-500 font-semibold mb-1">Dễ chăm sóc</p>
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((n) => (
+                                <span
+                                  key={n}
+                                  className={`w-2 h-2 rounded-full transition-colors ${
+                                    n <= selectedVariant.plantAttributes.careLevel
+                                      ? 'bg-brand-500'
+                                      : 'bg-neutral-200'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {selectedVariant.plantAttributes.size != null && (
+                        <div className="flex items-center gap-3 p-3 bg-brand-50 rounded-md border border-brand-200">
+                          <Ruler className="w-4 h-4 text-brand-600 flex-shrink-0" strokeWidth={1.5} />
+                          <div className="min-w-0">
+                            <p className="text-[10px] tracking-widest uppercase text-ink-500 font-semibold mb-1">Kích thước</p>
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((n) => (
+                                <span
+                                  key={n}
+                                  className={`w-2 h-2 rounded-full transition-colors ${
+                                    n <= selectedVariant.plantAttributes.size
+                                      ? 'bg-brand-500'
+                                      : 'bg-neutral-200'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {/* Row 2: humidity + suitability */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {selectedVariant.plantAttributes.humidity != null && (
+                        <div className="flex items-center gap-3 p-3 bg-brand-50 rounded-md border border-brand-200">
+                          <Droplets className="w-4 h-4 text-brand-600 flex-shrink-0" strokeWidth={1.5} />
+                          <div className="min-w-0">
+                            <p className="text-[10px] tracking-widest uppercase text-ink-500 font-semibold mb-1">Độ ẩm</p>
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((n) => (
+                                <span
+                                  key={n}
+                                  className={`w-2 h-2 rounded-full transition-colors ${
+                                    n <= selectedVariant.plantAttributes.humidity
+                                      ? 'bg-brand-500'
+                                      : 'bg-neutral-200'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {selectedVariant.plantAttributes.suitability != null && (
+                        <div className="flex items-center gap-3 p-3 bg-brand-50 rounded-md border border-brand-200">
+                          <Sun className="w-4 h-4 text-brand-600 flex-shrink-0" strokeWidth={1.5} />
+                          <div className="min-w-0">
+                            <p className="text-[10px] tracking-widest uppercase text-ink-500 font-semibold mb-1">Phù hợp</p>
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((n) => (
+                                <span
+                                  key={n}
+                                  className={`w-2 h-2 rounded-full transition-colors ${
+                                    n <= selectedVariant.plantAttributes.suitability
+                                      ? 'bg-brand-500'
+                                      : 'bg-neutral-200'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
 
                 {/* Variants */}
@@ -355,8 +461,8 @@ function ProductDetailPage() {
         </div>
       </section>
 
-      {/* Related products */}
-      {related.length > 0 && (
+      {/* Related SKUs (one card per variant of products in the same category) */}
+      {relatedSkus.length > 0 && (
         <section className="py-16 md:py-20 bg-ivory-100">
           <div className="container-custom">
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
@@ -367,7 +473,7 @@ function ProductDetailPage() {
                 </h2>
               </div>
               <Link
-                to={`/products?category=${encodeURIComponent(product.category)}`}
+                to={`/san-pham?category=${encodeURIComponent(product.category)}`}
                 className="link-editorial self-start md:self-end"
               >
                 Xem Tất Cả
@@ -375,9 +481,9 @@ function ProductDetailPage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
-              {related.map((p, i) => (
-                <ProductCard key={p.id} product={p} index={i} />
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-10">
+              {relatedSkus.map((sku, i) => (
+                <SkuCard key={`${sku.productId}-${sku.sku}`} sku={sku} index={i} />
               ))}
             </div>
           </div>

@@ -3,11 +3,11 @@ import { Instagram, Facebook, Youtube, Mail, Phone, MapPin } from 'lucide-react'
 
 const footerLinks = {
   collection: [
-    { name: 'Cây Giống Hoa', href: '/products?category=cay-giong' },
-    { name: 'Hoa Đồng Tiền', href: '/products/hoa-dong-tien' },
-    { name: 'Lan Ý', href: '/products/lan-y' },
-    { name: 'Monstera', href: '/products/monstera-deliciosa' },
-    { name: 'Quà Tặng', href: '/products?category=qua-tang' },
+    { name: 'Cây Giống Hoa', href: '/san-pham?category=cay-giong' },
+    { name: 'Hoa Đồng Tiền', href: '/san-pham?category=hoa-dong-tien' },
+    { name: 'Lan Ý', href: '/san-pham?category=lan-y' },
+    { name: 'Monstera', href: '/san-pham?category=monstera' },
+    { name: 'Quà Tặng', href: '/san-pham?category=qua-tang' },
   ],
   maison: [
     { name: 'Câu Chuyện', href: '/about' },

@@ -52,29 +52,32 @@ api.interceptors.response.use(
 )
 
 export const productApi = {
+  // All listing endpoints return a list of { product, soldCounts, rating }
+  // (see backend DTO ProductWithStats). The product itself is in `.product`
+  // and the stats are in `.soldCounts` (per SKU) + `.rating` (product-level).
   getAll: async (category = null) => {
     const params = category ? { category } : {}
     const response = await api.get('/products', { params })
-    return response.data
+    return unwrapProductList(response.data)
   },
 
   getById: async (id) => {
     const response = await api.get(`/products/${id}`)
-    return response.data
+    return unwrapProductItem(response.data)
   },
 
   getByCategory: async (category) => {
     const response = await api.get('/products', {
       params: { category },
     })
-    return response.data
+    return unwrapProductList(response.data)
   },
 
   search: async (query) => {
     const response = await api.get('/products', {
       params: { search: query },
     })
-    return response.data
+    return unwrapProductList(response.data)
   },
 
   create: async (payload) => {
@@ -91,6 +94,26 @@ export const productApi = {
     const response = await api.delete(`/products/${id}`)
     return response.data
   },
+}
+
+// The backend now wraps every product in a stats envelope. Unwrap to the
+// product document so existing consumers keep working with the bare shape.
+function unwrapProductList(data) {
+  if (!Array.isArray(data)) return []
+  return data.map(unwrapProductItem)
+}
+
+function unwrapProductItem(item) {
+  if (!item) return null
+  // Old shape (bare product) — pass through.
+  if (!item.product) return item
+  // New shape: pull the product out but keep the stats as a sibling property
+  // on the returned object so the FE can use them when flattening SKUs.
+  return {
+    ...item.product,
+    _soldCounts: item.soldCounts || {},
+    _rating: item.rating || { avg: 0, count: 0 },
+  }
 }
 
 export const userApi = {
@@ -224,6 +247,28 @@ export const authApi = {
   },
   me: async () => {
     const response = await api.get('/auth/me')
+    return response.data
+  },
+}
+
+export const reviewApi = {
+  // GET /api/reviews?productId=...&variantSku=...&limit=20
+  // → { reviews: [...], aggregate: { avg, count } }
+  list: async ({ productId, variantSku = null, limit = 20 } = {}) => {
+    const params = { productId, limit }
+    if (variantSku) params.variantSku = variantSku
+    const response = await api.get('/reviews', { params })
+    return response.data
+  },
+
+  // POST /api/reviews — requires JWT. The server fills userId from the token.
+  create: async ({ productId, variantSku = null, rating, comment = '' }) => {
+    const response = await api.post('/reviews', {
+      productId,
+      variantSku,
+      rating,
+      comment,
+    })
     return response.data
   },
 }

@@ -2,6 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =============================================================
+   Florist Design System — CSS variables
+   Source of truth matches .cursor/rules/florist-design-system.mdc
+   ============================================================= */
+:root {
+  /* Brand Green (Primary Palette) */
+  --brand-900: #1a3a2e;  /* Deep Forest */
+  --brand-800: #234d3f;
+  --brand-700: #2d6150;
+  --brand-600: #367461;
+  --brand-500: #408872;  /* Brand Core */
+  --brand-400: #5fa088;
+  --brand-300: #7fb89e;
+  --brand-200: #9fd0b4;
+  --brand-100: #bfe8ca;
+  --brand-50:  #e0f5e5;
+
+  /* Botanical Earth (Secondary) */
+  --earth-clay: #c89b7b;
+  --earth-sand: #e5d4c1;
+  --earth-moss: #7a8b6f;
+  --earth-bark: #6b5b4f;
+
+  /* Neutrals */
+  --neutral-900: #1a1a1a;
+  --neutral-800: #2e2e2e;
+  --neutral-700: #424242;
+  --neutral-600: #6b6b6b;
+  --neutral-500: #8c8c8c;
+  --neutral-400: #adadad;
+  --neutral-300: #cfcfcf;
+  --neutral-200: #e8e8e8;
+  --neutral-100: #f5f5f5;
+  --neutral-50:  #fafafa;
+  --white:       #ffffff;
+
+  /* Semantic Colors */
+  --success: #4caf50;
+  --warning: #ff9800;
+  --error:   #f44336;
+  --info:    #2196f3;
+
+  /* Florist type tokens */
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body:    'Inter', sans-serif;
+
+  /* Brand-tinted shadow alphas */
+  --shadow-rgb: 26, 58, 46; /* brand-900 */
+}
+
 /* ========== BASE ========== */
 * {
   margin: 0;
@@ -16,23 +66,23 @@ html {
 }
 
 body {
-  font-family: 'Inter', sans-serif;
-  color: #0a0a0a;
-  background: #fdfcf9;
+  font-family: var(--font-body);
+  color: var(--neutral-900);
+  background: var(--neutral-50);
   line-height: 1.6;
   font-weight: 400;
 }
 
 /* ========== EDITORIAL TYPOGRAPHY ========== */
-.font-display { font-family: 'Cormorant Garamond', serif; font-weight: 400; letter-spacing: -0.01em; }
+.font-display { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.01em; }
 
 .eyebrow {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: #a37d35;
+  color: var(--brand-700);
 }
 
 .section-number {
@@ -40,7 +90,7 @@ body {
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.2em;
-  color: #8a8a8a;
+  color: var(--neutral-500);
 }
 
 /* ========== CONTAINER ========== */
@@ -60,20 +110,20 @@ body {
   justify-content: center;
   gap: 0.5rem;
   padding: 1rem 2.5rem;
-  background: #0a0a0a;
-  color: #fdfcf9;
+  background: var(--neutral-900);
+  color: var(--white);
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  border: 1px solid #0a0a0a;
+  border: 1px solid var(--neutral-900);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
 }
 
 .btn-luxury:hover {
   background: transparent;
-  color: #0a0a0a;
+  color: var(--neutral-900);
 }
 
 .btn-luxury-outline {
@@ -83,29 +133,54 @@ body {
   gap: 0.5rem;
   padding: 1rem 2.5rem;
   background: transparent;
-  color: #0a0a0a;
+  color: var(--neutral-900);
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  border: 1px solid #0a0a0a;
+  border: 1px solid var(--neutral-900);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
 }
 
 .btn-luxury-outline:hover {
-  background: #0a0a0a;
-  color: #fdfcf9;
+  background: var(--neutral-900);
+  color: var(--white);
 }
 
+/* Primary brand button — FDS spec: bg-brand-500, hover bg-brand-600 */
+.btn-luxury-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 2.5rem;
+  background: var(--brand-500);
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border: none;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.btn-luxury-brand:hover {
+  background: var(--brand-600);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(var(--shadow-rgb), 0.25);
+}
+
+/* Botanical gold → earth-clay (warm accent CTA) */
 .btn-luxury-gold {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   padding: 1rem 2.5rem;
-  background: linear-gradient(135deg, #c19a4f 0%, #a37d35 100%);
-  color: #fdfcf9;
+  background: var(--earth-clay);
+  color: var(--white);
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.15em;
@@ -116,9 +191,9 @@ body {
 }
 
 .btn-luxury-gold:hover {
-  background: linear-gradient(135deg, #d4b878 0%, #c19a4f 100%);
+  background: var(--earth-bark);
   transform: translateY(-1px);
-  box-shadow: 0 12px 32px rgba(163, 125, 53, 0.25);
+  box-shadow: 0 12px 32px rgba(var(--shadow-rgb), 0.25);
 }
 
 /* ========== LINK ========== */
@@ -131,7 +206,7 @@ body {
   font-weight: 500;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #0a0a0a;
+  color: var(--neutral-900);
   text-decoration: none;
   padding-bottom: 4px;
   transition: all 0.3s ease;
@@ -144,7 +219,7 @@ body {
   bottom: 0;
   width: 100%;
   height: 1px;
-  background: #0a0a0a;
+  background: var(--neutral-900);
   transform-origin: right;
   transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -157,25 +232,25 @@ body {
 /* ========== DIVIDER ========== */
 .divider-thin {
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, #b8b8b8 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, var(--neutral-300) 50%, transparent 100%);
 }
 
 .divider-vertical {
   width: 1px;
-  background: linear-gradient(180deg, transparent 0%, #b8b8b8 50%, transparent 100%);
+  background: linear-gradient(180deg, transparent 0%, var(--neutral-300) 50%, transparent 100%);
 }
 
 /* ========== CARD ========== */
 .card-editorial {
-  background: #ffffff;
-  border: 1px solid #f0eadf;
+  background: var(--white);
+  border: 1px solid var(--earth-sand);
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .card-editorial:hover {
-  border-color: #0a0a0a;
+  border-color: var(--neutral-900);
   transform: translateY(-4px);
-  box-shadow: 0 24px 48px rgba(10, 10, 10, 0.08);
+  box-shadow: 0 24px 48px rgba(var(--shadow-rgb), 0.08);
 }
 
 /* ========== BADGE ========== */
@@ -188,8 +263,8 @@ body {
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  background: #0a0a0a;
-  color: #fdfcf9;
+  background: var(--neutral-900);
+  color: var(--white);
 }
 
 .badge-gold {
@@ -201,13 +276,13 @@ body {
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  background: linear-gradient(135deg, #c19a4f 0%, #a37d35 100%);
-  color: #fdfcf9;
+  background: var(--earth-clay);
+  color: var(--white);
 }
 
 /* ========== SHIMMER ========== */
 .shimmer {
-  background: linear-gradient(90deg, #f0eadf 0%, #f8f5ee 50%, #f0eadf 100%);
+  background: linear-gradient(90deg, var(--earth-sand) 0%, var(--brand-50) 50%, var(--earth-sand) 100%);
   background-size: 200% 100%;
   animation: shimmer 2.5s linear infinite;
 }
@@ -218,22 +293,22 @@ body {
   padding: 1rem 0;
   background: transparent;
   border: none;
-  border-bottom: 1px solid #b8b8b8;
-  font-family: 'Inter', sans-serif;
+  border-bottom: 1px solid var(--neutral-300);
+  font-family: var(--font-body);
   font-size: 14px;
-  color: #0a0a0a;
+  color: var(--neutral-900);
   outline: none;
   transition: border-color 0.3s ease;
 }
 
 .input-editorial:focus {
-  border-color: #0a0a0a;
+  border-color: var(--neutral-900);
 }
 
 .input-editorial::placeholder {
-  color: #8a8a8a;
+  color: var(--neutral-500);
   font-style: italic;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 16px;
 }
 
@@ -286,21 +361,21 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f8f5ee;
+  background: var(--neutral-100);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #0a0a0a;
+  background: var(--neutral-900);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #404040;
+  background: var(--neutral-700);
 }
 
 /* ========== SELECTION ========== */
 ::selection {
-  background: #0a0a0a;
-  color: #fdfcf9;
+  background: var(--neutral-900);
+  color: var(--white);
 }
 
 /* ========== BACK TO TOP ========== */

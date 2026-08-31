@@ -31,8 +31,36 @@ public class Product
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
 
+/// <summary>
+/// Botanical care attributes — all numeric on a 1–5 scale.
+/// Null when not yet set.
+/// </summary>
+public class PlantAttributes
+{
+    /// <summary>Care difficulty: 1 = very hard → 5 = very easy.</summary>
+    [BsonElement("careLevel")]
+    [BsonIgnoreIfNull]
+    public int? CareLevel { get; set; }
+
+    /// <summary>Size: 1 = tiny / bonsai → 5 = large tree.</summary>
+    [BsonElement("size")]
+    [BsonIgnoreIfNull]
+    public int? Size { get; set; }
+
+    /// <summary>Humidity preference: 1 = very dry → 5 = very humid.</summary>
+    [BsonElement("humidity")]
+    [BsonIgnoreIfNull]
+    public int? Humidity { get; set; }
+
+    /// <summary>Adaptability / ease-of-life: 1 = fussy → 5 = very hardy.</summary>
+    [BsonElement("suitability")]
+    [BsonIgnoreIfNull]
+    public int? Suitability { get; set; }
+}
+
 // DTO for PATCH /api/products/{id} — only fields the client may change.
 // Every field is nullable so we can distinguish "not provided" from "set to empty".
+// PlantAttributes are carried inside each variant — see ProductVariant.
 public class ProductUpdateDto
 {
     public string? Name { get; set; }
@@ -64,4 +92,23 @@ public class ProductVariant
 
     [BsonElement("isActive")]
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Optional compare-at (original) price. When present and greater than
+    /// <see cref="Price"/>, the storefront surfaces a discount badge derived
+    /// from <c>(OriginalPrice - Price) / OriginalPrice</c>.
+    /// </summary>
+    [BsonElement("originalPrice")]
+    [BsonIgnoreIfNull]
+    public decimal? OriginalPrice { get; set; }
+
+    /// <summary>
+    /// Per-SKU botanical care attributes (all numeric on a 1–5 scale).
+    /// Each variant of a product can have its own care profile since different
+    /// cultivars of the same plant (e.g. Monstera Deliciosa vs Thai Constellation)
+    /// have very different care needs. Null when not yet set.
+    /// </summary>
+    [BsonElement("plantAttributes")]
+    [BsonIgnoreIfNull]
+    public PlantAttributes? PlantAttributes { get; set; }
 }

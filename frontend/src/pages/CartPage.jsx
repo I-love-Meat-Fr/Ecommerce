@@ -30,7 +30,7 @@ function CartPage() {
             <p className="text-ink-500 font-light mb-10">
               Hãy khám phá bộ sưu tập cây cảnh của chúng tôi để tìm cho mình những sản phẩm ưng ý.
             </p>
-            <Link to="/products" className="btn-luxury">
+            <Link to="/san-pham" className="btn-luxury">
               Khám Phá Bộ Sưu Tập
               <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
             </Link>
@@ -80,7 +80,7 @@ function CartPage() {
                         № {String(i + 1).padStart(2, '0')}
                       </span>
                       
-                      <Link to={`/products/${item.product.id}`} className="flex-shrink-0 w-24 h-32 md:w-32 md:h-40 overflow-hidden bg-ivory-200 hover-zoom">
+                      <Link to={`/san-pham/${item.product.id}-${encodeURIComponent(item.variant?.sku || '')}`} className="flex-shrink-0 w-24 h-32 md:w-32 md:h-40 overflow-hidden bg-ivory-200 hover-zoom">
                         <SafeImage
                           src={item.product.imageUrl}
                           alt={item.product.name}
@@ -93,7 +93,7 @@ function CartPage() {
                         <div className="flex justify-between gap-3">
                           <div className="min-w-0">
                             <Link
-                              to={`/products/${item.product.id}`}
+                              to={`/san-pham/${item.product.id}-${encodeURIComponent(item.variant?.sku || '')}`}
                               className="font-display text-xl md:text-2xl text-ink-900 hover:text-champagne-500 transition-colors block truncate"
                             >
                               {item.product.name}
@@ -148,7 +148,7 @@ function CartPage() {
               </div>
 
               <div className="mt-8">
-                <Link to="/products" className="link-editorial">
+                <Link to="/san-pham" className="link-editorial">
                   <ArrowLeft className="w-3 h-3" strokeWidth={2} />
                   Tiếp tục khám phá
                 </Link>

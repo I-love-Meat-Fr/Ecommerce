@@ -6,56 +6,99 @@ export default {
   ],
   theme: {
     extend: {
-colors: {
-        // Editorial Luxury palette — neutral foundations
-        ivory: {
-          50: '#fdfcf9',
-          100: '#f8f5ee',
-          200: '#f0eadf',
-          300: '#e3dccb',
+      colors: {
+        // ===== Florist Design System — Botanical Brand Green =====
+        // The primary accent of the design language.
+        brand: {
+          50:  '#e0f5e5',
+          100: '#bfe8ca',
+          200: '#9fd0b4',
+          300: '#7fb89e',
+          400: '#5fa088',
+          500: '#408872', /* Brand Core */
+          600: '#367461',
+          700: '#2d6150',
+          800: '#234d3f',
+          900: '#1a3a2e', /* Deep Forest */
         },
+
+        // ===== Florist Design System — Botanical Earth =====
+        // Warm, organic secondary accents.
+        earth: {
+          clay: '#c89b7b',
+          sand: '#e5d4c1',
+          moss: '#7a8b6f',
+          bark: '#6b5b4f',
+        },
+
+        // ===== Florist Design System — Neutrals =====
+        neutral: {
+          50:  '#fafafa',
+          100: '#f5f5f5',
+          200: '#e8e8e8',
+          300: '#cfcfcf',
+          400: '#adadad',
+          500: '#8c8c8c',
+          600: '#6b6b6b',
+          700: '#424242',
+          800: '#2e2e2e',
+          900: '#1a1a1a',
+        },
+
+        // ===== Legacy aliases — remapped to FDS tokens =====
+        // `ink-*` was the editorial luxury near-black scale; now it
+        // resolves to the FDS neutral scale so existing `ink-900`
+        // buttons, borders, and text pick up the new grays automatically.
         ink: {
-          900: '#0a0a0a',
-          800: '#1a1a1a',
-          700: '#2d2d2d',
-          600: '#404040',
-          500: '#595959',
-          400: '#8a8a8a',
-          300: '#b8b8b8',
+          50:  '#fafafa',
+          100: '#f5f5f5',
+          200: '#e8e8e8',
+          300: '#cfcfcf',
+          400: '#adadad',
+          500: '#8c8c8c',
+          600: '#6b6b6b',
+          700: '#424242',
+          800: '#2e2e2e',
+          900: '#1a1a1a',
         },
-        // Botanical sage — primary natural accent
+
+        // `ivory-*` was the warm cream scale; now it resolves to the
+        // soft FDS surfaces (neutral 50/100 + earth-sand for warmth).
+        ivory: {
+          50:  '#fafafa',
+          100: '#f5f5f5',
+          200: '#e5d4c1', /* earth-sand — warm card/border tone */
+          300: '#cfcfcf',
+        },
+
+        // `sage-*` was the botanical sage accent; now it points at the
+        // FDS brand-green scale so all `bg-sage-*`, `text-sage-*`, and
+        // `border-sage-*` classes inherit the FDS botanical green.
         sage: {
-          50: '#f4f7f1',
-          100: '#e6ecdf',
-          200: '#cdd9bf',
-          300: '#aebf97',
-          400: '#7d9463',
-          500: '#5e7a48',
-          600: '#3f5530',
+          50:  '#e0f5e5',
+          100: '#bfe8ca',
+          200: '#9fd0b4',
+          300: '#7fb89e',
+          400: '#5fa088',
+          500: '#408872',
+          600: '#367461',
+          700: '#2d6150',
+          800: '#234d3f',
+          900: '#1a3a2e',
         },
-        // Legacy alias — components still reference `champagne-NNN`.
-        // Pointed at the sage palette so the theme reads green/natural.
-        champagne: {
-          50: '#f4f7f1',
-          100: '#e6ecdf',
-          200: '#cdd9bf',
-          300: '#aebf97',
-          400: '#7d9463',
-          500: '#5e7a48',
-          600: '#3f5530',
-        },
-        // Legacy primary for compatibility
+
+        // Legacy `primary-*` palette — remapped to FDS brand green.
         primary: {
-          50: '#fdfcf9',
-          100: '#f8f5ee',
-          200: '#f0eadf',
-          300: '#e3dccb',
-          400: '#a37d35',
-          500: '#7a5e26',
-          600: '#404040',
-          700: '#2d2d2d',
-          800: '#1a1a1a',
-          900: '#0a0a0a',
+          50:  '#e0f5e5',
+          100: '#bfe8ca',
+          200: '#9fd0b4',
+          300: '#7fb89e',
+          400: '#5fa088',
+          500: '#408872',
+          600: '#367461',
+          700: '#2d6150',
+          800: '#234d3f',
+          900: '#1a3a2e',
         },
       },
       fontFamily: {
@@ -88,9 +131,11 @@ colors: {
         'xs': '2px',
       },
       boxShadow: {
-        'soft': '0 1px 2px rgba(10,10,10,0.04)',
-        'medium': '0 4px 24px rgba(10,10,10,0.06)',
-        'elevated': '0 12px 40px rgba(10,10,10,0.08)',
+        // Shadows re-tinted with the FDS brand-green primary so any
+        // elevated surface picks up the botanical accent.
+        'soft':     '0 1px 2px rgba(26, 58, 46, 0.04)',
+        'medium':   '0 4px 24px rgba(26, 58, 46, 0.06)',
+        'elevated': '0 12px 40px rgba(26, 58, 46, 0.08)',
       },
       animation: {
         'fade-up': 'fadeUp 0.8s ease-out forwards',

@@ -6,9 +6,9 @@ import { Search, X, ShoppingBag, User, LogOut, Menu } from 'lucide-react'
 
 const navigation = [
   { name: 'Trang chủ', href: '/' },
-  { name: 'Bộ Sưu Tập', href: '/products' },
-  { name: 'Cây Giống', href: '/products?category=cay-giong' },
-  { name: 'Hoa Đồng Tiền', href: '/products?category=hoa-dong-tien' },
+  { name: 'Bộ Sưu Tập', href: '/san-pham' },
+  { name: 'Cây Giống', href: '/san-pham?category=cay-giong' },
+  { name: 'Hoa Đồng Tiền', href: '/san-pham?category=hoa-dong-tien' },
   { name: 'Câu Chuyện', href: '/about' },
   { name: 'Liên Hệ', href: '/contact' },
 ]
@@ -43,7 +43,7 @@ function Header({ onMenuClick }) {
   const handleSearch = (e) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
+      navigate(`/san-pham?search=${encodeURIComponent(searchQuery.trim())}`)
       setSearchQuery('')
       setIsSearchOpen(false)
     }

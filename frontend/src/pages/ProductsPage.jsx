@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import ProductCard from '../components/ProductCard'
+import SkuCard from '../components/SkuCard'
 import { productApi } from '../services/api'
+import { flattenSkus, sortSkus } from '../services/skuHelpers'
 import { Filter, ChevronDown, ArrowUpDown, X } from 'lucide-react'
 
 const categories = [
@@ -18,7 +19,8 @@ function ProductsPage() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
-  
+  const [sortBy, setSortBy] = useState('newest')
+
   const categoryParam = searchParams.get('category') || 'all'
   const searchQuery = searchParams.get('search') || ''
 
@@ -52,13 +54,29 @@ function ProductsPage() {
     setShowFilters(false)
   }
 
-  const filteredProducts = products.filter(product => {
-    if (searchQuery) {
-      return product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-             product.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    }
-    return true
-  })
+  // Flatten products → SKUs once, then sort + filter via memo.
+  const allSkus = useMemo(() => flattenSkus(products), [products])
+
+  const visibleSkus = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    const matched = q
+      ? allSkus.filter((s) => {
+          const haystack = [
+            s.productName,
+            s.productDescription,
+            s.name,
+            s.sku,
+            s.color,
+            s.productCategory,
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase()
+          return haystack.includes(q)
+        })
+      : allSkus
+    return sortSkus(matched, sortBy)
+  }, [allSkus, searchQuery, sortBy])
 
   const currentCategory = categories.find(c => c.id === categoryParam)
 
@@ -87,7 +105,7 @@ function ProductsPage() {
                 mang đến vẻ đẹp tinh tế cho không gian sống của bạn.
               </p>
               <p className="text-[10px] tracking-widest uppercase text-champagne-500 font-semibold mt-4">
-                Hiển thị {filteredProducts.length} sản phẩm
+                Hiển thị {visibleSkus.length} sản phẩm
               </p>
             </div>
           </div>
@@ -129,11 +147,15 @@ function ProductsPage() {
             {/* Sort */}
             <div className="relative flex items-center gap-3 ml-auto">
               <ArrowUpDown className="w-3 h-3 text-ink-400 hidden sm:block" strokeWidth={1.5} />
-              <select className="appearance-none bg-transparent text-sm tracking-wide pr-6 cursor-pointer focus:outline-none text-ink-700">
-                <option>Mới nhất</option>
-                <option>Giá thấp đến cao</option>
-                <option>Giá cao đến thấy</option>
-                <option>Tên A-Z</option>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="appearance-none bg-transparent text-sm tracking-wide pr-6 cursor-pointer focus:outline-none text-ink-700"
+              >
+                <option value="newest">Mới nhất</option>
+                <option value="price-asc">Giá thấp đến cao</option>
+                <option value="price-desc">Giá cao đến thấp</option>
+                <option value="name-asc">Tên A-Z</option>
               </select>
               <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 text-ink-400 pointer-events-none" />
             </div>
@@ -174,10 +196,10 @@ function ProductsPage() {
                 </div>
               ))}
             </div>
-          ) : filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-14">
-              {filteredProducts.map((product, i) => (
-                <ProductCard key={product.id} product={product} index={i} />
+          ) : visibleSkus.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-10">
+              {visibleSkus.map((sku, i) => (
+                <SkuCard key={`${sku.productId}-${sku.sku}`} sku={sku} index={i} />
               ))}
             </div>
           ) : (
@@ -185,7 +207,7 @@ function ProductsPage() {
               <X className="w-12 h-12 text-ivory-300 mx-auto mb-6" strokeWidth={1} />
               <h3 className="font-display text-2xl text-ink-900 mb-3">Không tìm thấy sản phẩm</h3>
               <p className="text-ink-500 font-light mb-8">Hãy thử tìm kiếm với từ khóa khác hoặc khám phá bộ sưu tập đầy đủ của chúng tôi.</p>
-              <Link to="/products" className="btn-luxury-outline">
+              <Link to="/san-pham" className="btn-luxury-outline">
                 Xem Toàn Bộ Sản Phẩm
               </Link>
             </div>
