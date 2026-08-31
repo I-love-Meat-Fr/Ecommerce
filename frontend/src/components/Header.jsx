@@ -1,14 +1,17 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useCartStore } from '../store/cartStore'
 import { useAuthStore } from '../store/authStore'
-import { useState, useEffect } from 'react'
-import { Search, X, ShoppingBag, User, LogOut, Menu } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Search, X, ShoppingBag, User, LogOut, Menu, ChevronDown } from 'lucide-react'
+import { categoryApi } from '../services/api'
+import CollectionsMegaDropdown from './CollectionsMegaDropdown'
 
-const navigation = [
+// Static "above the fold" nav. Category links are loaded dynamically from
+// the API tree and prepended after the static items so the editorial labels
+// stay consistent across the site.
+const staticNavigation = [
   { name: 'Trang chủ', href: '/' },
   { name: 'Bộ Sưu Tập', href: '/san-pham' },
-  { name: 'Cây Giống', href: '/san-pham?category=cay-giong' },
-  { name: 'Hoa Đồng Tiền', href: '/san-pham?category=hoa-dong-tien' },
   { name: 'Câu Chuyện', href: '/about' },
   { name: 'Liên Hệ', href: '/contact' },
 ]
@@ -19,6 +22,12 @@ function Header({ onMenuClick }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isAccountOpen, setIsAccountOpen] = useState(false)
+  const [categoryTree, setCategoryTree] = useState([])
+  // Mega-dropdown visibility. The trigger element holds its own hover state
+  // AND the dropdown panel does, so we OR both signals and use a small
+  // close delay so the cursor can cross the gap without flicker.
+  const [isCollectionsOpen, setIsCollectionsOpen] = useState(false)
+  const closeTimerRef = useRef(null)
   const cartItems = useCartStore(state => state.items)
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
   const isAuthenticated = useAuthStore(state => state.isAuthenticated())
@@ -40,6 +49,17 @@ function Header({ onMenuClick }) {
     return () => document.removeEventListener('click', handleClick)
   }, [isAccountOpen])
 
+  // Fetch the category tree once at mount. We surface the FIRST root + its
+  // first 1–2 children as the visible nav so the editorial header stays
+  // uncluttered. The MobileMenu shows the full tree.
+  useEffect(() => {
+    let cancelled = false
+    categoryApi.getTree()
+      .then((tree) => { if (!cancelled) setCategoryTree(tree || []) })
+      .catch(() => { if (!cancelled) setCategoryTree([]) })
+    return () => { cancelled = true }
+  }, [])
+
   const handleSearch = (e) => {
     e.preventDefault()
     if (searchQuery.trim()) {
@@ -54,6 +74,29 @@ function Header({ onMenuClick }) {
     setIsAccountOpen(false)
     navigate('/')
   }
+
+  // Open / close the collections mega dropdown with a small delay so the
+  // cursor can travel from the trigger to the panel without the panel
+  // vanishing mid-transition (the panel sits ~12px below the trigger).
+  const openCollections = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
+    setIsCollectionsOpen(true)
+  }
+  const scheduleCloseCollections = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = setTimeout(() => setIsCollectionsOpen(false), 120)
+  }
+  useEffect(() => () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+  }, [])
+
+  // Compose the full nav. The "Bộ Sưu Tập" entry is special — it acts as the
+// hover trigger for the mega dropdown below. Clicking still navigates to
+// `/san-pham` for users without a pointer device.
+  const staticRightNav = staticNavigation.slice(2) // ['Câu Chuyện', 'Liên Hệ']
 
   return (
     <>
@@ -92,15 +135,35 @@ function Header({ onMenuClick }) {
 
             {/* Left nav - desktop */}
             <nav className="hidden lg:flex items-center gap-10 flex-1">
-              {navigation.slice(0, 3).map((item) => (
+              <Link
+                to="/"
+                className="link-editorial text-[12px]"
+              >
+                Trang chủ
+              </Link>
+              {/* "Bộ Sưu Tập" — hover trigger for the 4-column mega dropdown */}
+              <div
+                className="relative"
+                onMouseEnter={openCollections}
+                onMouseLeave={scheduleCloseCollections}
+              >
                 <Link
-                  key={item.name}
-                  to={item.href}
-                  className="link-editorial text-[12px]"
+                  to="/san-pham"
+                  className={`link-editorial text-[12px] inline-flex items-center gap-1.5 ${
+                    isCollectionsOpen ? 'text-sage-600' : ''
+                  }`}
+                  aria-haspopup="true"
+                  aria-expanded={isCollectionsOpen}
                 >
-                  {item.name}
+                  Bộ Sưu Tập
+                  <ChevronDown
+                    className={`w-3 h-3 transition-transform ${
+                      isCollectionsOpen ? 'rotate-180' : ''
+                    }`}
+                    strokeWidth={1.5}
+                  />
                 </Link>
-              ))}
+              </div>
             </nav>
 
             {/* Center logo */}
@@ -115,7 +178,7 @@ function Header({ onMenuClick }) {
 
             {/* Right nav - desktop */}
             <nav className="hidden lg:flex items-center gap-10 flex-1 justify-end">
-              {navigation.slice(3).map((item) => (
+              {staticRightNav.map((item) => (
                 <Link
                   key={item.name}
                   to={item.href}
@@ -227,6 +290,20 @@ function Header({ onMenuClick }) {
             </div>
           </div>
         </div>
+
+        {/* Mega dropdown — anchored to the full-width <header>, not the trigger link.
+            Keeps it visually centered on the navbar regardless of where "Bộ Sưu Tập" sits.
+            Hover handlers mirror the trigger so the cursor can cross the gap without flicker. */}
+        {isCollectionsOpen && categoryTree.length > 0 && (
+          <div
+            className="absolute left-1/2 -translate-x-1/2 top-full pt-3 z-50"
+            onMouseEnter={openCollections}
+            onMouseLeave={scheduleCloseCollections}
+          >
+            <CollectionsMegaDropdown tree={categoryTree} />
+          </div>
+        )}
+
         <div className="divider-thin" />
       </header>
     </>

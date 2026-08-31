@@ -57,6 +57,19 @@ export function sortSkus(skus, sortBy) {
         const bKey = `${b.productName} ${b.name}`.toLowerCase()
         return aKey.localeCompare(bKey)
       })
+    case 'popular':
+      // Falls back to most-sold-count desc, then to recency. Used by the FE
+      // only as a *secondary* sort on top of the server's already-sorted
+      // result — the server owns the canonical popular ordering because it
+      // has access to TotalSoldCount at the product level.
+      return sorted.sort((a, b) => {
+        const sa = Number(a.sold) || 0
+        const sb = Number(b.sold) || 0
+        if (sb !== sa) return sb - sa
+        const aTime = new Date(a.productUpdatedAt || a.productCreatedAt || 0).getTime()
+        const bTime = new Date(b.productUpdatedAt || b.productCreatedAt || 0).getTime()
+        return bTime - aTime
+      })
     case 'newest':
     default:
       return sorted.sort((a, b) => {

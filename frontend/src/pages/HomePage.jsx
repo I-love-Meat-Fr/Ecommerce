@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import SkuCard from '../components/SkuCard'
 import SafeImage from '../components/SafeImage'
-import { productApi } from '../services/api'
+import { productApi, categoryApi } from '../services/api'
 import { flattenSkus } from '../services/skuHelpers'
 import { ArrowRight, ArrowUpRight, Award, Truck, Leaf, ShieldCheck, Sparkles, Quote } from 'lucide-react'
 
@@ -21,6 +21,7 @@ const editorial = [
 
 function HomePage() {
   const [allProducts, setAllProducts] = useState([])
+  const [categoryTree, setCategoryTree] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
 
@@ -46,26 +47,62 @@ function HomePage() {
     }
   }, [])
 
+  useEffect(() => {
+    // Category tree is small + stable — fetch once at mount. The tree is the
+    // source of truth for category names and ordering; products contribute
+    // the thumbnails + counts that decorate each tile.
+    let cancelled = false
+    categoryApi.getTree()
+      .then((tree) => { if (!cancelled) setCategoryTree(tree || []) })
+      .catch(() => { if (!cancelled) setCategoryTree([]) })
+    return () => { cancelled = true }
+  }, [])
+
   // Flatten all products to SKUs, then show the first four.
   const featuredSkus = useMemo(() => flattenSkus(allProducts).slice(0, 4), [allProducts])
 
-  // Derive categories from real product data. Each category becomes a tile
-  // with a thumbnail (first product's image), a real product count, and the
-  // raw category slug for the /san-pham?category=… filter link.
-  const categoryTiles = useMemo(() => {
-    const map = new Map()
+  // Index products by category slug so we can decorate tree nodes with
+  // thumbnails + counts without a nested loop on every render.
+  const productIndex = useMemo(() => {
+    const idx = new Map()
     for (const p of allProducts) {
       const slug = (p.category || '').trim()
       if (!slug) continue
-      if (!map.has(slug)) {
-        map.set(slug, { slug, name: slug, count: 0, imageUrl: p.imageUrl })
-      }
-      map.get(slug).count += 1
+      const entry = idx.get(slug) || { count: 0, imageUrl: p.imageUrl, name: p.category }
+      entry.count += 1
+      if (!entry.imageUrl && p.imageUrl) entry.imageUrl = p.imageUrl
+      idx.set(slug, entry)
     }
-    return [...map.values()]
+    return idx
+  }, [allProducts])
+
+  // Prefer the server's category tree (gives us proper names & ordering).
+  // Fall back to deriving from products when the tree endpoint fails — keeps
+  // the homepage working even on cold-start or transient Atlas hiccups.
+  const categoryTiles = useMemo(() => {
+    if (categoryTree.length > 0) {
+      const out = []
+      const visit = (node) => {
+        const meta = productIndex.get(node.slug)
+        if (meta) {
+          out.push({
+            slug: node.slug,
+            name: node.name,
+            count: meta.count,
+            imageUrl: meta.imageUrl,
+          })
+        }
+        for (const child of node.children || []) visit(child)
+      }
+      for (const root of categoryTree) visit(root)
+      return out.sort((a, b) => b.count - a.count).slice(0, 4)
+    }
+    // Fallback: derive from products.
+    return [...productIndex.entries()]
+      .map(([slug, meta]) => ({ slug, name: meta.name, count: meta.count, imageUrl: meta.imageUrl }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 4)
-  }, [allProducts])
+  }, [categoryTree, productIndex])
 
   return (
     <div className="bg-ivory-50">

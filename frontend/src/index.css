@@ -372,6 +372,18 @@ body {
   background: var(--neutral-700);
 }
 
+/* ========== SCROLLBAR HIDE ========== */
+/* Lets the category filter strip scroll horizontally on mobile without
+   showing a visible track. Falls back to native scrollbar on Firefox/IE
+   where the pseudo-element trick is unsupported. */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* ========== SELECTION ========== */
 ::selection {
   background: var(--neutral-900);

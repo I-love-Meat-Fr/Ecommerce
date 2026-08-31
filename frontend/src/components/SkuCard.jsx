@@ -66,8 +66,8 @@ function SkuCard({ sku }) {
         className={!isActive ? 'cursor-not-allowed pointer-events-none' : ''}
         aria-disabled={!isActive}
       >
-        {/* Image */}
-        <div className="relative aspect-[3/4] overflow-hidden bg-ivory-100 mb-3">
+        {/* Image — square for compact 4-column grids */}
+        <div className="relative aspect-square overflow-hidden bg-ivory-100 mb-2.5">
           <div className="hover-zoom w-full h-full">
             <SafeImage
               src={imageUrl}
@@ -79,15 +79,15 @@ function SkuCard({ sku }) {
 
           {/* Top-left badge: discount wins over category when present */}
           {!isActive ? (
-            <span className="absolute top-3 left-3 px-2.5 py-1 bg-ink-900/90 text-ivory-50 text-[10px] tracking-widest uppercase font-medium">
+            <span className="absolute top-2 left-2 px-2 py-0.5 bg-ink-900/90 text-ivory-50 text-[9px] tracking-widest uppercase font-medium">
               Ngừng bán
             </span>
           ) : discount > 0 ? (
-            <span className="absolute top-3 left-3 px-2.5 py-1 bg-red-500 text-white text-[10px] tracking-widest uppercase font-semibold">
+            <span className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-white text-[9px] tracking-widest uppercase font-semibold">
               -{discount}%
             </span>
           ) : sku.productCategory ? (
-            <span className="absolute top-3 left-3 px-2.5 py-1 bg-ivory-50/95 backdrop-blur-sm text-ink-900 text-[10px] tracking-widest uppercase font-medium">
+            <span className="absolute top-2 left-2 px-2 py-0.5 bg-ivory-50/95 backdrop-blur-sm text-ink-900 text-[9px] tracking-widest uppercase font-medium">
               {sku.productCategory}
             </span>
           ) : null}
@@ -95,36 +95,36 @@ function SkuCard({ sku }) {
           {/* Wishlist */}
           {isActive && (
             <button
-              className="absolute top-3 right-3 w-8 h-8 bg-ivory-50/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 hover:bg-ink-900 hover:text-ivory-50"
+              className="absolute top-2 right-2 w-7 h-7 bg-ivory-50/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 hover:bg-ink-900 hover:text-ivory-50"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
               }}
               aria-label="Yêu thích"
             >
-              <Heart className="w-3.5 h-3.5" strokeWidth={1.5} />
+              <Heart className="w-3 h-3" strokeWidth={1.5} />
             </button>
           )}
 
           {/* Quick shop overlay */}
           {isActive && (
-            <div className="absolute inset-x-0 bottom-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out-expo">
+            <div className="absolute inset-x-0 bottom-0 p-2 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out-expo">
               <button
                 onClick={handleAddToCart}
-                className="w-full py-2.5 bg-ink-900 text-ivory-50 text-[10px] tracking-editorial uppercase font-medium hover:bg-sage-500 transition-colors duration-300 flex items-center justify-center gap-2"
+                className="w-full py-2 bg-ink-900 text-ivory-50 text-[9px] tracking-editorial uppercase font-medium hover:bg-sage-500 transition-colors duration-300 flex items-center justify-center gap-1.5"
               >
                 Thêm vào giỏ
-                <ArrowRight className="w-3 h-3" strokeWidth={2} />
+                <ArrowRight className="w-2.5 h-2.5" strokeWidth={2} />
               </button>
             </div>
           )}
         </div>
 
-        {/* Content */}
-        <div className="px-0.5">
+        {/* Content — compact 3-line stack for 4-column density */}
+        <div className="px-0.5 space-y-1">
           {/* Name + color */}
           <h3
-            className={`font-display text-sm md:text-[15px] leading-snug mb-1.5 line-clamp-1 transition-colors duration-500 ${
+            className={`font-body text-[12.5px] leading-snug line-clamp-1 transition-colors duration-500 ${
               isActive
                 ? 'text-ink-900 group-hover:text-sage-500'
                 : 'text-ink-400 line-through'
@@ -135,48 +135,41 @@ function SkuCard({ sku }) {
             {variantLabel}
           </h3>
 
-          {/* Meta row: rating · sold count */}
-          <div className="flex items-center gap-3 text-[11px] text-ink-500 mb-2 font-light">
+          {/* Meta row: rating · sold count — single tight line */}
+          <div className="flex items-center gap-1.5 text-[10px] text-ink-500 font-light">
             {rating.count > 0 ? (
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-0.5">
                 <Star
-                  className="w-3 h-3 text-amber-500"
+                  className="w-2.5 h-2.5 text-amber-500"
                   strokeWidth={0}
                   fill="currentColor"
                 />
                 <span className="text-ink-700 font-medium">
                   {Number(rating.avg).toFixed(1)}
                 </span>
-                <span>({rating.count})</span>
               </span>
             ) : (
-              <span className="text-ink-400">Chưa có đánh giá</span>
+              <span className="text-ink-400">Mới</span>
             )}
-
-            {soldCount > 0 ? (
-              <span className="inline-flex items-center gap-1">
+            {soldCount > 0 && (
+              <>
                 <span className="text-ink-300">·</span>
                 <span>Đã bán {formatSold(soldCount)}</span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1">
-                <span className="text-ink-300">·</span>
-                <span className="text-sage-600 font-medium">Mới</span>
-              </span>
+              </>
             )}
           </div>
 
           {/* Price row */}
-          <div className="flex items-baseline gap-2">
+          <div className="flex items-baseline gap-1.5 pt-0.5">
             <span
-              className={`font-display text-[15px] md:text-base ${
-                isActive ? 'text-ink-900' : 'text-ink-400'
-              }`}
+              className={`font-body text-[13px] font-semibold ${
+              isActive ? 'text-ink-900' : 'text-ink-400'
+            }`}
             >
               {currentPrice}
             </span>
             {originalPrice && discount > 0 && (
-              <span className="text-[11px] text-ink-400 line-through font-light">
+              <span className="text-[10px] text-ink-400 line-through font-light">
                 {originalPrice}
               </span>
             )}
