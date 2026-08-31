@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { productApi } from '../services/api'
+import { productApi, categoryApi } from '../services/api'
 import { useCartStore } from '../store/cartStore'
 import SkuCard from '../components/SkuCard'
 import SafeImage from '../components/SafeImage'
@@ -15,6 +15,7 @@ function ProductDetailPage() {
   const { productId, variantSku } = useMemo(() => parseSkuHandle(handle), [handle])
   const [product, setProduct] = useState(null)
   const [related, setRelated] = useState([])
+  const [categoryTree, setCategoryTree] = useState([])
   const [selectedVariant, setSelectedVariant] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -64,6 +65,31 @@ function ProductDetailPage() {
     return () => { cancelled = true }
   }, [product?.category, productId])
 
+  // Category tree is small + stable — load once for name resolution.
+  useEffect(() => {
+    let mounted = true
+    categoryApi.getTree()
+      .then(tree => { if (mounted) setCategoryTree(tree || []) })
+      .catch(() => {})
+    return () => { mounted = false }
+  }, [])
+
+  // Build slug → name lookup map from the tree for O(1) resolution.
+  const catNameMap = useMemo(() => {
+    const map = new Map()
+    const visit = (node) => {
+      map.set(node.slug, node.name)
+      for (const c of node.children || []) visit(c)
+    }
+    for (const root of categoryTree) visit(root)
+    return map
+  }, [categoryTree])
+
+  // Resolved category name for the main product (slug → name).
+  const productCatName = product?.category
+    ? (catNameMap.get(product.category) || product.category)
+    : ''
+
   const handleAddToCart = () => {
     if (!selectedVariant) return
     addItem(product, selectedVariant, quantity)
@@ -103,9 +129,15 @@ function ProductDetailPage() {
   }, [product])
 
   // Flatten related products → SKUs (one card per variant, capped to 4).
+  // Resolve category name from slug so SkuCard displays the human-readable name.
   const relatedSkus = useMemo(() => {
-    return flattenSkus(related).slice(0, 4)
-  }, [related])
+    return flattenSkus(related).map(sku => ({
+      ...sku,
+      _catName: sku.productCategory
+        ? (catNameMap.get(sku.productCategory) || sku.productCategory)
+        : '',
+    })).slice(0, 4)
+  }, [related, catNameMap])
 
   if (loading) {
     return (
@@ -154,7 +186,7 @@ function ProductDetailPage() {
                   to={`/san-pham?category=${encodeURIComponent(product.category)}`}
                   className="text-ink-500 hover:text-ink-900 transition-colors"
                 >
-                  {product.category}
+                  {productCatName}
                 </Link>
               </>
             )}
@@ -216,9 +248,9 @@ function ProductDetailPage() {
                   <h1 className="font-display text-4xl md:text-5xl text-ink-900 leading-[1.05] mb-4">
                     {product.name}
                   </h1>
-                  {product.category && (
+                  {productCatName && (
                     <span className="text-[10px] tracking-widest uppercase text-champagne-500 font-semibold">
-                      {product.category}
+                      {productCatName}
                     </span>
                   )}
                 </div>
@@ -483,7 +515,7 @@ function ProductDetailPage() {
 
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-10">
               {relatedSkus.map((sku, i) => (
-                <SkuCard key={`${sku.productId}-${sku.sku}`} sku={sku} index={i} />
+                <SkuCard key={`${sku.productId}-${sku.sku}`} sku={sku} index={i} categoryName={sku._catName} />
               ))}
             </div>
           </div>

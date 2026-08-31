@@ -16,7 +16,7 @@ import {
 //   2. Name + color (single line, line-clamp-1).
 //   3. Meta row: star + rating.count  ·  Đã bán N.
 //   4. Price row: current price (optional compare-at strikethrough).
-function SkuCard({ sku }) {
+function SkuCard({ sku, categoryName }) {
   const addItem = useCartStore((state) => state.addItem)
   const isActive = sku.isActive !== false
   const displayName = sku.name || sku.productName
@@ -85,6 +85,10 @@ function SkuCard({ sku }) {
           ) : discount > 0 ? (
             <span className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-white text-[9px] tracking-widest uppercase font-semibold">
               -{discount}%
+            </span>
+          ) : categoryName ? (
+            <span className="absolute top-2 left-2 px-2 py-0.5 bg-ivory-50/95 backdrop-blur-sm text-ink-900 text-[9px] tracking-widest uppercase font-medium">
+              {categoryName}
             </span>
           ) : sku.productCategory ? (
             <span className="absolute top-2 left-2 px-2 py-0.5 bg-ivory-50/95 backdrop-blur-sm text-ink-900 text-[9px] tracking-widest uppercase font-medium">

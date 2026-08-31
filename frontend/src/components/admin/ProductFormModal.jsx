@@ -173,6 +173,10 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
   const [catFormMode, setCatFormMode] = useState(null) // null | 'create' | Category object
   const [savingCat, setSavingCat] = useState(false)
   const [deletingCatId, setDeletingCatId] = useState(null)
+  // The selected category is highlighted via `form.category === cat.slug`.
+  // The search only filters the visible list — never narrows it to just the
+  // currently-selected item, which would lock the user out of picking a new one.
+  const [catSearch, setCatSearch] = useState('')
   const catInputRef = useRef(null)
   const catDropdownRef = useRef(null)
 
@@ -199,6 +203,7 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
   useEffect(() => {
     if (open) {
       setErrors({})
+      setCatSearch('')
       fetchCategories()
       if (product) {
         setForm({
@@ -275,7 +280,7 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
       // If the deleted category was selected, clear the product form
       if (form.category) {
         const cat = categories.find(c => c.id === id)
-        if (cat && form.category === cat.name) {
+        if (cat && form.category === cat.slug) {
           updateField('category', '')
         }
       }
@@ -287,8 +292,8 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
     }
   }
 
-  const selectCategory = (name) => {
-    updateField('category', name)
+  const selectCategory = (cat) => {
+    updateField('category', cat.slug)
     setShowCatDropdown(false)
   }
 
@@ -355,10 +360,11 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
     }
   }
 
-  // Filter categories as user types in the text input
-  const filteredCats = categories.filter(c =>
-    c.name.toLowerCase().includes((form.category || '').toLowerCase())
-  )
+  // Filter categories by the (separate) search input. Empty search shows ALL
+  // categories so the user is never locked out of picking a new one.
+  const filteredCats = catSearch.trim()
+    ? categories.filter(c => c.name.toLowerCase().includes(catSearch.toLowerCase()))
+    : categories
 
   return (
     <div className="fixed inset-0 z-[80] flex items-start justify-center p-4 bg-ink-900/50 backdrop-blur-sm overflow-y-auto">
@@ -403,10 +409,12 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
                 {/* Input-like trigger */}
                 <div
                   className="w-full px-3 py-2 text-sm border border-ink-300 rounded-xs bg-white flex items-center justify-between cursor-pointer"
-                  onClick={() => { setShowCatDropdown(v => !v); setCatFormMode(null) }}
+                  onClick={() => { setCatSearch(''); setShowCatDropdown(v => !v); setCatFormMode(null) }}
                 >
                   <span className={form.category ? 'text-ink-900' : 'text-ink-400'}>
-                    {form.category || '— Chọn hoặc tạo danh mục —'}
+                    {form.category
+                      ? (categories.find(c => c.slug === form.category)?.name || form.category)
+                      : '— Chọn hoặc tạo danh mục —'}
                   </span>
                   <span className="text-ink-400 text-xs">▾</span>
                 </div>
@@ -414,6 +422,19 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
                 {/* Dropdown panel */}
                 {showCatDropdown && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-ink-300 rounded-xs shadow-elevated max-h-64 overflow-y-auto">
+
+                    {/* Search / filter input — separate from form.category so the
+                        selected value never narrows the list */}
+                    <div className="sticky top-0 bg-white border-b border-ink-200 p-2 z-10">
+                      <input
+                        type="text"
+                        value={catSearch}
+                        onChange={(e) => setCatSearch(e.target.value)}
+                        placeholder="Tìm danh mục…"
+                        autoFocus
+                        className="w-full px-2.5 py-1.5 text-xs border border-ink-300 rounded-xs focus:outline-none focus:border-ink-900"
+                      />
+                    </div>
 
                     {/* Create new category */}
                     {catFormMode === 'create' ? (
@@ -457,9 +478,9 @@ export default function ProductFormModal({ open, product, onClose, onSaved }) {
                             <>
                               <button
                                 type="button"
-                                onClick={() => selectCategory(cat.name)}
+                                onClick={() => selectCategory(cat)}
                                 className={`flex-1 px-3 py-2 text-sm text-left hover:bg-ivory-50 ${
-                                  form.category === cat.name ? 'font-semibold text-ink-900 bg-ivory-50' : 'text-ink-700'
+                                  form.category === cat.slug ? 'font-semibold text-ink-900 bg-ivory-50' : 'text-ink-700'
                                 }`}
                               >
                                 {cat.name}
