@@ -44,6 +44,24 @@ function Header({ onMenuClick }) {
     return () => document.removeEventListener('click', handleClick)
   }, [isAccountOpen])
 
+  // Any click anywhere closes the collections mega dropdown. The trigger still
+  // opens it via hover (`onMouseEnter`), so a click is the unambiguous "I'm
+  // done" signal — whether the click lands inside (item selection / link
+  // navigation) or outside (focus shifting to the page). React Router still
+  // handles the navigation; we just clear the panel state at the same time.
+  useEffect(() => {
+    if (!isCollectionsOpen) return
+    const handleClick = () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current)
+        closeTimerRef.current = null
+      }
+      setIsCollectionsOpen(false)
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [isCollectionsOpen])
+
   const handleSearch = (e) => {
     e.preventDefault()
     if (searchQuery.trim()) {
@@ -128,6 +146,7 @@ function Header({ onMenuClick }) {
               {/* "Bộ Sưu Tập" — hover trigger for the 3-column mega dropdown */}
               <div
                 className="relative"
+                data-collections-menu
                 onMouseEnter={openCollections}
                 onMouseLeave={scheduleCloseCollections}
               >
@@ -281,6 +300,7 @@ function Header({ onMenuClick }) {
         {isCollectionsOpen && (
           <div
             className="absolute left-1/2 -translate-x-1/2 top-full pt-3 z-50"
+            data-collections-menu
             onMouseEnter={openCollections}
             onMouseLeave={scheduleCloseCollections}
           >

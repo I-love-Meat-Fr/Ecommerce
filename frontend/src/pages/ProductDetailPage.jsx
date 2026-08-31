@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { productApi, categoryApi } from '../services/api'
 import { useCartStore } from '../store/cartStore'
 import SkuCard from '../components/SkuCard'
@@ -12,6 +12,7 @@ import {
 
 function ProductDetailPage() {
   const { handle } = useParams()
+  const navigate = useNavigate()
   const { productId, variantSku } = useMemo(() => parseSkuHandle(handle), [handle])
   const [product, setProduct] = useState(null)
   const [related, setRelated] = useState([])
@@ -22,7 +23,18 @@ function ProductDetailPage() {
   const [addedToCart, setAddedToCart] = useState(false)
   const addItem = useCartStore(state => state.addItem)
 
-  // Load product and auto-select the variant that matches the URL SKU.
+  // Navigate to a URL that encodes the selected SKU so refresh / back-button
+  // / share all preserve the exact variant selection.
+  const handleVariantChange = (variant) => {
+    if (!variant || variant.isActive === false) return
+    const newHandle = `${product.id}-${encodeURIComponent(variant.sku || '')}`
+    // replace: avoid polluting history with intermediate variant clicks
+    navigate(`/san-pham/${newHandle}`, { replace: true })
+    setQuantity(1)
+  }
+
+  // Fetch product — runs only when productId changes (not on every URL variant-sku
+  // change). Sets selectedVariant from the URL on initial load.
   useEffect(() => {
     if (!productId) return
     let cancelled = false
@@ -50,7 +62,19 @@ function ProductDetailPage() {
       })
 
     return () => { cancelled = true }
-  }, [productId, variantSku])
+  }, [productId])
+
+  // Sync selectedVariant when the URL variantSku changes (e.g., from a navigate()
+  // call triggered by handleVariantChange or a direct URL edit). Runs only
+  // when product is already loaded so we don't re-fetch.
+  useEffect(() => {
+    if (!product || !variantSku) return
+    const target = product.variants?.find((v) => v.sku === variantSku)
+    if (target) {
+      setSelectedVariant((current) => (current?.sku === target.sku ? current : target))
+      setQuantity(1)
+    }
+  }, [variantSku, product])  // product dep is safe: once loaded it never changes
 
   // Fetch related products from the same category (excluding the current product).
   useEffect(() => {
@@ -107,6 +131,14 @@ function ProductDetailPage() {
 
   const formatPrice = (price) =>
     new Intl.NumberFormat('vi-VN').format(price) + ' ₫'
+
+  // The main image defaults to the selected variant's own image; falls back to
+  // the product's hero image when the variant doesn't carry its own photo.
+  const displayImage = useMemo(() => {
+    if (!product) return null
+    if (selectedVariant?.imageUrl) return selectedVariant.imageUrl
+    return product.imageUrl
+  }, [product, selectedVariant])
 
   // Collect all image sources: main image first, then variant images that differ.
   const allImages = useMemo(() => {
@@ -206,7 +238,7 @@ function ProductDetailPage() {
                   <>
                     <div className="col-span-12 aspect-[4/5] overflow-hidden bg-ivory-200 hover-zoom">
                       <SafeImage
-                        src={allImages[0].src}
+                        src={displayImage || ''}
                         alt={product.name}
                         fallbackSeed={product.id || product.name}
                         imgClassName="w-full h-full object-cover"
@@ -376,7 +408,7 @@ function ProductDetailPage() {
                       {product.variants.map((variant) => (
                         <button
                           key={variant.sku || variant.name}
-                          onClick={() => variant.isActive && setSelectedVariant(variant)}
+                          onClick={() => variant.isActive !== false && handleVariantChange(variant)}
                           disabled={!variant.isActive}
                           className={`
                             flex justify-between items-center p-4 border transition-all duration-300

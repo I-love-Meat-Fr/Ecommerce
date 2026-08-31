@@ -117,10 +117,17 @@ function CollectionsMegaDropdown({ onMouseEnter, onMouseLeave }) {
                 const price = firstActive?.price
                 const imageUrl = firstActive?.imageUrl || p.imageUrl
                 const name = p.name || '—'
+                // Clicking a product opens the listing page filtered by that
+                // product's category. Falls back to the bare listing when the
+                // product has no category assigned (defensive — categories are
+                // required by the seeders but new entries may not be).
+                const filterHref = p.category
+                  ? `/san-pham?category=${encodeURIComponent(p.category)}`
+                  : '/san-pham'
                 return (
                   <li key={p.id}>
-                    <button
-                      type="button"
+                    <Link
+                      to={filterHref}
                       onMouseEnter={() => setHoveredProductId(p.id)}
                       onFocus={() => setHoveredProductId(p.id)}
                       className={`group w-full text-left px-3 py-2 flex items-center gap-3 transition-colors ${
@@ -154,7 +161,7 @@ function CollectionsMegaDropdown({ onMouseEnter, onMouseLeave }) {
                         }`}
                         strokeWidth={1.5}
                       />
-                    </button>
+                    </Link>
                   </li>
                 )
               })
