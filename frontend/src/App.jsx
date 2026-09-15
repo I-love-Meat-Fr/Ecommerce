@@ -7,6 +7,7 @@ import CartPage from './pages/CartPage'
 import AboutPage from './pages/AboutPage'
 import ContactPage from './pages/ContactPage'
 import BlogPage from './pages/BlogPage'
+import BlogPostPage from './pages/BlogPostPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import AccountPage from './pages/AccountPage'
@@ -28,7 +29,8 @@ function App() {
         <Route path="checkout" element={<CheckoutPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="contact" element={<ContactPage />} />
-        <Route path="blog" element={<BlogPage />} />
+        <Route path="di-va-viet" element={<BlogPage />} />
+        <Route path="di-va-viet/:slug" element={<BlogPostPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route

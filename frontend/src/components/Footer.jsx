@@ -12,7 +12,7 @@ const footerLinks = {
   maison: [
     { name: 'Câu Chuyện', href: '/about' },
     { name: 'Hệ Thống Cửa Hàng', href: '/stores' },
-    { name: 'Tạp Chí', href: '/blog' },
+    { name: 'Đi & Viết', href: '/di-va-viet' },
     { name: 'Tuyển Dụng', href: '/careers' },
   ],
   services: [

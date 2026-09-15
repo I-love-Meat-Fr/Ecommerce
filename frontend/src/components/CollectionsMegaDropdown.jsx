@@ -86,7 +86,7 @@ function CollectionsMegaDropdown({ onMouseEnter, onMouseLeave }) {
       onMouseLeave={onMouseLeave}
     >
       <div
-        className="bg-ivory-50 border border-ivory-300 shadow-elevated w-[960px] max-w-[92vw] p-8 grid grid-cols-3 gap-6 animate-fade-in"
+        className="bg-ivory-50 border border-ivory-300 shadow-elevated w-[960px] max-w-[92vw] p-8 grid grid-cols-3 gap-6"
         role="menu"
         aria-label="Bộ sưu tập"
       >
@@ -252,25 +252,25 @@ function CollectionsMegaDropdown({ onMouseEnter, onMouseLeave }) {
         {/* ─── Column 3: top 3 featured (newest) ─── */}
         <div>
           <ColumnHeader icon="03" title="Nổi bật" subtitle="Mới về" />
-          <div className="mt-4 space-y-3">
+          <ul className="mt-4 space-y-0.5">
             {featuredLoading && featured.length === 0 ? (
               [...Array(3)].map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-14 h-14 shimmer flex-shrink-0" />
+                <li key={i} className="flex items-center gap-3 px-3 py-2">
+                  <div className="w-11 h-11 shimmer flex-shrink-0" />
                   <div className="flex-1 space-y-1.5">
                     <div className="h-2.5 shimmer w-3/4" />
-                    <div className="h-2.5 shimmer w-1/3" />
+                    <div className="h-2.5 shimmer w-1/2" />
                   </div>
-                </div>
+                </li>
               ))
             ) : featured.length === 0 ? (
-              <p className="text-xs text-ink-400 font-light leading-relaxed">
+              <li className="text-xs text-ink-400 font-light px-3 py-2">
                 Chưa có sản phẩm nổi bật.
-              </p>
+              </li>
             ) : (
-              featured.map((p) => <FeaturedProductCard key={p.id} product={p} />)
+              featured.map((p) => <FeaturedProductRow key={p.id} product={p} />)
             )}
-          </div>
+          </ul>
           <Link
             to="/san-pham?sortBy=newest"
             className="mt-4 inline-flex items-center gap-1 text-[10px] tracking-widest uppercase text-ink-500 hover:text-ink-900 transition-colors"
@@ -303,9 +303,10 @@ function ColumnHeader({ icon, title, subtitle }) {
   )
 }
 
-// Visual card for the "Nổi bật" column — image-forward layout, distinct from
-// the compact rows used in column 1 so the two read as different surfaces.
-function FeaturedProductCard({ product }) {
+// Horizontal rectangle row for the "Nổi bật" column — mirrors the compact
+// row used in column 1 so both reads read as a list of products rather than
+// mixing card vs row layouts in the same dropdown.
+function FeaturedProductRow({ product }) {
   const variants = product.variants || []
   const firstActive =
     variants.find((v) => v.isActive !== false) || variants[0]
@@ -320,30 +321,49 @@ function FeaturedProductCard({ product }) {
     Number.isFinite(Number(originalPrice)) &&
     Number(originalPrice) > Number(price)
   return (
-    <Link to={detailPath} className="block group">
-      <div className="aspect-[4/3] bg-ivory-100 overflow-hidden mb-2">
-        <SafeImage
-          src={imageUrl}
-          alt={name}
-          fallbackSeed={product.slug || name}
-          imgClassName="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-      </div>
-      <p
-        className="text-xs text-ink-900 line-clamp-1 font-medium"
-        title={name}
+    <li>
+      <Link
+        to={detailPath}
+        className="group flex items-center gap-3 px-3 py-2 hover:bg-ivory-100 transition-colors"
       >
-        {name}
-      </p>
-      <p className="text-[11px] text-sage-600 mt-0.5 font-semibold">
-        {price != null ? formatVnd(price) : 'Liên hệ'}
-        {onSale && (
-          <span className="ml-1 text-ink-400 font-light line-through">
-            {formatVnd(originalPrice)}
-          </span>
-        )}
-      </p>
-    </Link>
+        <div className="relative w-11 h-11 bg-ivory-100 overflow-hidden flex-shrink-0">
+          <SafeImage
+            src={imageUrl}
+            alt={name}
+            fallbackSeed={product.slug || name}
+            imgClassName="w-full h-full object-cover"
+          />
+          {onSale && (
+            <span
+              className="absolute top-0.5 left-0.5 px-1.5 py-0.5 rounded-full bg-[var(--warning)] text-white text-[8px] font-semibold uppercase tracking-wide leading-none"
+              aria-label="Đang giảm giá"
+            >
+              Sale
+            </span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p
+            className="text-xs text-ink-900 line-clamp-1 font-medium"
+            title={name}
+          >
+            {name}
+          </p>
+          <p className="text-[11px] mt-0.5 font-semibold text-sage-600">
+            {price != null ? formatVnd(price) : 'Liên hệ'}
+            {onSale && (
+              <span className="ml-1 text-ink-400 font-light line-through">
+                {formatVnd(originalPrice)}
+              </span>
+            )}
+          </p>
+        </div>
+        <ChevronRight
+          className="w-3 h-3 text-ink-300 group-hover:text-sage-600 transition-colors flex-shrink-0"
+          strokeWidth={1.5}
+        />
+      </Link>
+    </li>
   )
 }
 

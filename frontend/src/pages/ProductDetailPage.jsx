@@ -203,9 +203,9 @@ function ProductDetailPage() {
   return (
     <div className="bg-ivory-50">
       {/* Breadcrumb */}
-      <section className="pt-10 pb-6">
+      <section className="pt-6 pb-4">
         <div className="container-custom">
-          <nav className="flex items-center gap-2 text-[11px] tracking-widest uppercase">
+          <nav className="flex items-center gap-1.5 text-[10px] tracking-widest uppercase">
             <Link to="/" className="text-ink-500 hover:text-ink-900 transition-colors">Trang Chủ</Link>
             <span className="text-ink-300">/</span>
             <Link to="/san-pham" className="text-ink-500 hover:text-ink-900 transition-colors">Bộ Sưu Tập</Link>
@@ -227,13 +227,13 @@ function ProductDetailPage() {
       </section>
 
       {/* Product Detail */}
-      <section className="pb-20 md:pb-28">
+      <section className="pb-12 md:pb-16">
         <div className="container-custom">
-          <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
+          <div className="grid lg:grid-cols-12 gap-6 lg:gap-10">
 
             {/* Image column — main + variant thumbnails */}
             <div className="lg:col-span-7">
-              <div className="grid grid-cols-12 gap-3 md:gap-4">
+              <div className="grid grid-cols-12 gap-2 md:gap-3">
                 {allImages.length > 0 ? (
                   <>
                     <div className="col-span-12 aspect-[4/5] overflow-hidden bg-ivory-200 hover-zoom">
@@ -269,17 +269,17 @@ function ProductDetailPage() {
             </div>
 
             {/* Info column */}
-            <div className="lg:col-span-5 lg:sticky lg:top-32 lg:self-start">
-              <div className="space-y-8">
+            <div className="lg:col-span-5 lg:sticky lg:top-24 lg:self-start">
+              <div className="space-y-5">
                 <div>
-                  <p className="section-number mb-4">
+                  <p className="section-number mb-2">
                     — Mã: {selectedVariant?.sku || '—'}
                   </p>
-                  <h1 className="font-display text-4xl md:text-5xl text-ink-900 leading-[1.05] mb-4">
+                  <h1 className="font-display text-2xl md:text-3xl text-ink-900 leading-[1.1] mb-2">
                     {product.name}
                   </h1>
                   {productCatName && (
-                    <span className="text-[10px] tracking-widest uppercase text-champagne-500 font-semibold">
+                    <span className="text-[9px] tracking-widest uppercase text-champagne-500 font-semibold">
                       {productCatName}
                     </span>
                   )}
@@ -287,38 +287,38 @@ function ProductDetailPage() {
 
                 {/* Price */}
                 {selectedVariant && (
-                  <div className="py-2 border-y border-ivory-300">
-                    <div className="flex items-baseline gap-3">
-                      <span className="font-display text-4xl text-ink-900">
+                  <div className="py-1.5 border-y border-ivory-300">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-display text-2xl md:text-3xl text-ink-900">
                         {formatPrice(selectedVariant.price)}
                       </span>
-                      <span className="text-xs text-ink-500">/ sản phẩm</span>
+                      <span className="text-[10px] text-ink-500">/ sản phẩm</span>
                     </div>
                   </div>
                 )}
 
                 {/* Description */}
                 {product.description && (
-                  <p className="text-ink-600 leading-relaxed font-light">
+                  <p className="text-sm text-ink-600 leading-relaxed font-light">
                     {product.description}
                   </p>
                 )}
 
                 {/* Plant Attributes — shown when the selected variant has them set */}
                 {selectedVariant?.plantAttributes && (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {/* Row 1: care level + size */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2">
                       {selectedVariant.plantAttributes.careLevel != null && (
-                        <div className="flex items-center gap-3 p-3 bg-brand-50 rounded-md border border-brand-200">
-                          <Sparkles className="w-4 h-4 text-brand-600 flex-shrink-0" strokeWidth={1.5} />
+                        <div className="flex items-center gap-2 p-2 bg-brand-50 rounded border border-brand-200">
+                          <Sparkles className="w-3 h-3 text-brand-600 flex-shrink-0" strokeWidth={1.5} />
                           <div className="min-w-0">
-                            <p className="text-[10px] tracking-widest uppercase text-ink-500 font-semibold mb-1">Dễ chăm sóc</p>
-                            <div className="flex items-center gap-1">
+                            <p className="text-[9px] tracking-widest uppercase text-ink-500 font-semibold mb-0.5">Dễ chăm sóc</p>
+                            <div className="flex items-center gap-0.5">
                               {[1, 2, 3, 4, 5].map((n) => (
                                 <span
                                   key={n}
-                                  className={`w-2 h-2 rounded-full transition-colors ${
+                                  className={`w-1.5 h-1.5 rounded-full transition-colors ${
                                     n <= selectedVariant.plantAttributes.careLevel
                                       ? 'bg-brand-500'
                                       : 'bg-neutral-200'
@@ -330,15 +330,15 @@ function ProductDetailPage() {
                         </div>
                       )}
                       {selectedVariant.plantAttributes.size != null && (
-                        <div className="flex items-center gap-3 p-3 bg-brand-50 rounded-md border border-brand-200">
-                          <Ruler className="w-4 h-4 text-brand-600 flex-shrink-0" strokeWidth={1.5} />
+                        <div className="flex items-center gap-2 p-2 bg-brand-50 rounded border border-brand-200">
+                          <Ruler className="w-3 h-3 text-brand-600 flex-shrink-0" strokeWidth={1.5} />
                           <div className="min-w-0">
-                            <p className="text-[10px] tracking-widest uppercase text-ink-500 font-semibold mb-1">Kích thước</p>
-                            <div className="flex items-center gap-1">
+                            <p className="text-[9px] tracking-widest uppercase text-ink-500 font-semibold mb-0.5">Kích thước</p>
+                            <div className="flex items-center gap-0.5">
                               {[1, 2, 3, 4, 5].map((n) => (
                                 <span
                                   key={n}
-                                  className={`w-2 h-2 rounded-full transition-colors ${
+                                  className={`w-1.5 h-1.5 rounded-full transition-colors ${
                                     n <= selectedVariant.plantAttributes.size
                                       ? 'bg-brand-500'
                                       : 'bg-neutral-200'
@@ -351,17 +351,17 @@ function ProductDetailPage() {
                       )}
                     </div>
                     {/* Row 2: humidity + suitability */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2">
                       {selectedVariant.plantAttributes.humidity != null && (
-                        <div className="flex items-center gap-3 p-3 bg-brand-50 rounded-md border border-brand-200">
-                          <Droplets className="w-4 h-4 text-brand-600 flex-shrink-0" strokeWidth={1.5} />
+                        <div className="flex items-center gap-2 p-2 bg-brand-50 rounded border border-brand-200">
+                          <Droplets className="w-3 h-3 text-brand-600 flex-shrink-0" strokeWidth={1.5} />
                           <div className="min-w-0">
-                            <p className="text-[10px] tracking-widest uppercase text-ink-500 font-semibold mb-1">Độ ẩm</p>
-                            <div className="flex items-center gap-1">
+                            <p className="text-[9px] tracking-widest uppercase text-ink-500 font-semibold mb-0.5">Độ ẩm</p>
+                            <div className="flex items-center gap-0.5">
                               {[1, 2, 3, 4, 5].map((n) => (
                                 <span
                                   key={n}
-                                  className={`w-2 h-2 rounded-full transition-colors ${
+                                  className={`w-1.5 h-1.5 rounded-full transition-colors ${
                                     n <= selectedVariant.plantAttributes.humidity
                                       ? 'bg-brand-500'
                                       : 'bg-neutral-200'
@@ -373,15 +373,15 @@ function ProductDetailPage() {
                         </div>
                       )}
                       {selectedVariant.plantAttributes.suitability != null && (
-                        <div className="flex items-center gap-3 p-3 bg-brand-50 rounded-md border border-brand-200">
-                          <Sun className="w-4 h-4 text-brand-600 flex-shrink-0" strokeWidth={1.5} />
+                        <div className="flex items-center gap-2 p-2 bg-brand-50 rounded border border-brand-200">
+                          <Sun className="w-3 h-3 text-brand-600 flex-shrink-0" strokeWidth={1.5} />
                           <div className="min-w-0">
-                            <p className="text-[10px] tracking-widest uppercase text-ink-500 font-semibold mb-1">Phù hợp</p>
-                            <div className="flex items-center gap-1">
+                            <p className="text-[9px] tracking-widest uppercase text-ink-500 font-semibold mb-0.5">Phù hợp</p>
+                            <div className="flex items-center gap-0.5">
                               {[1, 2, 3, 4, 5].map((n) => (
                                 <span
                                   key={n}
-                                  className={`w-2 h-2 rounded-full transition-colors ${
+                                  className={`w-1.5 h-1.5 rounded-full transition-colors ${
                                     n <= selectedVariant.plantAttributes.suitability
                                       ? 'bg-brand-500'
                                       : 'bg-neutral-200'
@@ -399,19 +399,19 @@ function ProductDetailPage() {
                 {/* Variants */}
                 {product.variants?.length > 0 && (
                   <div>
-                    <div className="flex items-center mb-4">
-                      <h3 className="text-[10px] tracking-widest uppercase text-ink-900 font-semibold">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-[9px] tracking-widest uppercase text-ink-900 font-semibold">
                         Phân loại
                       </h3>
                     </div>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1.5">
                       {product.variants.map((variant) => (
                         <button
                           key={variant.sku || variant.name}
                           onClick={() => variant.isActive !== false && handleVariantChange(variant)}
                           disabled={!variant.isActive}
                           className={`
-                            flex justify-between items-center p-4 border transition-all duration-300
+                            flex justify-between items-center py-2.5 px-3 border transition-all duration-300 text-sm
                             ${selectedVariant?.sku === variant.sku
                               ? 'border-ink-900 bg-ink-900 text-ivory-50'
                               : variant.isActive
@@ -419,11 +419,11 @@ function ProductDetailPage() {
                                 : 'border-ivory-200 text-ink-300 cursor-not-allowed line-through'}
                           `}
                         >
-                          <span className="text-sm font-medium">
+                          <span className="text-xs font-medium">
                             {variant.name}
                             {variant.color && ` · ${variant.color}`}
                           </span>
-                          <span className={`font-display text-base ${
+                          <span className={`font-display text-sm ${
                             selectedVariant?.sku === variant.sku ? 'text-champagne-300' : 'text-ink-900'
                           }`}>
                             {formatPrice(variant.price)}
@@ -436,22 +436,22 @@ function ProductDetailPage() {
 
                 {/* Quantity */}
                 <div>
-                  <h3 className="text-[10px] tracking-widest uppercase text-ink-900 font-semibold mb-4">
+                  <h3 className="text-[9px] tracking-widest uppercase text-ink-900 font-semibold mb-2">
                     Số Lượng
                   </h3>
                   <div className="inline-flex items-center border border-ivory-300">
                     <button
                       onClick={() => setQuantity(q => Math.max(1, q - 1))}
                       disabled={!selectedVariant}
-                      className="w-12 h-12 flex items-center justify-center hover:bg-ivory-100 transition-colors disabled:opacity-30"
+                      className="w-9 h-9 flex items-center justify-center hover:bg-ivory-100 transition-colors disabled:opacity-30"
                     >
-                      <Minus className="w-4 h-4" strokeWidth={1.5} />
+                      <Minus className="w-3 h-3" strokeWidth={1.5} />
                     </button>
                     <input
                       type="number"
                       value={quantity}
                       onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-16 text-center bg-transparent focus:outline-none font-display text-lg"
+                      className="w-12 text-center bg-transparent focus:outline-none font-display text-base"
                       min="1"
                       max="999"
                       disabled={!selectedVariant}
@@ -459,15 +459,15 @@ function ProductDetailPage() {
                     <button
                       onClick={() => setQuantity(q => q + 1)}
                       disabled={!selectedVariant || quantity >= 999}
-                      className="w-12 h-12 flex items-center justify-center hover:bg-ivory-100 transition-colors disabled:opacity-30"
+                      className="w-9 h-9 flex items-center justify-center hover:bg-ivory-100 transition-colors disabled:opacity-30"
                     >
-                      <Plus className="w-4 h-4" strokeWidth={1.5} />
+                      <Plus className="w-3 h-3" strokeWidth={1.5} />
                     </button>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="space-y-3 pt-2">
+                <div className="space-y-2 pt-1">
                   <button
                     onClick={handleAddToCart}
                     disabled={!selectedVariant}
@@ -477,7 +477,7 @@ function ProductDetailPage() {
                   >
                     {addedToCart ? (
                       <>
-                        <Check className="w-4 h-4" strokeWidth={1.5} />
+                        <Check className="w-3 h-3" strokeWidth={1.5} />
                         Đã Thêm Vào Giỏ
                       </>
                     ) : !selectedVariant ? (
@@ -485,35 +485,35 @@ function ProductDetailPage() {
                     ) : (
                       <>
                         Thêm Vào Giỏ Hàng
-                        <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+                        <ArrowRight className="w-3 h-3" strokeWidth={1.5} />
                       </>
                     )}
                   </button>
 
-                  <div className="flex gap-3">
-                    <button className="flex-1 btn-luxury-outline">
-                      <Heart className="w-4 h-4" strokeWidth={1.5} />
+                  <div className="flex gap-2">
+                    <button className="flex-1 btn-luxury-outline py-2.5">
+                      <Heart className="w-3 h-3" strokeWidth={1.5} />
                       Yêu Thích
                     </button>
                     <button
                       onClick={handleShare}
-                      className="w-14 h-14 border border-ink-900 flex items-center justify-center hover:bg-ink-900 hover:text-ivory-50 transition-colors"
+                      className="w-11 h-11 border border-ink-900 flex items-center justify-center hover:bg-ink-900 hover:text-ivory-50 transition-colors"
                     >
-                      <Share2 className="w-4 h-4" strokeWidth={1.5} />
+                      <Share2 className="w-3 h-3" strokeWidth={1.5} />
                     </button>
                   </div>
                 </div>
 
                 {/* Promises */}
-                <div className="border-t border-ivory-300 pt-6 space-y-4">
+                <div className="border-t border-ivory-300 pt-4 space-y-2">
                   {[
                     { icon: Truck, label: 'Miễn phí vận chuyển cho đơn từ 1.000.000đ' },
                     { icon: ShieldCheck, label: 'Bảo hành sức sống 30 ngày' },
                     { icon: Leaf, label: 'Tư vấn chăm sóc cây miễn phí' },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <item.icon className="w-4 h-4 text-champagne-500" strokeWidth={1.5} />
-                      <span className="text-xs text-ink-600 font-light">{item.label}</span>
+                    <div key={i} className="flex items-center gap-2">
+                      <item.icon className="w-3 h-3 text-champagne-500" strokeWidth={1.5} />
+                      <span className="text-[10px] text-ink-600 font-light">{item.label}</span>
                     </div>
                   ))}
                 </div>
@@ -525,12 +525,12 @@ function ProductDetailPage() {
 
       {/* Related SKUs (one card per variant of products in the same category) */}
       {relatedSkus.length > 0 && (
-        <section className="py-16 md:py-20 bg-ivory-100">
+        <section className="py-10 md:py-12 bg-ivory-100">
           <div className="container-custom">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-3">
               <div>
-                <p className="section-number mb-3">— Cùng Danh Mục</p>
-                <h2 className="font-display text-display-lg text-ink-900">
+                <p className="section-number mb-2">— Cùng Danh Mục</p>
+                <h2 className="font-display text-2xl md:text-3xl text-ink-900">
                   Sản phẩm <em className="italic">tương tự</em>
                 </h2>
               </div>
@@ -543,7 +543,7 @@ function ProductDetailPage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-10">
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-8">
               {relatedSkus.map((sku, i) => (
                 <SkuCard key={`${sku.productId}-${sku.sku}`} sku={sku} index={i} categoryName={sku._catName} />
               ))}

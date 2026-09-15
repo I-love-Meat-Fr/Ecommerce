@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import SkuCard from '../components/SkuCard'
 import { productApi, categoryApi, PRODUCT_SORT_OPTIONS } from '../services/api'
 import { flattenSkus } from '../services/skuHelpers'
 import {
-  Filter, ChevronDown, ArrowUpDown, X,
+  Filter, ChevronDown, ChevronLeft, ChevronRight, ArrowUpDown, X,
 } from 'lucide-react'
 
 // Stable shape used in the URL → state bridge. The "all" sentinel marks
@@ -70,6 +70,58 @@ function ProductsPage() {
       .catch(() => { if (mounted) setCategoryTree([]) })
     return () => { mounted = false }
   }, [])
+
+  // ── Category strip scroll state ─────────────────────────────────────
+  // The category strip holds every pill in one horizontal row; with a long
+  // catalogue it overflows the viewport. We expose arrow buttons + edge
+  // fade gradients on desktop so the overflow is discoverable; on mobile
+  // the strip falls back to native touch-scroll.
+  const scrollRef = useRef(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
+  const updateScrollState = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const { scrollLeft, clientWidth, scrollWidth } = el
+    // Sub-pixel tolerance so arrows don't flicker when fully scrolled.
+    setCanScrollLeft(scrollLeft > 2)
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 2)
+  }, [])
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    updateScrollState()
+    el.addEventListener('scroll', updateScrollState, { passive: true })
+    const ro = new ResizeObserver(updateScrollState)
+    ro.observe(el)
+    return () => {
+      el.removeEventListener('scroll', updateScrollState)
+      ro.disconnect()
+    }
+  }, [updateScrollState, categoryTree.length])
+
+  // When the active category changes (URL or click), nudge the strip so
+  // the active pill is visible — `inline: 'nearest'` no-ops when it's
+  // already on screen, otherwise smoothly scrolls it into view.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const active = el.querySelector('[aria-pressed="true"]')
+    if (active && typeof active.scrollIntoView === 'function') {
+      active.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' })
+    }
+  }, [categoryParam])
+
+  const scrollByAmount = (direction) => {
+    const el = scrollRef.current
+    if (!el) return
+    // ~70% of the visible width keeps a single tap meaningful without
+    // jumping past the next anchor.
+    const step = Math.max(180, Math.round(el.clientWidth * 0.7))
+    el.scrollBy({ left: direction * step, behavior: 'smooth' })
+  }
 
   // Re-fetch products whenever any committed filter changes. Pagination
   // resets to 1 when the filter set changes (a new search ≠ "next page").
@@ -277,30 +329,79 @@ function ProductsPage() {
 
       {/* ========== CATEGORY FILTER BAR ========== */}
       {/* Single-row pill strip — flat list, no hierarchy. Hidden until the
-          category list finishes loading so we don't render an empty bar. */}
+          category list finishes loading so we don't render an empty bar.
+          Always horizontally scrollable; on desktop arrow buttons + edge
+          fades reveal the overflow that was previously clipped, on mobile
+          we fall back to native touch-scroll. */}
       {categoryTree.length > 0 && (
         <section
           aria-label="Bộ lọc danh mục"
           className="border-b border-ivory-300 bg-ivory-50"
         >
           <div className="container-custom py-5 md:py-6">
-            <div className="flex items-center gap-2 md:gap-3 -mx-6 px-6 md:mx-0 md:px-0 overflow-x-auto md:overflow-visible scrollbar-hide">
-              <span className="hidden md:inline-block text-[10px] tracking-[0.25em] uppercase text-ink-400 font-semibold mr-1 flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="hidden md:inline-block text-[10px] tracking-[0.25em] uppercase text-ink-400 font-semibold flex-shrink-0">
                 Danh Mục
               </span>
-              <CategoryPill
-                label="Tất Cả"
-                active={categoryParam === ALL}
-                onClick={() => setCategory(ALL)}
-              />
-              {categoryTree.map((cat) => (
-                <CategoryPill
-                  key={cat.id || cat.slug}
-                  label={cat.name}
-                  active={categoryParam === cat.slug}
-                  onClick={() => setCategory(cat.slug)}
-                />
-              ))}
+
+              {/* Scroll wrapper. `-mx-6 px-6` bleeds the strip to the
+                  container edge on mobile so touch-scroll feels full-bleed;
+                  `md:mx-0 md:px-0` re-anchors it on desktop so the arrow
+                  buttons can sit flush against the viewport edges. */}
+              <div className="relative flex-1 min-w-0 -mx-6 px-6 md:mx-0 md:px-0">
+                {/* Edge fade gradients — hint that content continues past
+                    the visible edge. Sit below the arrows so the buttons
+                    stay clickable. */}
+                {canScrollLeft && (
+                  <div className="hidden md:block pointer-events-none absolute left-10 top-0 bottom-0 w-10 bg-gradient-to-r from-ivory-50 to-transparent z-[5]" />
+                )}
+                {canScrollRight && (
+                  <div className="hidden md:block pointer-events-none absolute right-10 top-0 bottom-0 w-10 bg-gradient-to-l from-ivory-50 to-transparent z-[5]" />
+                )}
+
+                {/* Left arrow — only when there is more content to the left. */}
+                {canScrollLeft && (
+                  <button
+                    type="button"
+                    onClick={() => scrollByAmount(-1)}
+                    aria-label="Danh mục trước"
+                    className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center bg-ivory-50 border-r border-ivory-300 text-ink-700 hover:text-ink-900 hover:border-ink-900 transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" strokeWidth={1.5} />
+                  </button>
+                )}
+
+                {/* Right arrow — only when there is more content to the right. */}
+                {canScrollRight && (
+                  <button
+                    type="button"
+                    onClick={() => scrollByAmount(1)}
+                    aria-label="Danh mục tiếp"
+                    className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center bg-ivory-50 border-l border-ivory-300 text-ink-700 hover:text-ink-900 hover:border-ink-900 transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4" strokeWidth={1.5} />
+                  </button>
+                )}
+
+                <div
+                  ref={scrollRef}
+                  className="flex items-center gap-2 md:gap-3 overflow-x-auto scrollbar-hide scroll-smooth md:pl-12 md:pr-12"
+                >
+                  <CategoryPill
+                    label="Tất Cả"
+                    active={categoryParam === ALL}
+                    onClick={() => setCategory(ALL)}
+                  />
+                  {categoryTree.map((cat) => (
+                    <CategoryPill
+                      key={cat.id || cat.slug}
+                      label={cat.name}
+                      active={categoryParam === cat.slug}
+                      onClick={() => setCategory(cat.slug)}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>

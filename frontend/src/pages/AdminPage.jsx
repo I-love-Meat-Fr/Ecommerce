@@ -77,7 +77,7 @@ export default function AdminPage() {
               <p className="eyebrow mb-3">Quản lý</p>
               <h3 className="font-display text-2xl text-ink-900 mb-4">Bài viết</h3>
               <p className="text-sm text-ink-600 font-light mb-6">
-                Quản lý blog và nội dung cửa hàng.
+                Quản lý bài viết Đi & Viết và nội dung cửa hàng.
               </p>
               <span className="badge-editorial">Sắp ra mắt</span>
             </div>

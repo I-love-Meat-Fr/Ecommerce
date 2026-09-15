@@ -52,9 +52,20 @@ public class CategoryService
         return category;
     }
 
-    public async Task<bool> UpdateAsync(string id, string name, string? description)
+    public async Task<CategoryUpdateResult> UpdateAsync(string id, string name, string? description)
     {
         var slug = GenerateSlug(name);
+
+        // Guard against name/slug collisions with other categories.
+        // Without this, the unique index ux_categories_name throws
+        // E11000 duplicate key on $set, which surfaces as 500.
+        var clash = await _categories
+            .Find(c => c.Id != id && (c.Name == name || c.Slug == slug))
+            .Project(c => c.Id)
+            .FirstOrDefaultAsync();
+        if (clash != null)
+            return CategoryUpdateResult.DuplicateName;
+
         var update = Builders<Category>.Update
             .Set(c => c.Name, name)
             .Set(c => c.Slug, slug);
@@ -62,7 +73,9 @@ public class CategoryService
             update = update.Set(c => c.Description, description);
 
         var result = await _categories.UpdateOneAsync(c => c.Id == id, update);
-        return result.MatchedCount > 0;
+        return result.MatchedCount > 0
+            ? CategoryUpdateResult.Updated
+            : CategoryUpdateResult.NotFound;
     }
 
     public async Task<bool> DeleteAsync(string id)

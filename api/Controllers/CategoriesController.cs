@@ -82,17 +82,21 @@ public class CategoriesController : ControllerBase
 
     [HttpPatch("{id}")]
     [Authorize(Roles = "Admin")]
-    public async Task<ActionResult> Update(string id, [FromBody] CategoryUpdateDto dto)
+    public async Task<ActionResult> Patch(string id, [FromBody] CategoryUpdateDto dto)
     {
         if (string.IsNullOrWhiteSpace(id) || id.Length != 24)
             return BadRequest(new { message = "id không hợp lệ." });
         if (string.IsNullOrWhiteSpace(dto.Name?.Trim()))
             return BadRequest(new { message = "Tên danh mục bắt buộc." });
 
-        var success = await _categoryService.UpdateAsync(id, dto.Name.Trim(), dto.Description?.Trim());
-        if (!success)
-            return NotFound();
-        return NoContent();
+        var result = await _categoryService.UpdateAsync(id, dto.Name.Trim(), dto.Description?.Trim());
+        return result switch
+        {
+            CategoryUpdateResult.Updated => NoContent(),
+            CategoryUpdateResult.NotFound => NotFound(),
+            CategoryUpdateResult.DuplicateName => Conflict(new { message = "Tên danh mục đã tồn tại." }),
+            _ => StatusCode(500),
+        };
     }
 
     [HttpDelete("{id}")]
