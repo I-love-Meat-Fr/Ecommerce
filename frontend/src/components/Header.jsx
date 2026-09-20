@@ -12,6 +12,7 @@ const staticNavigation = [
   { name: 'Trang chủ', href: '/' },
   { name: 'Bộ Sưu Tập', href: '/san-pham' },
   { name: 'Câu Chuyện', href: '/about' },
+  { name: 'Kinh nghiệm', href: '/kinh-nghiem' },
   { name: 'Đi & Viết', href: '/di-va-viet' },
   { name: 'Liên Hệ', href: '/contact' },
 ]

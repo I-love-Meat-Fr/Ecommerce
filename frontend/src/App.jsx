@@ -7,6 +7,7 @@ import CartPage from './pages/CartPage'
 import AboutPage from './pages/AboutPage'
 import ContactPage from './pages/ContactPage'
 import BlogPage from './pages/BlogPage'
+import KnowledgePage from './pages/KnowledgePage'
 import BlogPostPage from './pages/BlogPostPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -30,7 +31,9 @@ function App() {
         <Route path="about" element={<AboutPage />} />
         <Route path="contact" element={<ContactPage />} />
         <Route path="di-va-viet" element={<BlogPage />} />
+        <Route path="kinh-nghiem" element={<KnowledgePage />} />
         <Route path="di-va-viet/:slug" element={<BlogPostPage />} />
+        <Route path="kinh-nghiem/:slug" element={<BlogPostPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route

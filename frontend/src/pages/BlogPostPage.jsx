@@ -8,6 +8,20 @@ import {
 } from '../data/posts'
 import BlogPostCard from '../components/BlogPostCard'
 
+// Categories supported by this page. Adding a new editorial category only
+// requires extending this map and rendering the page at a matching route —
+// the content rendering stays identical.
+const CATEGORY_META = {
+  'Đi & Viết': {
+    backUrl: '/di-va-viet',
+    backLabel: 'Đi & Viết',
+  },
+  'Kinh nghiệm': {
+    backUrl: '/kinh-nghiem',
+    backLabel: 'Kinh nghiệm',
+  },
+}
+
 /**
  * Render a single content block from a post's `content` array.
  * Supports: paragraph | subheading | callout.
@@ -60,6 +74,11 @@ function BlogPostPage() {
   const { slug } = useParams()
   const post = getPostBySlug(slug)
 
+  // Resolve this post's category metadata (back link + label). Default to the
+  // legacy "Đi & Viết" URL so older links keep working for any unmapped post.
+  const categoryMeta =
+    (post && CATEGORY_META[post.category]) || CATEGORY_META['Đi & Viết']
+
   // When switching between blog posts (e.g. clicking "Bài viết khác" at the
   // bottom), scroll the new post into view from the top. `instant` avoids the
   // default smooth-scroll animation being interrupted by React re-renders.
@@ -80,8 +99,8 @@ function BlogPostPage() {
             Bài viết bạn tìm không có trong nhật ký Đi & Viết của chúng tôi. Có
             thể nó đã được di chuyển hoặc đường dẫn không chính xác.
           </p>
-          <Link to="/di-va-viet" className="link-editorial">
-            ← Quay lại Đi & Viết
+          <Link to={categoryMeta.backUrl} className="link-editorial">
+            ← Quay lại {categoryMeta.backLabel}
           </Link>
 
           <div className="mt-20">
@@ -110,11 +129,11 @@ function BlogPostPage() {
       <section className="pt-12 md:pt-16 pb-10">
         <div className="container-custom max-w-4xl">
           <Link
-            to="/di-va-viet"
+            to={categoryMeta.backUrl}
             className="inline-flex items-center gap-2 text-[11px] tracking-widest uppercase text-ink-500 hover:text-ink-900 transition-colors mb-10"
           >
             <ArrowLeft className="w-3 h-3" strokeWidth={1.5} />
-            Đi & Viết
+            {categoryMeta.backLabel}
           </Link>
 
           <div className="flex items-center gap-4 mb-6">

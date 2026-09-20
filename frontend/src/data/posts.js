@@ -278,6 +278,102 @@ export const posts = [
       },
     ],
   },
+  {
+    slug: 'cham-soc-hoa-dong-tien-dung-cach',
+    title: 'Chăm sóc hoa đồng tiền đúng cách',
+    excerpt:
+      'Cách trồng hoa đồng tiền rất đơn giản. Hoa có thể trồng quanh năm, cây ưa đất tơi xốp, dễ thoát nước, nhiều mùn. Bài viết chia sẻ kỹ thuật chăm sóc, bón phân, tưới nước và phòng bệnh cho hoa đồng tiền từ kinh nghiệm thực tế của đội ngũ Florist Vietnam.',
+    coverImage: '/uploads/2026/08/Florist_17.jpg',
+    category: 'Kinh nghiệm',
+    author: 'Florist Vietnam',
+    date: '07/10/2020',
+    readTime: '5 phút',
+    sourceUrl: 'https://florist.vn/cham-soc-hoa-dong-tien-dung-cach/',
+    content: [
+      {
+        type: 'paragraph',
+        text:
+          'Cách trồng hoa đồng tiền rất đơn giản. Hoa có thể trồng quanh năm, cây ưa đất tơi xốp, dễ thoát nước, nhiều mùn. Đây là những ghi chú thực tế mà đội ngũ Florist Vietnam tổng hợp lại sau nhiều vụ trồng tại các làng hoa Thái Bình, Tây Tựu và Xuân Quan.',
+      },
+      {
+        type: 'subheading',
+        text: 'Đặc điểm sinh trưởng',
+      },
+      {
+        type: 'paragraph',
+        text:
+          'Hoa đồng tiền (Gerbera) thuộc cây thân thảo, sống lâu năm, cao 30–50cm. Cây ưa sáng nhưng không chịu nắng gắt buổi trưa, thích hợp trồng ở nơi có ánh nắng buổi sáng hoặc dưới lưới che giảm 30–40% cường độ sáng. Nhiệt độ lý tưởng để cây phát triển là 18–25°C, nếu dưới 10°C hoặc trên 35°C cây sẽ sinh trưởng kém và ra hoa nhỏ.',
+      },
+      {
+        type: 'subheading',
+        text: 'Đất trồng và giá thể',
+      },
+      {
+        type: 'paragraph',
+        text:
+          'Đất trồng hoa đồng tiền cần đảm bảo ba yếu tố: tơi xốp, thoát nước tốt và giàu mùn. Bà con thường phối trộn theo công thức: 50% đất thịt nhẹ + 30% phân chuồng hoai mục + 20% trấu hun hoặc xơ dừa. Lên luống cao 25–30cm, rộng 1,2m, mặt luống phẳng để thoát nước đều, tránh ngập úng gây thối rễ.',
+      },
+      {
+        type: 'callout',
+        text:
+          'Lưu ý: Hoa đồng tiền rất mẫn cảm với úng rễ. Chỉ cần ngập nước 24–48 giờ là cây có thể bị thối cổ rễ và chết hàng loạt.',
+      },
+      {
+        type: 'subheading',
+        text: 'Tưới nước đúng cách',
+      },
+      {
+        type: 'paragraph',
+        text:
+          'Tưới nước là khâu quan trọng nhất khi chăm sóc hoa đồng tiền. Bà con nên tưới vào buổi sáng sớm (trước 9h) hoặc chiều mát (sau 16h), tránh tưới giữa trưa nắng gắt làm chết rễ. Lượng nước trung bình 1–1,5 lít/m²/ngày vào mùa khô, mùa mưa giảm còn 0,5 lít/m²/ngày và chỉ tưới khi mặt đất se khô.',
+      },
+      {
+        type: 'paragraph',
+        text:
+          'Phương pháp tưới phun mưa hoặc tưới nhỏ giọt đều phù hợp. Tuyệt đối không tưới phun lên lá và hoa vì dễ phát sinh nấm bệnh, đặc biệt là bệnh phấn trắng và thối lá.',
+      },
+      {
+        type: 'image',
+        url: '/uploads/2026/08/Florist_10-scaled.jpg',
+        alt: 'Cây hoa đồng tiền trưởng thành sẵn sàng ra hoa',
+        caption:
+          'Cây hoa đồng tiền đạt 60–70 ngày tuổi bắt đầu phân hóa mầm hoa, sau 90–100 ngày sẽ cho đợt hoa đầu tiên.',
+      },
+      {
+        type: 'subheading',
+        text: 'Bón phân theo từng giai đoạn',
+      },
+      {
+        type: 'paragraph',
+        text:
+          'Hoa đồng tiền chia làm 3 giai đoạn bón phân: thời kỳ cây con (0–30 ngày sau trồng), thời kỳ sinh trưởng (30–60 ngày) và thời kỳ ra hoa (từ 60 ngày trở đi). Ở mỗi giai đoạn cây cần tỷ lệ N-P-K khác nhau, ưu tiên đạm khi cây con và lân-kali khi cây đang phân hóa mầm hoa.',
+      },
+      {
+        type: 'subheading',
+        text: 'Phòng và trị bệnh thường gặp',
+      },
+      {
+        type: 'paragraph',
+        text:
+          'Ba bệnh phổ biến nhất trên hoa đồng tiền là phấn trắng, thối cổ rễ và héo vàng do nấm Fusarium. Phòng bệnh là chính: giữ vườn thông thoáng, tưới nước vừa đủ, không để nước đọng quanh gốc và luân canh với cây trồng khác họ sau mỗi 2–3 vụ. Khi phát hiện cây bị bệnh cần nhổ bỏ và tiêu hủy ngay để tránh lây lan.',
+      },
+      {
+        type: 'callout',
+        text:
+          'Mẹo nhỏ: Phun phòng định kỳ 15 ngày/lần bằng chế phẩm sinh học Trichoderma kết hợp nano đồng giúp giảm 70–80% tỷ lệ thối rễ mà vẫn an toàn cho hoa và người chăm sóc.',
+      },
+      {
+        type: 'paragraph',
+        text:
+          'Với những kỹ thuật trên, hoa đồng tiền cho thu hoạch sau 3–4 tháng trồng, mỗi cây cho từ 5–8 hoa/vụ và thời gian sinh trưởng kéo dài 2–3 năm nếu chăm sóc tốt. Đây là một trong những mô hình hoa cho hiệu quả kinh tế cao và ổn định tại nhiều làng hoa ở Việt Nam.',
+      },
+      {
+        type: 'callout',
+        text:
+          'Số điện thoại hỗ trợ kỹ thuật: 0818 596 696 — Florist Vietnam',
+      },
+    ],
+  },
 ]
 
 /**
