@@ -18,4 +18,12 @@
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
   </ItemGroup>
 
+  <!--
+    The Microsoft.NET.Sdk.Web auto-includes everything under wwwroot/ as
+    Content with CopyToOutputDirectory=PreserveNewest, so banner images in
+    wwwroot/uploads/** are already shipped with the Docker image. No explicit
+    Content Include is needed here; see .dockerignore to ensure the source
+    files are copied into the build context.
+  -->
+
 </Project>

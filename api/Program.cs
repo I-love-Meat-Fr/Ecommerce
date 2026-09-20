@@ -2,6 +2,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Ecommer.Api.Data;
 using Ecommer.Api.Middleware;
@@ -147,8 +148,23 @@ app.UseHttpsRedirection();
 app.UseSecurityHeaders();
 app.UseCors("FrontendDev");
 
-// Serve files under wwwroot/ (which is where /uploads/... images live).
+// Serve files under wwwroot/ (which is where /uploads/... images live by default).
 app.UseStaticFiles();
+
+// Optional persistent uploads directory — when UPLOADS_PATH is set (e.g. on
+// Railway, where the container filesystem is ephemeral), also serve those
+// files under /uploads/... so URLs in the database stay stable across redeploys.
+// The same env var is read by UploadsController when deciding where to write.
+var uploadsOverride = Environment.GetEnvironmentVariable("UPLOADS_PATH");
+if (!string.IsNullOrWhiteSpace(uploadsOverride))
+{
+    Directory.CreateDirectory(uploadsOverride);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(uploadsOverride),
+        RequestPath = "/uploads",
+    });
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

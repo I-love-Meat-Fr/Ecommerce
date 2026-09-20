@@ -1,12 +1,21 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
 
 namespace Ecommer.Api.Controllers;
 
 /// <summary>
-/// Image upload endpoints for the admin panel. Files land in
-/// wwwroot/uploads/yyyy/mm/{guid}.{ext} and are served as static assets
-/// under /uploads/... by Program.cs.
+/// Image upload endpoints for the admin panel.
+/// <para>
+/// By default files are written to <c>wwwroot/uploads/yyyy/mm/{guid}.{ext}</c>
+/// and served as static assets under <c>/uploads/...</c> by Program.cs.
+/// </para>
+/// <para>
+/// If the <c>UPLOADS_PATH</c> environment variable is set (recommended for
+/// Railway / Render / any ephemeral container), the controller writes into
+/// that directory instead. The matching <see cref="IFileProvider"/> is wired
+/// up in Program.cs so the same <c>/uploads/...</c> URL keeps working.
+/// </para>
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -33,6 +42,28 @@ public class UploadsController : ControllerBase
     }
 
     /// <summary>
+    /// Resolves the on-disk root for uploaded files. Honors <c>UPLOADS_PATH</c>
+    /// if set, otherwise falls back to <c>wwwroot/uploads</c>. Falls back to a
+    /// temp-friendly path if even WebRootPath is null (rare unit-test setups).
+    /// </summary>
+    private string GetUploadsRoot()
+    {
+        var overridePath = Environment.GetEnvironmentVariable("UPLOADS_PATH");
+        if (!string.IsNullOrWhiteSpace(overridePath))
+        {
+            return overridePath;
+        }
+
+        var webRoot = _env.WebRootPath;
+        if (!string.IsNullOrEmpty(webRoot))
+        {
+            return Path.Combine(webRoot, "uploads");
+        }
+
+        return Path.Combine(_env.ContentRootPath, "wwwroot", "uploads");
+    }
+
+    /// <summary>
     /// Upload a single image file under the "file" form field.
     /// Returns { url } where url is a relative path like
     /// "/uploads/2026/08/abc123.jpg" — prepend your origin to render.
@@ -55,7 +86,7 @@ public class UploadsController : ControllerBase
             return BadRequest(new { message = $"Content-Type không hợp lệ: {file.ContentType}" });
 
         var now = DateTime.UtcNow;
-        var uploadsRoot = Path.Combine(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"), "uploads");
+        var uploadsRoot = GetUploadsRoot();
         var monthDir = Path.Combine(uploadsRoot, now.ToString("yyyy"), now.ToString("MM"));
         Directory.CreateDirectory(monthDir);
 
@@ -74,7 +105,7 @@ public class UploadsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to write upload to {Path}", fullPath);
-            return StatusCode(500, new { message = "Lưu file thất bại." });
+            return StatusCode(500, new { message = "Lưu file thất lỗi." });
         }
 
         var url = $"/uploads/{now:yyyy}/{now:MM}/{fileName}";
@@ -96,12 +127,14 @@ public class UploadsController : ControllerBase
         if (!relative.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
             return BadRequest(new { message = "url không hợp lệ." });
 
-        // Resolve and ensure the final path is still under the uploads root.
-        var uploadsRoot = Path.Combine(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"), "uploads");
-        var fullPath = Path.GetFullPath(Path.Combine(_env.ContentRootPath, relative));
-        var rootFull = uploadsRoot + Path.DirectorySeparatorChar;
+        var uploadsRoot = GetUploadsRoot();
+        Directory.CreateDirectory(uploadsRoot); // ensure root exists so GetFullPath is safe
+        var fullPath = Path.GetFullPath(Path.Combine(uploadsRoot, relative.Substring("uploads/".Length)));
+        var rootFull = uploadsRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                     + Path.DirectorySeparatorChar;
+        var rootBare = uploadsRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         if (!fullPath.StartsWith(rootFull, StringComparison.OrdinalIgnoreCase) &&
-            !fullPath.Equals(uploadsRoot.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
+            !fullPath.Equals(rootBare, StringComparison.OrdinalIgnoreCase))
         {
             return BadRequest(new { message = "url nằm ngoài thư mục uploads." });
         }
@@ -116,7 +149,7 @@ public class UploadsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete upload {Path}", fullPath);
-            return StatusCode(500, new { message = "Xóa file thất bại." });
+            return StatusCode(500, new { message = "Xóa file thất lỗi." });
         }
 
         return NoContent();
